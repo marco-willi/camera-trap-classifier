@@ -1,0 +1,14 @@
+top_level_entry: top_level_value
+top_level_1:
+  sub_level_1_1: sub_level_value_1_1
+  sub_level_1_2: sub_level_value_1_2
+  sub_level_1_3_empty:
+  sub_level_1_4:
+    sub_level_1_4_1: sub_level_1_4_1_value
+top_level_integer: 333
+top_level_true: True
+top_level_empty:
+top_level_fraction: 0.4
+paths:
+  path_1: path_to_dummy/test
+  path_2: /path2/

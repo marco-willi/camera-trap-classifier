@@ -1,0 +1,22 @@
+general:
+  logging: debug
+  logging_to_disk: True
+  identifier: timestamp
+
+project:
+  name: camera_catalogue
+
+paths:
+  images: D:/Studium_GD/Zooniverse/Data/transfer_learning_project/images/
+  model_output: D:/Studium_GD/Zooniverse/Data/transfer_learning_project/save/
+  logging_output: D:/Studium_GD/Zooniverse/Data/transfer_learning_project/logs/
+  model_saves: D:/Studium_GD/Zooniverse/Data/transfer_learning_project/models/
+
+model:
+  name: resent18.py
+  config: default
+  
+training_splits:
+  train: 0.8
+  validation: 0.1
+  test: 0.1
