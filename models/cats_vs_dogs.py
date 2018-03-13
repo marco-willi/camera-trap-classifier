@@ -5,8 +5,17 @@ from tensorflow.python.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.python.keras import layers
 
 
-def architecture(inputs, num_classes):
+def architecture(inputs, num_classes, output_names):
     """ Architecture of model """
+
+    # Check input types
+    assert ((type(num_classes) is int) and (type(output_names) is str)) or \
+           ((type(num_classes)) is list and (type(output_names) is list))
+
+    # convert to list
+    if type(num_classes) is int:
+        num_classes = [num_classes]
+        output_names = [output_names]
 
     conv1 = Conv2D(32, kernel_size=(3, 3),
                    activation='relu')(inputs)
@@ -18,6 +27,11 @@ def architecture(inputs, num_classes):
     flat1 = Flatten()(max3)
     dense1 = Dense(64, activation='relu')(flat1)
     drop1 = Dropout(0.5)(dense1)
-    dense2 = Dense(num_classes, activation='softmax',name="labels/primary")(drop1)
 
-    return dense2
+    # create multiple output
+    all_outputs = tuple()
+    for n, name in zip(num_classes, output_names):
+        all_outputs.add(
+            Dense(n, activation='softmax', name=name)(drop1))
+
+    return all_outputs
