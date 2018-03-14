@@ -15,7 +15,7 @@
               "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296742_0.jpeg"
              ]
   },
-  "10300561":{
+  "no_list_label_type_primary":{
    "labels": {"primary": "dog",
                "color": ["white"]},
    "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300561_0.jpeg"
@@ -32,14 +32,22 @@
                "color": ["brown"]},
    "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300652_0.jpeg"]
   },
-  "10300333":{
+  "empty_images_list":{
    "labels": {"primary": ["dog"],
                "color": ["brown"]},
    "images": []
  },
- "10300728":{
+ "multi_labels":{
   "labels": {"primary": ["dog", "human"],
               "color": ["brown"]
+            },
+  "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300728_0.jpeg",
+             "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300742_0.jpeg"
+            ]
+ },
+ "non_string_label":{
+  "labels": {"primary": ["dog", "human"],
+              "color": [12]
             },
   "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300728_0.jpeg",
              "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300742_0.jpeg"
@@ -51,5 +59,17 @@
               },
     "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
     "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300788_0.jpeg"]
-   }
+   },
+"not_all_labels":{
+      "labels": {"primary": ["dog"]
+                },
+      "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
+      "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300788_0.jpeg"]
+  },
+"only_empty_images_string":{
+       "labels": {"primary": ["dog"]
+                 },
+       "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
+       "images": [""]
+    }
 }

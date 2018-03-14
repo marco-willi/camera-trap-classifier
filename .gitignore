@@ -3,3 +3,6 @@ sandbox/*
 __pycache__/*
 */__pycache__/*
 .spyproject/*
+.Rproj.user
+*.Rproj
+*.Rhistory

@@ -1,5 +1,5 @@
 """ Train a Model for Cats vs Dogs """
-from data_processing.data_creator import CamCatDatasetInventory
+from data_processing.data_inventory import DatasetInventory
 #from data_processing.data_reader import DatasetReader
 from data_processing.tfr_encoder_decoder import CamCatTFRecordEncoderDecoder
 from data_processing.data_reader import DatasetReader
@@ -34,8 +34,9 @@ image_proc_args = {
     'resize_side_max': 500}
 
 # Create Data Inventory
-dataset_dict = CamCatDatasetInventory()
-dataset_dict.create_from_class_directories(path_to_images)
+dataset_inventory = DatasetInventory()
+dataset_inventory.create_from_class_directories(path_to_images)
+dataset_inventory.remove_multi_label_records()
 
 
 # Create TFRecod Encoder / Decoder
@@ -43,15 +44,9 @@ tfr_encoder_decoder = CamCatTFRecordEncoderDecoder()
 
 # Write TFRecord from Data Inventory
 tfr_encoder_decoder.encode_dict_to_tfr(
-        dataset_dict, path_to_tfr_output + "all.tfrecord",
+        dataset_inventory, path_to_tfr_output + "all.tfrecord",
         image_pre_processing_fun=resize_jpeg,
         image_pre_processing_args={"max_side": image_save_side_max})
-
-
-
-#all_labels = dataset_dict.get_all_labels()
-#class_mapper = create_default_class_mapper(all_labels, class_mapping=None)
-
 
 
 # Split TFrecord into Train/Val/Test
@@ -63,7 +58,7 @@ tfr_splitter.split_tfr_file(output_path=path_to_tfr_output,
                             output_prefix="split",
                             splits=['train', 'val', 'test'],
                             split_props=[0.9, 0.05, 0.05],
-                            output_labels=['primary'])
+                            output_labels=model_labels)
 
 
 
@@ -71,12 +66,10 @@ tfr_splitter.print_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 
 
-
 #for example in tf.python_io.tf_record_iterator(tfr_splitter.get_splits_dict()['train']):
 #    result, res2 = tf.train.Example.FromString(example)
 #
 #
-
 
 
 # Create Dataset Reader
@@ -100,8 +93,8 @@ with tf.Session() as sess:
     images = sess.run(images_dummy)
     labels = sess.run(labels_dummy)
 
-image_means = list(np.mean(images['images'], axis=(0,1,2)))
-image_stdevs = list(np.std(images['images'], axis=(0,1,2)))
+image_means = list(np.mean(images['images'], axis=(0, 1, 2)))
+image_stdevs = list(np.std(images['images'], axis=(0, 1, 2)))
 
 image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs
@@ -138,7 +131,7 @@ n_batches_per_epoch_train = calc_n_batches_per_epoch(tfr_n_records['train'],
                                                      batch_size)
 
 n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['val'],
-                                                     batch_size)
+                                                   batch_size)
 
 # Define Model
 from tensorflow.python.keras._impl import keras
@@ -153,19 +146,17 @@ from models.cats_vs_dogs import architecture
 
 
 
-def create_model(input_feeder, target_labels):
+def create_model(input_feeder, n_classes, target_labels):
+
+    target_labels_clean = ['labels/' + x for x in target_labels]
 
     inputs, targets = input_feeder()
     model_input = layers.Input(tensor=inputs['images'])
-    model_output = architecture(model_input, n_classes)
-
-
+    model_output = architecture(model_input, n_classes, target_labels_clean)
     model = keras.models.Model(inputs=model_input, outputs=model_output)
 
     # TODO: build multiple outputs in architecture and map to labels
-
-    target_labels_clean = ['labels/' + x for x in target_labels]
-    target_tensors = {x:tf.cast(targets[x], tf.float32) \
+    target_tensors = {x: tf.cast(targets[x], tf.float32) \
                       for x in target_labels_clean}
 
     opt = RMSprop()
@@ -176,10 +167,8 @@ def create_model(input_feeder, target_labels):
     return model
 
 
-train_model = create_model(input_feeder_train, model_labels)
-val_model = create_model(input_feeder_val, model_labels)
-
-
+train_model = create_model(input_feeder_train, n_classes, model_labels)
+val_model = create_model(input_feeder_val, n_classes, model_labels)
 
 
 for i in range(0, 20):
@@ -196,6 +185,3 @@ for i in range(0, 20):
     for val, metric in zip(val_model.metrics_names, results):
 
         logging.info("Eval - %s: %s" % (metric, val))
-
-
-
