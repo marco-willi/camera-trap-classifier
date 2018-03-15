@@ -19,9 +19,6 @@ class DatasetReader(object):
 
         dataset = tf.data.TFRecordDataset(tfr_files)
 
-        logging.debug("Map dataset")
-        logging.debug("Dataset: %s" % dataset)
-
         dataset = dataset.map(lambda x: self.tfr_decoder(
                 serialized_example=x,
                 output_labels=labels,

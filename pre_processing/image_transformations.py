@@ -4,6 +4,7 @@ from PIL import Image
 import io
 
 def resize_image(image, target_size):
+    """ Resize Image """
     image = tf.image.resize_images(image, size=target_size)
     image = tf.divide(image, 255.0)
     return image
@@ -378,6 +379,7 @@ def preprocess_image_default(image, output_height, output_width,
 
     return image
 
+
 def resize_jpeg(image,  max_side):
     """ Take Raw JPEG resize with aspect ratio preservation
          and return bytes
@@ -389,6 +391,7 @@ def resize_jpeg(image,  max_side):
     image_bytes = b.getvalue()
     return image_bytes
 
+
 def read_jpeg(image):
     """ Reads jpeg and returns Bytes """
     img = Image.open(image)
@@ -396,6 +399,7 @@ def read_jpeg(image):
     img.save(b, 'JPEG')
     image_bytes = b.getvalue()
     return image_bytes
+
 
 def preprocessing_resize_jpeg2(image, coder, smallest_side, n_color_channels):
     """ Take Raw JPEG resize with aspect ratio preservation

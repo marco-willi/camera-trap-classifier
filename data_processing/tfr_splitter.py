@@ -5,6 +5,7 @@ from data_processing.utils import id_to_zero_one, n_records_in_tfr
 from data_processing.data_reader import DatasetReader
 from collections import OrderedDict
 
+
 class TFRecordSplitter(object):
     """ Splits TFRecord files """
 

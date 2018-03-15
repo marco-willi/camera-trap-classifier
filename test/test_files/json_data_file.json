@@ -3,34 +3,34 @@
    "labels": {"primary": ["cat"],
                "color": ["brown", "white", "black"]
              },
-   "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296725_0.jpeg",
-              "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296726_0.jpeg",
-              "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296727_0.jpeg"
+   "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+              "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+              "\\images\\4715\\all\\cat\\10296727_0.jpeg"
              ]
   },
   "10296741":{
    "labels": {"primary": ["cat"],
                "color": ["black"]},
-   "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296741_0.jpeg",
-              "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296742_0.jpeg"
+   "images": ["\\images\\4715\\all\\cat\\10296741_0.jpeg",
+              "\\images\\4715\\all\\cat\\10296742_0.jpeg"
              ]
   },
   "no_list_label_type_primary":{
    "labels": {"primary": "dog",
                "color": ["white"]},
-   "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300561_0.jpeg"
+   "images": ["\\images\\4715\\all\\dog\\10300561_0.jpeg"
              ]
   },
  "10300569":{
    "labels": {"primary": ["dog"],
                "color": ["brown"]},
-   "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\1030056df1_0.jpeg"
+   "images": ["\\images\\4715\\all\\dog\\1030056df1_0.jpeg"
              ]
   },
   "10300652":{
    "labels": {"primary": ["dog"],
                "color": ["brown"]},
-   "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300652_0.jpeg"]
+   "images": ["\\images\\4715\\all\\dog\\10300652_0.jpeg"]
   },
   "empty_images_list":{
    "labels": {"primary": ["dog"],
@@ -41,16 +41,16 @@
   "labels": {"primary": ["dog", "human"],
               "color": ["brown"]
             },
-  "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300728_0.jpeg",
-             "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300742_0.jpeg"
+  "images": ["\\images\\4715\\all\\dog\\10300728_0.jpeg",
+             "\\images\\4715\\all\\dog\\10300742_0.jpeg"
             ]
  },
  "non_string_label":{
   "labels": {"primary": ["dog", "human"],
               "color": [12]
             },
-  "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300728_0.jpeg",
-             "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300742_0.jpeg"
+  "images": ["\\images\\4715\\all\\dog\\10300728_0.jpeg",
+             "\\images\\4715\\all\\dog\\10300742_0.jpeg"
             ]
  },
  "10300788":{
@@ -58,13 +58,13 @@
                 "color": ["black"]
               },
     "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
-    "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300788_0.jpeg"]
+    "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
    },
 "not_all_labels":{
       "labels": {"primary": ["dog"]
                 },
       "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
-      "images": ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\dog\\10300788_0.jpeg"]
+      "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
   },
 "only_empty_images_string":{
        "labels": {"primary": ["dog"]

@@ -12,6 +12,7 @@ import tensorflow as tf
 import numpy as np
 from data_processing.utils  import calc_n_batches_per_epoch, create_default_class_mapper
 from config.config import logging
+import matplotlib.pyplot as plt
 
 ########################
 # Parameters
@@ -62,14 +63,15 @@ tfr_splitter = TFRecordSplitter(
 tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
                             split_names=['train', 'val', 'test'],
-                            split_props=[0.9, 0.05, 0.05],
+                            split_props=[0.1, 0.05, 0.85],
                             output_labels=model_labels)
 
 
 # Check numbers
 tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
-
+tfr_splitter.label_to_numeric_mapper
+num_to_label_mapper = {v:k for k, v in tfr_splitter.label_to_numeric_mapper['labels/primary'].items()}
 
 
 # Create Dataset Reader
@@ -77,7 +79,7 @@ data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
 # Calculate Dataset Image Means and Stdevs for a dummy batch
 batch_data= data_reader.get_iterator(
-        tfr_files=[tfr_splitter.get_splits_dict()['train']],
+        tfr_files=[tfr_splitter.get_split_paths()['train']],
         batch_size=1024,
         is_train=False,
         n_repeats=1,
@@ -85,7 +87,7 @@ batch_data= data_reader.get_iterator(
         image_pre_processing_fun=preprocess_image_default,
         image_pre_processing_args=image_proc_args,
         max_multi_label_number=None,
-        labels_are_numeric=False)
+        labels_are_numeric=True)
 
 
 with tf.Session() as sess:
@@ -99,10 +101,20 @@ image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs
 
 
+# plot some images and their labels to check
+for i in range(0, 30):
+    img = data['images'][i,:,:,:]
+    lbl = data['labels/primary'][i]
+    print("Label: %s" % num_to_label_mapper[int(lbl)])
+    plt.imshow(img)
+    plt.show()
+
+
+
 # Prepare Data Feeders for Training / Validation Data
 def input_feeder_train():
     return data_reader.get_iterator(
-                tfr_files=[tfr_splitter.get_splits_dict()['train']],
+                tfr_files=[tfr_splitter.get_split_paths()['train']],
                 batch_size=batch_size,
                 is_train=True,
                 n_repeats=None,
@@ -110,12 +122,12 @@ def input_feeder_train():
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
-                numeric_labels=True)
+                labels_are_numeric=True)
 
 
 def input_feeder_val():
     return data_reader.get_iterator(
-                tfr_files=[tfr_splitter.get_splits_dict()['val']],
+                tfr_files=[tfr_splitter.get_split_paths()['val']],
                 batch_size=batch_size,
                 is_train=False,
                 n_repeats=None,
@@ -123,7 +135,7 @@ def input_feeder_val():
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
-                numeric_labels=True)
+                labels_are_numeric=True)
 
 
 n_batches_per_epoch_train = calc_n_batches_per_epoch(tfr_n_records['train'],
@@ -140,8 +152,9 @@ from tensorflow.python.keras.layers import Conv2D, MaxPooling2D
 from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
 from tensorflow.python.keras import layers
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.callbacks import ReduceLROnPlateau
 from models.cats_vs_dogs import architecture
+import numpy as np
+from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
 
 
 
@@ -149,16 +162,16 @@ def create_model(input_feeder, n_classes, target_labels):
 
     target_labels_clean = ['labels/' + x for x in target_labels]
 
-    inputs, targets = input_feeder()
-    model_input = layers.Input(tensor=inputs['images'])
+    data = input_feeder()
+    model_input = layers.Input(tensor=data['images'])
     model_output = architecture(model_input, n_classes, target_labels_clean)
     model = keras.models.Model(inputs=model_input, outputs=model_output)
 
     # TODO: build multiple outputs in architecture and map to labels
-    target_tensors = {x: tf.cast(targets[x], tf.float32) \
+    target_tensors = {x: tf.cast(data[x], tf.float32) \
                       for x in target_labels_clean}
 
-    opt = RMSprop()
+    opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
     model.compile(loss='sparse_categorical_crossentropy',
                         optimizer=opt,
                         metrics=['accuracy'],
@@ -166,21 +179,50 @@ def create_model(input_feeder, n_classes, target_labels):
     return model
 
 
+reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
+        initial_lr = 0.01,
+        reduce_after_n_rounds=4,
+        stop_after_n_rounds=2,
+        reduction_mult=0.1,
+        min_lr=1e-4,
+        minimize=True
+        )
+
+early_stopping = EarlyStopping(stop_after_n_rounds=5)
+
 train_model = create_model(input_feeder_train, n_classes, model_labels)
 val_model = create_model(input_feeder_val, n_classes, model_labels)
 
 
-for i in range(0, 20):
-    logging.info("Starting Epoch %s" % i)
+for i in range(0, 50):
+    logging.info("Starting Epoch %s" % (i+1))
     train_model.fit(epochs=i+1,
                     steps_per_epoch=n_batches_per_epoch_train,
                     initial_epoch=i)
 
+    # Copy weights from training model to validation model
     weights = train_model.get_weights()
     val_model.set_weights(weights)
 
+    # Run evaluation model
     results = val_model.evaluate(steps=n_batches_per_epoch_val)
+
+    val_loss = results[val_model.metrics_names=='loss']
 
     for val, metric in zip(val_model.metrics_names, results):
 
         logging.info("Eval - %s: %s" % (metric, val))
+
+    # Reduce Learning Rate if necessary
+    reduce_lr_on_plateau.addResult(val_loss)
+    train_model.optimizer.lr.set_value(reduce_lr_on_plateau.current_lr)
+
+    # Check if training should be stopped
+    early_stopping.addResult(val_loss)
+    if early_stopping.stop_training:
+        logging.info("Early Stopping of Model Training after %s Epochs" %
+                     (i+1))
+        break
+
+
+

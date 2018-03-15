@@ -29,9 +29,9 @@ class ImportFromJsonTester(unittest.TestCase):
         self.assertIn("labels", self.data[test_id])
         self.assertIn("images", self.data[test_id])
         self.assertEqual(self.data[test_id]['images'],
-            ["D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296725_0.jpeg",
-             "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296726_0.jpeg",
-             "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all\\cat\\10296727_0.jpeg"
+            ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+             "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+             "\\images\\4715\\all\\cat\\10296727_0.jpeg"
              ])
 
         self.assertEqual(
