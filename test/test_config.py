@@ -6,7 +6,7 @@ class LoadConfigTestCase(unittest.TestCase):
 
     def setUp(self):
         print("Load CFG")
-        self.cfg_obj = Config('test/test_config.yaml')
+        self.cfg_obj = Config('test/test_files/test_config.yaml')
         self.cfg_obj.load_config()
         self.cfg = self.cfg_obj.get_config()
 

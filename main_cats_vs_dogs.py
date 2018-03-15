@@ -1,8 +1,9 @@
 """ Train a Model for Cats vs Dogs """
 from data_processing.data_inventory import DatasetInventory
 #from data_processing.data_reader import DatasetReader
-from data_processing.tfr_encoder_decoder import CamCatTFRecordEncoderDecoder
+from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from data_processing.data_reader import DatasetReader
+from data_processing.data_writer import DatasetWriter
 from data_processing.tfr_splitter import TFRecordSplitter
 from pre_processing.image_transformations import (
         preprocess_image,
@@ -40,44 +41,42 @@ dataset_inventory.remove_multi_label_records()
 
 
 # Create TFRecod Encoder / Decoder
-tfr_encoder_decoder = CamCatTFRecordEncoderDecoder()
+tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 
-# Write TFRecord from Data Inventory
-tfr_encoder_decoder.encode_dict_to_tfr(
-        dataset_inventory, path_to_tfr_output + "all.tfrecord",
+
+# Write TFRecord file from Data Inventory
+tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
+tfr_writer.encode_inventory_to_tfr(
+        dataset_inventory,
+        path_to_tfr_output + "all.tfrecord",
         image_pre_processing_fun=resize_jpeg,
         image_pre_processing_args={"max_side": image_save_side_max})
 
 
 # Split TFrecord into Train/Val/Test
 tfr_splitter = TFRecordSplitter(
-        main_file=path_to_tfr_output + "all.tfrecord",
-        tfr_encoder_decoder=tfr_encoder_decoder)
+        files_to_split=path_to_tfr_output + "all.tfrecord",
+        tfr_encoder=tfr_encoder_decoder.encode_record,
+        tfr_decoder=tfr_encoder_decoder.decode_record)
 
-tfr_splitter.split_tfr_file(output_path=path_to_tfr_output,
+tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
-                            splits=['train', 'val', 'test'],
+                            split_names=['train', 'val', 'test'],
                             split_props=[0.9, 0.05, 0.05],
                             output_labels=model_labels)
 
 
-
-tfr_splitter.print_record_numbers_per_file()
+# Check numbers
+tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 
 
-#for example in tf.python_io.tf_record_iterator(tfr_splitter.get_splits_dict()['train']):
-#    result, res2 = tf.train.Example.FromString(example)
-#
-#
-
 
 # Create Dataset Reader
-data_reader = DatasetReader(tfr_encoder_decoder.get_tfr_decoder())
-
+data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
 # Calculate Dataset Image Means and Stdevs for a dummy batch
-images_dummy, labels_dummy = data_reader.get_iterator(
+batch_data= data_reader.get_iterator(
         tfr_files=[tfr_splitter.get_splits_dict()['train']],
         batch_size=1024,
         is_train=False,
@@ -86,15 +85,15 @@ images_dummy, labels_dummy = data_reader.get_iterator(
         image_pre_processing_fun=preprocess_image_default,
         image_pre_processing_args=image_proc_args,
         max_multi_label_number=None,
-        numeric_labels=True)
+        labels_are_numeric=False)
 
 
 with tf.Session() as sess:
-    images = sess.run(images_dummy)
-    labels = sess.run(labels_dummy)
+    data = sess.run(batch_data)
 
-image_means = list(np.mean(images['images'], axis=(0, 1, 2)))
-image_stdevs = list(np.std(images['images'], axis=(0, 1, 2)))
+
+image_means = list(np.mean(data['images'], axis=(0, 1, 2)))
+image_stdevs = list(np.std(data['images'], axis=(0, 1, 2)))
 
 image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs

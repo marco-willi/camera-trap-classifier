@@ -5,35 +5,23 @@ from data_processing.utils import id_to_zero_one, n_records_in_tfr
 from data_processing.data_reader import DatasetReader
 from collections import OrderedDict
 
-
 class TFRecordSplitter(object):
     """ Splits TFRecord files """
 
-    def __init__(self, main_file, tfr_encoder_decoder):
-        self.main_file = main_file
-        self.tfr_encoder_decoder = tfr_encoder_decoder
+    def __init__(self, files_to_split, tfr_encoder, tfr_decoder):
+        self.files_to_split = files_to_split
+        self.tfr_encoder = tfr_encoder
+        self.tfr_decoder = tfr_decoder
         self.split_files = None
         self.split_props = None
         self.split_names = None
         self.class_mapping = None
 
-    def get_split_files(self):
-        """ Get Path to Splitted Files """
-        return self.split_files
-
-    def get_split_names(self):
-        """ Get names of splits """
-        return self.split_names
-
-    def get_splits_dict(self):
+    def get_split_paths(self):
         """ Get Split-Paths and Split-Names """
         return {k: v for k, v in zip(self.split_names, self.split_files)}
 
-    def get_class_mapping(self):
-        """ Get Class Mapping """
-        return self.class_mapping
-
-    def print_record_numbers_per_file(self):
+    def log_record_numbers_per_file(self):
         """ print record numbers per file """
         for f, n in zip(self.split_files, self.split_names):
             logging.info("File: %s has %s records" % (n, n_records_in_tfr(f)))
@@ -43,29 +31,21 @@ class TFRecordSplitter(object):
         return {n: n_records_in_tfr(f) for f, n in
                 zip(self.split_files, self.split_names)}
 
-    def split_tfr_file(self, output_path, output_prefix,
-                       splits, split_props, output_labels,
-                       class_mapping=None):
-        """ Split a TFR file according to split proportions """
+    def _check_and_clean_input(self):
+        """ Check and Clean Input """
 
         # Check Split Proportions
-        assert sum(split_props) == 1, "sum of split_prop has to be 1, is: %s" \
-            % sum(split_props)
-
-        self.split_props = split_props
-
-        # Check Split Names
-        assert len(splits) == len(split_props), "Number of splits must be " + \
-            "equal to number of split_prop"
-
-        self.split_names = splits
+        assert sum(self.split_props) == 1, \
+            "sum of split_prop has to be 1, is: %s" % sum(self.split_props)
 
         # Check Split Types
-        assert type(splits) is list and type(split_props) is list, \
+        assert type(self.split_names) is list and \
+            type(self.split_props) is list, \
             "splits and split_prop must be lists"
 
-        # Check Class Mapping
-        self.class_mapping = class_mapping
+        # Check Split Names
+        assert len(self.split_names) == len(self.split_props), \
+            "Number of splits must be equal to number of split_prop"
 
         # Rename class label types
         if self.class_mapping is not None:
@@ -73,33 +53,46 @@ class TFRecordSplitter(object):
                 self.class_mapping['labels/' + label_type] = \
                     self.class_mapping.pop(label_type)
 
+        # Clean output labels
+        self.output_labels_clean = ['labels/' + x for x in self.output_labels]
+
+    def split_tfr_file(self, output_path_main, output_prefix,
+                       split_names, split_props, output_labels,
+                       class_mapping=None):
+        """ Split a TFR file according to split proportions """
+
+        self.split_names = split_names
+        self.split_props = split_props
+        self.class_mapping = class_mapping
+        self.output_labels = output_labels
+
+        self._check_and_clean_input()
+
         # Create Output File Names
-        output_file_names = [output_path + output_prefix + '_' +
-                             s + '.tfrecord' for s in splits]
+        output_file_names = [output_path_main + output_prefix + '_' +
+                             s + '.tfrecord' for s in self.split_names]
 
         self.split_files = output_file_names
 
-        output_labels_clean = ['labels/' + x for x in output_labels]
-
-        # get all ids and their labels
-        logging.debug("Getting ids and labels via encoder_decoder")
-
-        dataset_reader = DatasetReader(
-            self.tfr_encoder_decoder._decode_labels_and_images)
+        # get all ids and their labels from the input file
+        dataset_reader = DatasetReader(self.tfr_decoder)
 
         iterator = dataset_reader.get_iterator(
-             self.main_file, batch_size=128, is_train=False, n_repeats=1,
+             self.files_to_split, batch_size=128, is_train=False, n_repeats=1,
              output_labels=output_labels,
              buffer_size=2048,
+             decode_images=False,
+             labels_are_numeric=False,
              max_multi_label_number=None)
 
         id_label_dict = OrderedDict()
         with tf.Session() as sess:
             while True:
                 try:
-                    ids, image_labels = sess.run(iterator)
-                    self._extract_id_labels(id_label_dict, ids,
-                                            image_labels, output_labels_clean)
+                    batch_data = sess.run(iterator)
+                    self._extract_id_labels(id_label_dict,
+                                            batch_data,
+                                            self.output_labels_clean)
                 except tf.errors.OutOfRangeError:
                     break
 
@@ -119,33 +112,30 @@ class TFRecordSplitter(object):
         id_to_split_val = {x: id_to_zero_one(x) for x in id_label_dict.keys()}
 
         # Write TFrecord files for each split
-        for i, split in enumerate(splits):
+        for i, split in enumerate(self.split_names):
             split_p_lower = sum(split_props[0:i])
             split_p_upper = sum(split_props[0:i+1])
 
-            # Read TFrecord file and iterate over it
-            dataset_reader = DatasetReader(
-                self.tfr_encoder_decoder._decode_labels_and_images)
-
             iterator = dataset_reader.get_iterator(
-                 self.main_file, batch_size=128, is_train=False, n_repeats=1,
+                 self.files_to_split, batch_size=128,
+                 is_train=False, n_repeats=1,
                  output_labels=output_labels,
                  buffer_size=2048,
+                 decode_images=False,
+                 labels_are_numeric=False,
                  max_multi_label_number=None)
 
             # Write Split File
-            logging.debug("Start writing file %s" % output_file_names[i])
+            logging.info("Start writing file %s" % output_file_names[i])
             with tf.python_io.TFRecordWriter(output_file_names[i]) as writer:
                 with tf.Session() as sess:
                     while True:
                         try:
                             batch_dict = OrderedDict()
-                            ids, image_labels = sess.run(iterator)
-
-                            self._extract_id_labels(batch_dict, ids,
-                                                    image_labels,
-                                                    output_labels_clean)
-
+                            batch_data = sess.run(iterator)
+                            self._extract_id_labels(batch_dict,
+                                                    batch_data,
+                                                    self.output_labels_clean)
                             for ii, idd in enumerate(batch_dict.keys()):
                                 if self._between(
                                  id_to_split_val[idd],
@@ -154,63 +144,23 @@ class TFRecordSplitter(object):
                                     record_dict['id'] = idd
                                     record_dict['labels'] = id_label_dict[idd]
                                     record_dict['images'] = \
-                                        list(image_labels['images'][ii])
-                                    serialized = self.tfr_encoder_decoder.\
-                                        serialize_split_tfr_record(record_dict)
+                                        list(batch_data['images'][ii])
+                                    serialized = self.tfr_encoder(
+                                        record_dict,
+                                        labels_are_numeric=True)
                                     writer.write(serialized)
                                 else:
                                     continue
                         except tf.errors.OutOfRangeError:
                             break
 
-
-
-            # # iterate over input file
-            # data_iterator = tf.python_io.tf_record_iterator(self.main_file)
-            #
-            # # Write Split File
-            # logging.debug("Start writing file %s" % output_file_names[i])
-            # with tf.python_io.TFRecordWriter(output_file_names[i]) as writer:
-            #
-            #     # iterate over all records of the main file
-            #     for ii, data_record in enumerate(data_iterator):
-            #
-            #         # create a splitting id and check if record belongs to
-            #         # this set
-            #         split_id = split_assignment[ii]
-            #         if (split_id >= split_p_lower) and \
-            #            (split_id <= split_p_upper):
-            #
-            #             # deserialize record_data
-            #             record_dict = self.tfr_encoder_decoder.decode_label_and_images_to_dict(
-            #                             data_record,
-            #                             output_labels_clean)
-            #
-            #             # change labels
-            #             new_label_dict = dict()
-            #
-            #             for label_type in output_labels_clean:
-            #                 new_labels = list()
-            #                 for label in record_dict[label_type]:
-            #                     mapped_label = \
-            #                         label_to_numeric_mapper[label_type][label]
-            #                     new_labels.append(mapped_label)
-            #                 new_label_dict[label_type] = new_labels
-            #
-            #             record_dict['labels'] = new_label_dict
-            #
-            #             serialized = self.tfr_encoder_decoder.serialize_split_tfr_record(record_dict)
-            #
-            #             # Write the serialized data to the TFRecords file.
-            #             writer.write(serialized)
-
-    def _extract_id_labels(self, dict_all, ids, labels, output_labels):
+    def _extract_id_labels(self, dict_all, data_batch, output_labels):
         """ Extract ids and labels from dataset and add to dict"""
-        for i, idd in enumerate(list(ids['id'])):
+        for i, idd in enumerate(list(data_batch['id'])):
             id_clean = str(idd, 'utf-8')
             dict_all[id_clean] = dict()
             for lab in output_labels:
-                lab_i = labels[lab][i]
+                lab_i = data_batch[lab][i]
                 lab_i = [str(x, 'utf-8') for x in lab_i]
                 dict_all[id_clean][lab] = lab_i
 
@@ -270,3 +220,71 @@ class TFRecordSplitter(object):
                     records_info[record_id][label_type] = \
                         list(new_label_list)
         return records_info
+
+    # assign each id to a set
+    def _assign_id_to_set(self, id_label_dict,
+                          split_names,
+                          split_props,
+                          balanced_sampling_min=False,
+                          balanced_sampling_label_type=None):
+        """ Assign ID to Set """
+
+        # assign unique hash to each id
+        split_vals = {x: id_to_zero_one(x) for x in id_label_dict.keys()}
+
+        # assign each id into different splits based on split value
+        split_assignments = list()
+
+        split_props_cum = [sum(split_props[0:(i+1)]) for i in
+                           range(0, len(split_props))]
+
+        for record_id in id_label_dict.keys():
+            for sn, sp in zip(split_names, split_props_cum):
+                split_val = split_vals[record_id]
+                if split_val <= sp:
+                    split_assignments.append(sn)
+                    break
+
+        # Balanced sampling to the minority class
+        if balanced_sampling_min:
+            if balanced_sampling_label_type is None:
+                raise ValueError("balanced_sampling_label_type must not \
+                                  be None if balanced_sampling_min = True")
+
+            # count number of records for each label of relevant label type
+            # To identify label with minimum number of records
+            label_stats = dict()
+            for v in id_label_dict.values():
+                for label_type, labels in v.items():
+                    if label_type == balanced_sampling_label_type:
+                        for label in labels:
+                            if label not in label_stats:
+                                label_stats[label] = 0
+                            label_stats[label] += 1
+
+            # find minimum label
+            min_label = min(label_stats, key=label_stats.get)
+            min_value = label_stats[min_label]
+
+            # assign each id to one unique class
+            class_assignment = {x: list() for x in label_stats.keys()}
+            remaining_record_ids = set()
+            for record_id, label_types in id_label_dict.items():
+                label = label_types[balanced_sampling_label_type][0]
+                # Add record to class assignment if label occurrence
+                # is below min_value of least frequent class
+                if len(class_assignment[label]) < min_value:
+                    class_assignment[label].append(record_id)
+                    remaining_record_ids.add(record_id)
+
+        else:
+            remaining_record_ids = id_label_dict.keys()
+
+        # create final dictionary with split assignment per record id
+        final_split_assignments = dict()
+
+        for record_id, sp in zip(id_label_dict.keys(), split_assignments):
+            if record_id in remaining_record_ids:
+                final_split_assignments[record_id] = sp
+
+        return final_split_assignments

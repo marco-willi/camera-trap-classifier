@@ -215,3 +215,35 @@ larger_output_side =700
 img.thumbnail([larger_output_side, larger_output_side],Image.ANTIALIAS)
 
 img.show()
+
+
+
+
+
+from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from data_processing.data_reader import DatasetReader
+path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\4715\\"
+
+
+tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
+
+dataset_reader = DatasetReader(tfr_encoder_decoder.decode_record)
+
+files_to_split = path_to_tfr_output + "all.tfrecord"
+iterator = dataset_reader.get_iterator(
+     files_to_split, batch_size=128, is_train=False, n_repeats=1,
+     output_labels=['primary'],
+     buffer_size=2048,
+     decode_images=False,
+     labels_are_numeric=False,
+     max_multi_label_number=None)
+
+
+with tf.Session() as sess:
+    for i in range(0, 3):
+        try:
+            images, ids_labels = sess.run(iterator)
+        except tf.errors.OutOfRangeError:
+            break
+
+

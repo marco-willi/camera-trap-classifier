@@ -7,7 +7,7 @@ class ImportFromJsonTester(unittest.TestCase):
 
     def setUp(self):
         self.json_importer = ImportFromJson()
-        self.test_path_json = './test/json_data_file.json'
+        self.test_path_json = './test/test_files/json_data_file.json'
         self.data = self.json_importer.read_from_json(self.test_path_json)
 
     def testLabelTypeIsNotListConvertedToList(self):

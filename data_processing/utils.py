@@ -101,6 +101,7 @@ def wrap_dict_int64_list(dic, prefix=''):
     return dic_tf
 
 
+# TODO: replace with .endswith()
 def clean_input_path(path):
     """ Add separator to path if missing """
     seps = os_path_separators()
@@ -121,6 +122,15 @@ def rename_files_cats_dogs(path):
 
 def n_records_in_tfr(tfr_path):
     return sum(1 for _ in tf.python_io.tf_record_iterator(tfr_path))
+
+
+def check_tfrecord_contents(path_to_tfr):
+    record_iterator = tf.python_io.tf_record_iterator(path_to_tfr)
+    for record in record_iterator:
+        example = tf.train.Example()
+        example.ParseFromString(record)
+    print(example)
+    print(record)
 
 
 def hash_string(value, constant=""):

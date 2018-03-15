@@ -7,7 +7,7 @@ class DataInventoryTests(unittest.TestCase):
 
     def setUp(self):
         self.dinv = DatasetInventory()
-        self.test_path_json = './test/json_data_file.json'
+        self.test_path_json = './test/test_files/json_data_file.json'
         self.dinv.create_from_json(self.test_path_json)
         self.inventory = self.dinv.data_inventory
 

@@ -1,6 +1,5 @@
 import unittest
 from data_processing.utils import (
-    id_to_zero_one,
     hash_string,
     assign_hash_to_zero_one,
     calc_n_batches_per_epoch,
@@ -19,6 +18,7 @@ class IdHasherTests(unittest.TestCase):
         self.test_string = "ldlaldfd_dfdfldfdf_ssdfdf"
         self.test_empty = ""
         self.test_none = None
+        self.rand_32string = str(random.randint(1e31, 1e32-1))
 
     def testIdenticalHash(self):
         self.assertEqual(hash_string(self.random_string),
@@ -29,11 +29,11 @@ class IdHasherTests(unittest.TestCase):
                          hash_string(self.random_int))
 
     def testValueBetweenOneZero(self):
-        t1 = assign_hash_to_zero_one(self.random_string)
+        t1 = assign_hash_to_zero_one(self.rand_32string)
         self.assertTrue(t1 >= 0 and t1 <= 1)
 
     def testValueType(self):
-        t2 = assign_hash_to_zero_one(self.random_string)
+        t2 = assign_hash_to_zero_one(self.rand_32string)
         self.assertTrue(type(t2) is float)
 
     # def testInvalidInput(self):
