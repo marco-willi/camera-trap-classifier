@@ -1,9 +1,12 @@
 """ Class To Split TFRecords """
-from config.config import logging
+from random import shuffle
+from collections import OrderedDict
+
 import tensorflow as tf
+
+from config.config import logging
 from data_processing.utils import id_to_zero_one, n_records_in_tfr
 from data_processing.data_reader import DatasetReader
-from collections import OrderedDict
 
 
 class TFRecordSplitter(object):
@@ -59,7 +62,9 @@ class TFRecordSplitter(object):
 
     def split_tfr_file(self, output_path_main, output_prefix,
                        split_names, split_props, output_labels,
-                       class_mapping=None):
+                       class_mapping=None,
+                       balanced_sampling_min=False,
+                       balanced_sampling_label_type=None):
         """ Split a TFR file according to split proportions """
 
         self.split_names = split_names
@@ -110,12 +115,13 @@ class TFRecordSplitter(object):
                                          label_to_numeric_mapper)
 
         # assign each id to a splitting value
-        id_to_split_val = {x: id_to_zero_one(x) for x in id_label_dict.keys()}
+        id_to_split_assignments = self._assign_id_to_set(
+            id_label_dict, split_names,
+            split_props, balanced_sampling_min,
+            balanced_sampling_label_type)
 
         # Write TFrecord files for each split
         for i, split in enumerate(self.split_names):
-            split_p_lower = sum(split_props[0:i])
-            split_p_upper = sum(split_props[0:i+1])
 
             iterator = dataset_reader.get_iterator(
                  self.files_to_split, batch_size=128,
@@ -137,10 +143,11 @@ class TFRecordSplitter(object):
                             self._extract_id_labels(batch_dict,
                                                     batch_data,
                                                     self.output_labels_clean)
+                            # For Each Record Get Split Assignment
+                            # and add to current split if match
                             for ii, idd in enumerate(batch_dict.keys()):
-                                if self._between(
-                                 id_to_split_val[idd],
-                                 split_p_lower, split_p_upper):
+                                if (idd in id_to_split_assignments) and \
+                                   (id_to_split_assignments[idd] == split):
                                     record_dict = dict()
                                     record_dict['id'] = idd
                                     record_dict['labels'] = id_label_dict[idd]
@@ -270,7 +277,13 @@ class TFRecordSplitter(object):
             # assign each id to one unique class
             class_assignment = {x: list() for x in label_stats.keys()}
             remaining_record_ids = set()
-            for record_id, label_types in id_label_dict.items():
+
+            # Randomly Shuffle Ids
+            all_record_ids = list(id_label_dict.keys())
+            shuffle(all_record_ids)
+
+            for record_id in all_record_ids:
+                label_types = id_label_dict[record_id]
                 label = label_types[balanced_sampling_label_type][0]
                 # Add record to class assignment if label occurrence
                 # is below min_value of least frequent class
