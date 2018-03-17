@@ -9,29 +9,35 @@ class ReduceLeraningRateOnPlateauTester(unittest.TestCase):
         self.red = ReduceLearningRateOnPlateau(
             initial_lr=0.1,
             reduce_after_n_rounds=3,
-            stop_after_n_rounds=2,
+            patience_after_reduction=2,
             reduction_mult=0.1,
             min_lr=0.00001,
             minimize=True
         )
 
-        eval_hist = [0.9, 0.7, 0.6, 0.5, 0.4, 0.4, 0.4, 0.4, 0.4, 0.39, 0.36,
-                     0.37, 0.365, 0.365, 0.361, 0.360]
+        eval_hist = [0.9, 0.7, 0.6, 0.5, 0.4, 0.4, 0.4, 0.4, #7, reduce
+                     0.4, 0.39, # 9
+                     0.36, 0.37, 0.365, 0.365, # 13 reduce here
+                     0.361,
+                     0.360,
+                     0.361] # 16 Reduce again
 
         for i, res in enumerate(eval_hist):
             self.red.addResult(res)
-            if i == 7:
-                self.assertAlmostEqual(self.red.current_lr, 0.01)
             if i < 7:
                 self.assertAlmostEqual(self.red.current_lr, 0.1)
-            if i >= 12:
-                self.assertTrue(self.red.stop_learning)
+            elif i < 13:
+                self.assertAlmostEqual(self.red.current_lr, 0.01)
+            elif i < 16:
+                self.assertAlmostEqual(self.red.current_lr, 0.001)
+            else:
+                self.assertAlmostEqual(self.red.current_lr, 0.0001)
 
     def testMinLearningRate(self):
         self.red = ReduceLearningRateOnPlateau(
             initial_lr=0.1,
             reduce_after_n_rounds=3,
-            stop_after_n_rounds=2,
+            patience_after_reduction=2,
             reduction_mult=0.1,
             min_lr=0.00001,
             minimize=True
