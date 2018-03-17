@@ -66,9 +66,19 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                       image_pre_processing_args=None,
                       n_color_channels=3, choose_random_image=True,
                       decode_images=True,
-                      labels_are_numeric=False
+                      labels_are_numeric=False,
+                      one_hot_labels=False,
+                      num_classes_list=None
                       ):
         """ Read TFRecord and return dictionary """
+
+        assert (one_hot_labels and labels_are_numeric) or \
+               (not one_hot_labels), \
+            "One Hot Labels only possible if Labels are numeric"
+
+        assert (not one_hot_labels) or \
+               (one_hot_labels and num_classes_list is not None), \
+            "One Hot Labels requires num_classes_list"
 
         # fixed size Features - ID Field
         context_features = {'id': tf.FixedLenFeature([], tf.string)}
@@ -92,6 +102,18 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                 serialized=serialized_example,
                 context_features=context_features,
                 sequence_features=sequence_features)
+
+        # One Hot Encoding
+        if one_hot_labels and labels_are_numeric:
+            for label, n_cl in zip(output_labels, num_classes_list):
+                if n_cl == 2:
+                    sequence[label] = tf.reshape(
+                        tf.one_hot(sequence[label], n_cl, on_value=0, dtype=tf.int32), [n_cl])
+                else:
+                    # ignore
+                    sequence[label] = tf.reshape(tf.one_hot(sequence[label], n_cl, dtype=tf.int32), [n_cl])
+                    # sequence[label] = tf.one_hot(sequence[label], n_cl, dtype=tf.int32)
+                    # sequence[label] = tf.squeeze(tf.one_hot(sequence[label], n_cl, dtype=tf.int32))
 
         if not decode_images:
             return {'images': sequence['images'],
