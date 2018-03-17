@@ -82,12 +82,6 @@ class TFRecordSplitter(object):
 
         self.split_files = output_file_names
 
-        # Check if all files exist
-        if not overwrite_existing_files:
-            if all([os.path.exists(x) for x in output_file_names]):
-                logging.info("Files: %s exist - not gonna overwrite"
-                             % output_file_names)
-
         # get all ids and their labels from the input file
         dataset_reader = DatasetReader(self.tfr_decoder)
 
@@ -117,6 +111,13 @@ class TFRecordSplitter(object):
         # create label to numeric mapper
         label_to_numeric_mapper = self._map_labels_to_numeric(id_label_dict)
         self.label_to_numeric_mapper = label_to_numeric_mapper
+
+        # Check if all files exist
+        if not overwrite_existing_files:
+            if all([os.path.exists(x) for x in output_file_names]):
+                logging.info("Files: %s exist - not gonna overwrite"
+                             % output_file_names)
+                return None
 
         # change labels to numeric
         id_label_dict = self._map_labels(id_label_dict,
