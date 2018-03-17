@@ -1,4 +1,5 @@
 """ Utils for Model Training """
+from config.config import logging
 import numpy as np
 
 
@@ -13,7 +14,7 @@ class EarlyStopping(object):
         self.minimize = minimize
 
         assert stop_after_n_rounds > 0, \
-            "stop_after_n_rounds must be larger than 1"
+            "stop_after_n_rounds must be larger than 0"
 
     def addResult(self, result):
         """ Add a result """
@@ -37,6 +38,7 @@ class EarlyStopping(object):
                 n_since_improvement += 1
                 if n_since_improvement >= self.stop_after_n_rounds:
                     self.stop_training = True
+                    logging.info("Early Stopping Activated")
             else:
                 n_since_improvement = 0
 
@@ -48,7 +50,7 @@ class ReduceLearningRateOnPlateau(object):
         """ Reduce Lerarning Rate On Plateau
          Args:
             initial_lr (float): initial learning Rate
-            reduce_after_n_rounds (int): number of rounds which stagnant eval is
+            reduce_after_n_rounds (int): number of rounds stagnant eval is
                 allowed before learning is terminated
             stop_after_n_rounds (int): number of rounds after reduction without
                 better results before stopping
@@ -83,6 +85,7 @@ class ReduceLearningRateOnPlateau(object):
 
     def _reduce_lr(self):
         """ Reduce Learning Rate """
+        old_lr = self.current_lr
         if self.reduction_abs is not None:
             self.current_lr = self.current_lr - self.reduction_abs
         else:
@@ -90,10 +93,12 @@ class ReduceLearningRateOnPlateau(object):
 
         self.current_lr = np.max([self.current_lr, self.min_lr])
 
+        logging.info("Changing learning rate from %s to %s" %
+                     (old_lr, self.current_lr))
+
     def _reset(self):
         """ Reset Internal Stats """
         self.current_lr = self.initial_lr
-
 
     def _calc_learning_rate(self):
         """ Calculate Learning Rate """
