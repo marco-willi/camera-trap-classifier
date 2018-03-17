@@ -1,6 +1,5 @@
-""" Train a Model for Cats vs Dogs """
+""" Train a Model for CamCat """
 from data_processing.data_inventory import DatasetInventory
-#from data_processing.data_reader import DatasetReader
 from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from data_processing.data_reader import DatasetReader
 from data_processing.data_writer import DatasetWriter
@@ -18,18 +17,19 @@ import matplotlib.pyplot as plt
 # Parameters
 #########################
 
-path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\cats_vs_dogs\\test"
-path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all"
-path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\4715\\"
-path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\4715\\test\\"
+path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\ss"
+path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\ss\\"
+path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras\\"
 model_labels = ['primary']
 label_mapper = None
-n_classes = 2
+n_classes = 3
 batch_size = 128
-image_save_side_max = 300
+image_save_side_max = 330
+balanced_sampling_min= False
+balanced_sampling_label_type = None
 image_proc_args = {
-    'output_height': 150,
-    'output_width': 150,
+    'output_height': 224,
+    'output_width': 224,
     'image_means': [0, 0, 0],
     'image_stdevs': [1, 1, 1],
     'is_training': True,
@@ -64,7 +64,7 @@ tfr_splitter = TFRecordSplitter(
 tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
                             split_names=['train', 'val', 'test'],
-                            split_props=[0.1, 0.05, 0.85],
+                            split_props=[0.9, 0.05, 0.05],
                             output_labels=model_labels)
 
 
@@ -72,7 +72,7 @@ tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
 tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.label_to_numeric_mapper
-num_to_label_mapper = {v:k for k, v in tfr_splitter.label_to_numeric_mapper['labels/primary'].items()}
+num_to_label_mapper = {v: k for k, v in tfr_splitter.label_to_numeric_mapper['labels/primary'].items()}
 
 
 # Create Dataset Reader
@@ -102,14 +102,14 @@ image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs
 
 
-# plot some images and their labels to check
-for i in range(0, 30):
-    img = data['images'][i,:,:,:]
-    lbl = data['labels/primary'][i]
-    print("Label: %s" % num_to_label_mapper[int(lbl)])
-    plt.imshow(img)
-    plt.show()
-
+## plot some images and their labels to check
+#for i in range(0, 30):
+#    img = data['images'][i,:,:,:]
+#    lbl = data['labels/primary'][i]
+#    print("Label: %s" % num_to_label_mapper[int(lbl)])
+#    plt.imshow(img)
+#    plt.show()
+#
 
 
 # Prepare Data Feeders for Training / Validation Data
@@ -146,27 +146,24 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['val'],
                                                    batch_size)
 
 # Define Model
-from tensorflow.python.keras._impl import keras
-from tensorflow.python.keras.models import Sequential, Model
-from tensorflow.python.keras.layers import Dense, Dropout, Flatten, Input
-from tensorflow.python.keras.layers import Conv2D, MaxPooling2D
+from models.resnet_keras_mod import build_resnet_18
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.layers import Input
 from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
-from tensorflow.python.keras import layers
-from tensorflow.python.keras import backend as K
-from models.cats_vs_dogs import architecture
-import numpy as np
 from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
 from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard, CSVLogger
 
 
-def create_model(input_feeder, n_classes, target_labels):
+def create_model(input_feeder, target_labels):
 
     target_labels_clean = ['labels/' + x for x in target_labels]
 
     data = input_feeder()
     model_input = layers.Input(tensor=data['images'])
-    model_output = architecture(model_input, n_classes, target_labels_clean)
-    model = keras.models.Model(inputs=model_input, outputs=model_output)
+
+    model_output = build_resnet_18(model_input, target_labels_clean)
+
+    model = Model(inputs=model_input, outputs=model_output)
 
     # TODO: build multiple outputs in architecture and map to labels
     target_tensors = {x: tf.cast(data[x], tf.float32) \
@@ -174,24 +171,21 @@ def create_model(input_feeder, n_classes, target_labels):
 
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
     model.compile(loss='sparse_categorical_crossentropy',
-                        optimizer=opt,
-                        metrics=['accuracy'],
-                        target_tensors=target_tensors)
+                  optimizer=opt,
+                  metrics=['accuracy'],
+                  target_tensors=target_tensors)
     return model
 
 
 # Callbacks and Monitors
-
+early_stopping = EarlyStopping(stop_after_n_rounds=5, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
-        initial_lr = 0.01,
-        reduce_after_n_rounds=4,
+        initial_lr=hparams['learning_rate'],
+        reduce_after_n_rounds=3,
         stop_after_n_rounds=2,
         reduction_mult=0.1,
-        min_lr=1e-4,
-        minimize=True
-        )
-
-early_stopping = EarlyStopping(stop_after_n_rounds=5)
+        min_lr=1e-5,
+        minimize=True)
 
 csv_logger = CSVLogger(path_to_model_output + 'training.log')
 
@@ -209,8 +203,8 @@ tensorboard = TensorBoard(log_dir=path_to_model_output,
                           write_grads=False, write_images=False)
 
 
-train_model = create_model(input_feeder_train, n_classes, model_labels)
-val_model = create_model(input_feeder_val, n_classes, model_labels)
+train_model = create_model(input_feeder_train, model_labels)
+val_model = create_model(input_feeder_val, model_labels)
 
 
 for i in range(0, 50):
@@ -227,7 +221,7 @@ for i in range(0, 50):
     # Run evaluation model
     results = val_model.evaluate(steps=n_batches_per_epoch_val)
 
-    val_loss = results[val_model.metrics_names=='loss']
+    val_loss = results[val_model.metrics_names == 'loss']
 
     for val, metric in zip(val_model.metrics_names, results):
 
@@ -244,6 +238,3 @@ for i in range(0, 50):
         logging.info("Early Stopping of Model Training after %s Epochs" %
                      (i+1))
         break
-
-
-

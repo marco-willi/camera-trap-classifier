@@ -1,8 +1,10 @@
 import tensorflow as tf
-from models.resnet_keras_mod import ResnetBuilder
-from tensorflow.python.keras.layers import Input
-from config.config import logging
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.layers import Input
+
+from models.resnet_keras_mod import ResnetBuilder
+from config.config import logging
+
 
 
 def my_model_fn(features, labels, mode, params):

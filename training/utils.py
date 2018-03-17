@@ -1,6 +1,18 @@
 """ Utils for Model Training """
 from config.config import logging
 import numpy as np
+import tensorflow as tf
+
+
+class LearningRateSetter(tf.train.SessionRunHook):
+
+    def __init__(self, lr):
+        self.lr = lr
+
+    def before_run(self, run_context):
+        return tf.train.SessionRunArgs(
+                        fetches=None,
+                        feed_dict={'learning_rate:0': self.lr})
 
 
 class EarlyStopping(object):
