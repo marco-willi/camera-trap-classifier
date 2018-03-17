@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\cats_vs_dogs\\test"
 path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all"
 path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\4715\\"
+path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\4715\\test\\"
 model_labels = ['primary']
 label_mapper = None
 n_classes = 2
@@ -155,7 +156,7 @@ from tensorflow.python.keras import backend as K
 from models.cats_vs_dogs import architecture
 import numpy as np
 from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
-
+from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard, CSVLogger
 
 
 def create_model(input_feeder, n_classes, target_labels):
@@ -179,6 +180,8 @@ def create_model(input_feeder, n_classes, target_labels):
     return model
 
 
+# Callbacks and Monitors
+
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         initial_lr = 0.01,
         reduce_after_n_rounds=4,
@@ -190,6 +193,22 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
 
 early_stopping = EarlyStopping(stop_after_n_rounds=5)
 
+csv_logger = CSVLogger(path_to_model_output + 'training.log')
+
+checkpointer = ModelCheckpoint(
+        filepath=path_to_model_output + 'weights.{epoch:02d}-{loss:.2f}.hdf5',
+        monitor='loss',
+        verbose=0,
+        save_best_only=False,
+        save_weights_only=False,
+        mode='auto', period=1)
+
+tensorboard = TensorBoard(log_dir=path_to_model_output,
+                          histogram_freq=0,
+                          batch_size=batch_size, write_graph=True,
+                          write_grads=False, write_images=False)
+
+
 train_model = create_model(input_feeder_train, n_classes, model_labels)
 val_model = create_model(input_feeder_val, n_classes, model_labels)
 
@@ -198,7 +217,8 @@ for i in range(0, 50):
     logging.info("Starting Epoch %s" % (i+1))
     train_model.fit(epochs=i+1,
                     steps_per_epoch=n_batches_per_epoch_train,
-                    initial_epoch=i)
+                    initial_epoch=i,
+                    callbacks=[checkpointer, tensorboard])
 
     # Copy weights from training model to validation model
     weights = train_model.get_weights()
@@ -215,7 +235,8 @@ for i in range(0, 50):
 
     # Reduce Learning Rate if necessary
     reduce_lr_on_plateau.addResult(val_loss)
-    train_model.optimizer.lr.set_value(reduce_lr_on_plateau.current_lr)
+    train_model.optimizer.lr.assign(reduce_lr_on_plateau.current_lr)
+    logging.info("Current Learning Rate: %s" % reduce_lr_on_plateau.current_lr)
 
     # Check if training should be stopped
     early_stopping.addResult(val_loss)
