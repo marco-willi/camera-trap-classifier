@@ -1,5 +1,6 @@
 """ Class To Split TFRecords """
 from random import shuffle
+import os
 from collections import OrderedDict
 
 import tensorflow as tf
@@ -64,7 +65,8 @@ class TFRecordSplitter(object):
                        split_names, split_props, output_labels,
                        class_mapping=None,
                        balanced_sampling_min=False,
-                       balanced_sampling_label_type=None):
+                       balanced_sampling_label_type=None,
+                       overwrite_existing_files=True):
         """ Split a TFR file according to split proportions """
 
         self.split_names = split_names
@@ -79,6 +81,12 @@ class TFRecordSplitter(object):
                              s + '.tfrecord' for s in self.split_names]
 
         self.split_files = output_file_names
+
+        # Check if all files exist
+        if not overwrite_existing_files:
+            if all([os.path.exists(x) for x in output_file_names]):
+                logging.info("Files: %s exist - not gonna overwrite"
+                             % output_file_names)
 
         # get all ids and their labels from the input file
         dataset_reader = DatasetReader(self.tfr_decoder)

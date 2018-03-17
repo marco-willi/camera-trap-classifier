@@ -1,7 +1,10 @@
 """ Write Data Inventory to Disk """
-from config.config import logging
-import tensorflow as tf
 import random
+import os
+
+import tensorflow as tf
+
+from config.config import logging
 from pre_processing.image_transformations import read_jpeg
 from data_processing.data_inventory import DatasetInventory
 
@@ -14,8 +17,13 @@ class DatasetWriter(object):
          self, data_inventory, output_file,
          image_pre_processing_fun=None,
          image_pre_processing_args=None,
-         random_shuffle_before_save=True):
+         random_shuffle_before_save=True,
+         overwrite_existing_file=True):
         """ Export Data Inventory to a TFRecord file """
+
+        if os.path.exists(output_file) and not overwrite_existing_file:
+            logging.info("File: %s exists - not gonna overwrite" % output_file)
+            return None
 
         logging.info("Starting to Encode Inventory to Dictionary")
 
