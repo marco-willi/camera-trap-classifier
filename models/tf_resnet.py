@@ -1,10 +1,10 @@
 import tensorflow as tf
 
-from models.resnet_official import (
+from models.resnet_official.tf_resnet import (
     Model, building_block, bottleneck_block, _get_block_sizes)
 
 
-def model_fn(features, labels, mode, params):
+def my_model_fn(features, labels, mode, params):
     """Shared functionality for different resnet model_fns.
 
     Initializes the ResnetModel representing the model layers

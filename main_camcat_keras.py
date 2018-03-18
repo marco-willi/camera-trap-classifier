@@ -20,6 +20,11 @@ import matplotlib.pyplot as plt
 path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\ss"
 path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\ss\\"
 path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras\\"
+
+path_to_images = '/host/data_hdd/images/camera_catalogue/all'
+path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only/'
+path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
+
 model_labels = ['primary']
 label_mapper = None
 n_classes = 3
@@ -52,7 +57,8 @@ tfr_writer.encode_inventory_to_tfr(
         dataset_inventory,
         path_to_tfr_output + "all.tfrecord",
         image_pre_processing_fun=resize_jpeg,
-        image_pre_processing_args={"max_side": image_save_side_max})
+        image_pre_processing_args={"max_side": image_save_side_max},
+        overwrite_existing_file=False)
 
 
 # Split TFrecord into Train/Val/Test
@@ -65,7 +71,10 @@ tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
                             split_names=['train', 'val', 'test'],
                             split_props=[0.9, 0.05, 0.05],
-                            output_labels=model_labels)
+                            balanced_sampling_min=balanced_sampling_min,
+                            balanced_sampling_label_type=balanced_sampling_label_type,
+                            output_labels=model_labels,
+                            overwrite_existing_files=False)
 
 
 # Check numbers

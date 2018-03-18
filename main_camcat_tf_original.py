@@ -22,14 +22,20 @@ from training.utils import (
 
 path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\ss"
 path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\ss\\"
-path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras_tf\\"
+path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_tf_original\\"
+
+path_to_images = '/host/data_hdd/images/camera_catalogue/all'
+path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_original'
+path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
+
+
 model_labels = ['primary']
 label_mapper = None
 n_classes = 3
-batch_size = 32
+batch_size = 128
 image_save_side_max = 330
-balanced_sampling_min= False
-balanced_sampling_label_type = None
+balanced_sampling_min= True
+balanced_sampling_label_type = 'primary'
 image_proc_args = {
     'output_height': 224,
     'output_width': 224,
@@ -44,7 +50,8 @@ image_proc_args = {
 # Convert some Parameters
 ####################################
 
-balanced_sampling_label_type = 'labels/' + balanced_sampling_label_type
+if balanced_sampling_label_type is not None:
+    balanced_sampling_label_type = 'labels/' + balanced_sampling_label_type
 
 # Create Data Inventory
 dataset_inventory = DatasetInventory()
@@ -62,7 +69,8 @@ tfr_writer.encode_inventory_to_tfr(
         dataset_inventory,
         path_to_tfr_output + "all.tfrecord",
         image_pre_processing_fun=resize_jpeg,
-        image_pre_processing_args={"max_side": image_save_side_max})
+        image_pre_processing_args={"max_side": image_save_side_max},
+        overwrite_existing_file=False)
 
 
 # Split TFrecord into Train/Val/Test
@@ -74,10 +82,11 @@ tfr_splitter = TFRecordSplitter(
 tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
                             split_names=['train', 'val', 'test'],
-                            split_props=[0.8, 0.15, 0.05],
+                            split_props=[0.9, 0.05, 0.05],
                             balanced_sampling_min=balanced_sampling_min,
                             balanced_sampling_label_type=balanced_sampling_label_type,
-                            output_labels=model_labels)
+                            output_labels=model_labels,
+                            overwrite_existing_files=False)
 
 
 # Check numbers
@@ -114,13 +123,13 @@ image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs
 
 
-# plot some images and their labels to check
-for i in range(0, 30):
-    img = data['images'][i,:,:,:]
-    lbl = data['labels/primary'][i]
-    print("Label: %s" % num_to_label_mapper[int(lbl)])
-    plt.imshow(img)
-    plt.show()
+## plot some images and their labels to check
+#for i in range(0, 30):
+#    img = data['images'][i,:,:,:]
+#    lbl = data['labels/primary'][i]
+#    print("Label: %s" % num_to_label_mapper[int(lbl)])
+#    plt.imshow(img)
+#    plt.show()
 
 
 
@@ -220,7 +229,6 @@ session_config = tf.ConfigProto(
 
 run_config = tf.estimator.RunConfig(
     model_dir=path_to_model_output,
-    tf_random_seed=123,
     save_summary_steps=n_batches_per_epoch_train,
     save_checkpoints_steps=n_batches_per_epoch_train,
     session_config=session_config)
@@ -238,10 +246,11 @@ early_stopping = EarlyStopping(stop_after_n_rounds=5, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         initial_lr=hparams['learning_rate'],
         reduce_after_n_rounds=3,
-        stop_after_n_rounds=2,
+        patience_after_reduction=2,
         reduction_mult=0.1,
         min_lr=1e-5,
-        minimize=True)
+        minimize=True
+        )
 
 lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
 

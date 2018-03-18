@@ -23,6 +23,12 @@ path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\i
 path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\4715\\"
 path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\4715\\keras_tf\\"
 
+path_to_images = '/host/data_hdd/images/4715/all'
+path_to_tfr_output = '/host/data_hdd/camtrap/cats_vs_dogs/data'
+path_to_model_output = '/host/data_hdd/camtrap/cats_vs_dogs/training/tf_keras/'
+
+
+
 model_labels = ['primary']
 label_mapper = None
 n_classes = 2
