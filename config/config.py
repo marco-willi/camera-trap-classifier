@@ -65,7 +65,7 @@ stdout_handler = logging.StreamHandler(sys.stdout)
 handlers.append(stdout_handler)
 
 # logger configuration
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(funcName)s - %(levelname)s:' +
                            '%(message)s',
                     handlers=handlers)
