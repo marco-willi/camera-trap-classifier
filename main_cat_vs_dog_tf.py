@@ -12,7 +12,7 @@ import tensorflow as tf
 import numpy as np
 from data_processing.utils  import calc_n_batches_per_epoch, create_default_class_mapper
 from config.config import logging
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from training.utils import LearningRateSetter, EarlyStopping, ReduceLearningRateOnPlateau
 
 ########################
@@ -150,6 +150,7 @@ def input_feeder_train():
     features = {'images': batch_dict['images']}
     labels = {key: batch_dict[key] for key in batch_dict \
                  if key not in ['images', 'id']}
+
     return features, labels
 
 def input_feeder_val():
@@ -169,6 +170,7 @@ def input_feeder_val():
     features = {'images': batch_dict['images']}
     labels = {key: batch_dict[key] for key in batch_dict \
                  if key not in ['images', 'id']}
+
     return features, labels
 
 

@@ -11,7 +11,7 @@ import tensorflow as tf
 import numpy as np
 from data_processing.utils  import calc_n_batches_per_epoch, create_default_class_mapper
 from config.config import logging
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 ########################
 # Parameters
