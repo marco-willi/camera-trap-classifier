@@ -31,6 +31,8 @@ label_mapper = None
 n_classes = 2
 batch_size = 128
 image_save_side_max = 300
+balanced_sampling_min=False
+balanced_sampling_label_type = 'primary'
 image_proc_args = {
     'output_height': 150,
     'output_width': 150,
