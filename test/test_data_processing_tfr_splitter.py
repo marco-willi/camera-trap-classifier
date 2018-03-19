@@ -200,3 +200,28 @@ class TFRecordSpliterTester(unittest.TestCase):
         self.assertAlmostEquals(stats['cat'], stats['dog'],
             delta=5)
         self.assertGreaterEqual(stats['ele'], stats['cat'])
+
+
+    def testRemoveLabelTypes(self):
+        test_dict = {'1': {'labels/primary': ['cat', 'dog'], 'labels/color': ['white', 'gray']},
+                     '2': {'labels/primary': ['elephant'], 'labels/color': ['black']},
+                     '3': {'labels/primary': ['leopard'],
+                           'labels/color': ['brown']}}
+        tt = self.splitter._remove_label_types(test_dict, 'labels/primary')
+
+        self.assertEqual(tt['3'],{'labels/color': ['brown']})
+        self.assertEqual(tt['1'],{'labels/color': ['white', 'gray']})
+        self.assertEqual(tt['2'],{'labels/color': ['black']})
+
+
+    def testKeepOnlyLabels(self):
+        test_dict = {'1': {'labels/primary': ['cat', 'dog']},
+                     '2': {'labels/primary': ['elephant']},
+                     '3': {'labels/primary': ['leopard', 'dog']}}
+
+        tt = self.splitter._keep_only_labels(test_dict, {'labels/primary': ['dog']})
+
+        self.assertEqual(tt['3'],{'labels/primary': ['dog']})
+        self.assertEqual(tt['1'],{'labels/primary': ['dog']})
+        self.assertNotIn('2', tt)
+

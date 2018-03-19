@@ -8,6 +8,7 @@ import tensorflow as tf
 from config.config import logging
 from data_processing.utils import id_to_zero_one, n_records_in_tfr
 from data_processing.data_reader import DatasetReader
+from data_processing.data_inventory import DatasetInventory
 
 
 class TFRecordSplitter(object):
@@ -61,18 +62,35 @@ class TFRecordSplitter(object):
         # Clean output labels
         self.output_labels_clean = ['labels/' + x for x in self.output_labels]
 
+        # check keep / remove labels
+        if self.keep_only_labels is not None:
+            keep_only_labels = self._convert_to_list(self.keep_only_labels)
+            keep_only_labels_clean = dict()
+            for label_type, labels in keep_only_labels.items():
+                keep_only_labels_clean['labels/' + label_type] = labels
+
+            self.keep_only_labels = keep_only_labels_clean
+
+        if self.remove_label_types is not None:
+            self.remove_label_types = \
+             ['labels/' + x for x in self.remove_label_types]
+
     def split_tfr_file(self, output_path_main, output_prefix,
                        split_names, split_props, output_labels,
                        class_mapping=None,
                        balanced_sampling_min=False,
                        balanced_sampling_label_type=None,
-                       overwrite_existing_files=True):
+                       overwrite_existing_files=True,
+                       keep_only_labels=None,
+                       remove_label_types=None):
         """ Split a TFR file according to split proportions """
 
         self.split_names = split_names
         self.split_props = split_props
         self.class_mapping = class_mapping
         self.output_labels = output_labels
+        self.keep_only_labels = keep_only_labels
+        self.remove_label_types = remove_label_types
 
         self._check_and_clean_input()
 
@@ -103,6 +121,16 @@ class TFRecordSplitter(object):
                                             self.output_labels_clean)
                 except tf.errors.OutOfRangeError:
                     break
+
+        # keep only specific labels
+        if self.keep_only_labels is not None:
+            id_label_dict = self._keep_only_labels(id_label_dict,
+                                                   self.keep_only_labels)
+
+        # keep only specific label types
+        if self.remove_label_types is not None:
+            id_label_dict = self._remove_label_types(id_label_dict,
+                                                     self.remove_label_types)
 
         # map labels if specified
         if self.class_mapping is not None:
@@ -172,7 +200,9 @@ class TFRecordSplitter(object):
                             break
 
     def _extract_id_labels(self, dict_all, data_batch, output_labels):
-        """ Extract ids and labels from dataset and add to dict"""
+        """ Extract ids and labels from dataset and add to dict
+            {'1234': {'labels/primary': ['cat', 'dog']}}
+        """
         for i, idd in enumerate(list(data_batch['id'])):
             id_clean = str(idd, 'utf-8')
             dict_all[id_clean] = dict()
@@ -181,9 +211,53 @@ class TFRecordSplitter(object):
                 lab_i = [str(x, 'utf-8') for x in lab_i]
                 dict_all[id_clean][lab] = lab_i
 
+    def _convert_id_label_dict_to_inventory(self, id_label_dict):
+        """ convert id label dict to inventory """
+        data_inv = DatasetInventory()
+        data_inv.data_inventory = OrderedDict()
+        inv = data_inv.data_inventory
+        for record_id, label_types in id_label_dict.items():
+            inv[record_id] = {'labels': dict()}
+            for label_type, label_list in label_types.items():
+                inv[record_id]['labels'][label_type] = label_list
+        return data_inv
+
+    def _convert_inventory_to_id_label_dict(self, inventory):
+        """ convert dataset inventory to label dict """
+        id_label_dict = OrderedDict()
+        for record_id, data in inventory.data_inventory.items():
+            id_label_dict[record_id] = dict()
+            for label_type, labels in data['labels'].items():
+                id_label_dict[record_id][label_type] = labels
+        return id_label_dict
+
+    def _remove_label_types(self, id_label_dict, label_types_list):
+        """ Remove all label types in label_types_list """
+        inv = self._convert_id_label_dict_to_inventory(id_label_dict)
+        inv.remove_label_types(label_types_list)
+        id_label_dict_new = self._convert_inventory_to_id_label_dict(inv)
+        return id_label_dict_new
+
+    def _keep_only_labels(self, id_label_dict, label_type_labels):
+        """ Keep only labels in label_type_list """
+        inv = self._convert_id_label_dict_to_inventory(id_label_dict)
+        inv.keep_only_labels(label_type_labels)
+        id_label_dict_new = self._convert_inventory_to_id_label_dict(inv)
+        return id_label_dict_new
+
     def _between(self, value, lower, upper):
         """ Check if value is between lower and upper """
         return (value <= upper) and (value > lower)
+
+    def _convert_to_list(self, input):
+        """ Convert input to list if str, else raise error """
+        if isinstance(input, list):
+            return input
+        elif isinstance(input, str):
+            return [input]
+        else:
+            raise ValueError("Function input: %s has to be a list, is: %s"
+                             % (input, type(input)))
 
     def _map_labels_to_numeric(self, records_info):
         """ Map Labels To Numerics """

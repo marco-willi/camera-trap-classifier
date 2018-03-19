@@ -51,6 +51,81 @@ class DatasetInventory(object):
                     ids_to_remove.add(record_id)
         return ids_to_remove
 
+    def _convert_to_list(self, input):
+        """ Convert input to list if str, else raise error """
+        if isinstance(input, list):
+            return input
+        elif isinstance(input, str):
+            return [input]
+        else:
+            raise ValueError("Function input: %s has to be a list, is: %s"
+                             % (input, type(input)))
+
+    def remove_label_types(self, label_types):
+        """ Remove the specified label types """
+        label_types = self._convert_to_list(label_types)
+        for record_id, data in self.data_inventory.items():
+            for label_type in label_types:
+                if label_type in data['labels']:
+                    self.data_inventory[record_id]['labels'].pop(label_type, None)
+
+        self._remove_not_all_label_types_present()
+
+    def remove_labels(self, label_type_labels):
+        """ Removes the specified labels """
+        assert isinstance(label_type_labels, dict), \
+            "label_type_labels must be a dictionary: {'label_type': 'label'}"
+
+        # convert all label entries to list
+        for label_type, labels in label_type_labels.items():
+            label_type_labels[label_type] = self._convert_to_list(labels)
+
+        # iterate over all records
+        for record_id in list(self.data_inventory.keys()):
+            data = self.data_inventory[record_id]
+            for label_type in list(data['labels'].keys()):
+                labels = self.data_inventory[record_id]['labels'][label_type]
+                # check if label type is affected
+                if label_type in label_type_labels:
+                    remaining_labels = list()
+                    # check if label is affected and keep only unaffected
+                    for label in labels:
+                        if label not in set(label_type_labels[label_type]):
+                            remaining_labels.append(label)
+                    if len(remaining_labels) > 0:
+                        self.data_inventory[record_id]['labels'][label_type] =\
+                            remaining_labels
+                    else:
+                        self.data_inventory[record_id]['labels'].pop(label_type, None)
+
+        self._remove_not_all_label_types_present()
+
+    def keep_only_label_types(self, label_types):
+        """ Keep only the specified label types """
+        label_types = set(self._convert_to_list(label_types))
+
+        for record_id in list(self.data_inventory.keys()):
+            for label_type in list(self.data_inventory[record_id]['labels'].keys()):
+                if label_type not in label_types:
+                    self.data_inventory[record_id]['labels'].pop(label_type, None)
+
+        self._remove_not_all_label_types_present()
+
+    def keep_only_labels(self, label_type_labels):
+        """ Keep only the specified labels """
+        to_remove = self.get_all_labels()
+
+        for label_type, labels in to_remove.items():
+            if label_type not in label_type_labels:
+                to_remove[label_type] = list(labels)
+            else:
+                labels_to_remove = set(to_remove[label_type].keys())
+                for label in label_type_labels[label_type]:
+                    labels_to_remove.remove(label)
+                to_remove[label_type] = list(labels_to_remove)
+
+        self.remove_labels(to_remove)
+
     def remove_multi_label_records(self):
         """ Removes records with mutliple entries in one label type """
         ids_to_remove = self._find_multi_label_records()
@@ -93,6 +168,10 @@ class DatasetInventory(object):
         for record_id, record_data in self.data_inventory.items():
             for label_type in all_label_types:
                 if label_type not in record_data['labels']:
+                    ids_to_remove.append(record_id)
+                elif not isinstance(record_data['labels'][label_type], list):
+                    ids_to_remove.append(record_id)
+                elif len(record_data['labels'][label_type]) == 0:
                     ids_to_remove.append(record_id)
 
         for record_to_remove in ids_to_remove:
