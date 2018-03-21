@@ -30,7 +30,7 @@ class DatasetWriter(object):
         if not isinstance(data_inventory, DatasetInventory):
             raise ValueError("data_inventory must be a DatasetInventory")
 
-        all_label_types = data_inventory.get_all_label_types()
+        all_label_types = data_inventory.label_handler.get_all_label_types()
         logging.info("Found following label types: %s" % all_label_types)
 
         n_records = data_inventory.get_number_of_records()

@@ -9,7 +9,7 @@ from pre_processing.image_transformations import (
         preprocess_image_default, resize_jpeg, resize_image)
 import tensorflow as tf
 import numpy as np
-from data_processing.utils  import calc_n_batches_per_epoch, create_default_class_mapper
+from data_processing.utils  import calc_n_batches_per_epoch
 from config.config import logging
 #import matplotlib.pyplot as plt
 
@@ -45,7 +45,7 @@ image_proc_args = {
 # Create Data Inventory
 dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_class_directories(path_to_images)
-dataset_inventory.remove_multi_label_records()
+dataset_inventory.label_handler.remove_multi_label_records()
 
 
 # Create TFRecod Encoder / Decoder

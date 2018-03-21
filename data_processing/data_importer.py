@@ -1,8 +1,9 @@
 """ Class To Import and Read Datasets """
-from config.config import logging
 import os
-from data_processing.utils import clean_input_path
 import json
+
+from config.config import logging
+from data_processing.utils import clean_input_path
 
 
 class ImportFromJson(object):
@@ -171,7 +172,7 @@ class ImportFromImageDirs(object):
                 if len(splitted_file_name) > 2:
                     logging.info("File %s has more than one . \
                                   in filename, which is not allowed"
-                                   % str(image_name))
+                                 % str(image_name))
                     continue
                 unique_image_id = splitted_file_name[0]
                 image_data = {

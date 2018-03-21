@@ -170,41 +170,41 @@ def calc_n_batches_per_epoch(n_total, batch_size):
     return int(n_batches_per_epoch)
 
 
-# TODO: Improve
-def create_default_class_mapper(all_labels, class_mapping=None):
-    """ Map Classes to Integers for modelling """
-    class_mapper = dict()
-
-    if class_mapping is not None:
-        class_mapping_key = dict()
-        for label_type, labels_to_map in class_mapping.items():
-            class_mapping_key[label_type] = dict()
-            for label_to_map, label_target in labels_to_map.items():
-                class_mapping_key[label_type][label_target] = {label_target: ''}
-            for i, k in enumerate(class_mapping_key[label_type].keys()):
-                class_mapping_key[label_type][k] = i
-
-    # loop over all labels dictionary
-    for label_type, labels in all_labels.items():
-
-        # initialize empty key and value pairs to store final mappings
-        key_id = list()
-        vals = list()
-
-        # create a dictionary for each label type
-        class_mapper[label_type] = dict()
-
-        for i, k in enumerate(labels.keys()):
-            key_id.append(k)
-            vals.append(i)
-
-        class_mapper[label_type]['keys'] = key_id
-        class_mapper[label_type]['values'] = vals
-
-        # re-map if class mapping available
-        if class_mapping is not None:
-            for i, k in enumerate(class_mapper[label_type]['keys']):
-                new_val = class_mapping_key[label_type][class_mapping[label_type][k]]
-                class_mapper[label_type]['values'][i] = new_val
-
-    return class_mapper
+# # TODO: Improve
+# def create_default_class_mapper(all_labels, class_mapping=None):
+#     """ Map Classes to Integers for modelling """
+#     class_mapper = dict()
+#
+#     if class_mapping is not None:
+#         class_mapping_key = dict()
+#         for label_type, labels_to_map in class_mapping.items():
+#             class_mapping_key[label_type] = dict()
+#             for label_to_map, label_target in labels_to_map.items():
+#                 class_mapping_key[label_type][label_target] = {label_target: ''}
+#             for i, k in enumerate(class_mapping_key[label_type].keys()):
+#                 class_mapping_key[label_type][k] = i
+#
+#     # loop over all labels dictionary
+#     for label_type, labels in all_labels.items():
+#
+#         # initialize empty key and value pairs to store final mappings
+#         key_id = list()
+#         vals = list()
+#
+#         # create a dictionary for each label type
+#         class_mapper[label_type] = dict()
+#
+#         for i, k in enumerate(labels.keys()):
+#             key_id.append(k)
+#             vals.append(i)
+#
+#         class_mapper[label_type]['keys'] = key_id
+#         class_mapper[label_type]['values'] = vals
+#
+#         # re-map if class mapping available
+#         if class_mapping is not None:
+#             for i, k in enumerate(class_mapper[label_type]['keys']):
+#                 new_val = class_mapping_key[label_type][class_mapping[label_type][k]]
+#                 class_mapper[label_type]['values'][i] = new_val
+#
+#     return class_mapper

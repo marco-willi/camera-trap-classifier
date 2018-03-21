@@ -10,7 +10,7 @@ from pre_processing.image_transformations import (
         preprocess_image_default, resize_jpeg, resize_image)
 import tensorflow as tf
 import numpy as np
-from data_processing.utils  import calc_n_batches_per_epoch, create_default_class_mapper
+from data_processing.utils  import calc_n_batches_per_epoch
 from config.config import logging
 #import matplotlib.pyplot as plt
 from training.utils import LearningRateSetter, EarlyStopping, ReduceLearningRateOnPlateau
@@ -55,7 +55,7 @@ balanced_sampling_label_type = 'labels/' + balanced_sampling_label_type
 # Create Data Inventory
 dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_class_directories(path_to_images)
-dataset_inventory.remove_multi_label_records()
+dataset_inventory.label_handler.remove_multi_label_records()
 
 
 # Create TFRecod Encoder / Decoder
@@ -92,6 +92,7 @@ tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
 tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.label_to_numeric_mapper
+
 num_to_label_mapper = {v:k for k, v in tfr_splitter.label_to_numeric_mapper['labels/primary'].items()}
 tfr_splitter.get_record_numbers_per_file()
 

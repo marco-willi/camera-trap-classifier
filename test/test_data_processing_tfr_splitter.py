@@ -15,62 +15,6 @@ class TFRecordSpliterTester(unittest.TestCase):
             tfr_decoder=self.enc_dec.decode_record
             )
 
-    def testMapLabelsStandard(self):
-        map1 = {'primary': {'cat': 'elephant', 'dog': 'giraffe'}}
-        ex1 = {"cat_to_elephant": {"primary": ['cat']},
-               "dog_to_giraffe": {"primary": ['dog']}}
-        res = self.splitter._map_labels(ex1, map1)
-
-        self.assertEqual(res["cat_to_elephant"], {"primary": ['elephant']})
-        self.assertEqual(res["dog_to_giraffe"], {"primary": ['giraffe']})
-
-    def testMapLabelsManyToFew(self):
-        map1 = {'primary': {'cat': 'elephant', 'dog': 'giraffe',
-                            'lion': 'elephant'}}
-
-        ex1 = {"cat_to_elephant": {"primary": ['cat']},
-               "dog_to_giraffe": {"primary": ['dog']},
-               "lion_to_elephant": {"primary": ['lion']}}
-
-        res = self.splitter._map_labels(ex1, map1)
-
-        self.assertEqual(res["cat_to_elephant"], {"primary": ['elephant']})
-        self.assertEqual(res["dog_to_giraffe"], {"primary": ['giraffe']})
-        self.assertEqual(res["lion_to_elephant"], {"primary": ['elephant']})
-
-    def testMapLabelsIfMissingInMapper(self):
-        map1 = {'primary': {'cat': 'elephant'}}
-        ex1 = {"cat_to_elephant": {"primary": ['cat']},
-               "dog_to_dog": {"primary": ['dog']}}
-        res = self.splitter._map_labels(ex1, map1)
-
-        self.assertEqual(res["cat_to_elephant"], {"primary": ['elephant']})
-        self.assertEqual(res["dog_to_dog"], {"primary": ['dog']})
-
-    def testMapIfLabelTypeMissingInMapper(self):
-        map1 = {'primary': {'cat': 'elephant'}}
-        ex1 = {"cat_to_elephant": {"primary": ['cat']},
-               "dog_to_white": {"color": ['white']}}
-        res = self.splitter._map_labels(ex1, map1)
-
-        self.assertEqual(res["cat_to_elephant"], {"primary": ['elephant']})
-        self.assertEqual(res["dog_to_white"], {"color": ['white']})
-
-    def testMapClassesToNumericStandard(self):
-        ex1 = {"cat_to_0": {"primary": ['cat']},
-               "dog_to_1": {"primary": ['dog']}}
-        res = self.splitter._map_labels_to_numeric(ex1)
-        self.assertEqual(res, {'primary': {'cat': 0, 'dog': 1}})
-
-    def testMapClassesToNumericMulti(self):
-        ex1 = {"cat_to_0": {"primary": ['cat', 'elephant']},
-               "dog_to_1": {"primary": ['dog'],
-                            'color': ['purple', 'green']}}
-
-        res = self.splitter._map_labels_to_numeric(ex1)
-        self.assertEqual(res['primary'],  {'cat': 0, 'dog': 1, 'elephant': 2})
-        self.assertEqual(res['color'],  {'green': 0, 'purple': 1})
-
     def testClassAssignmentStandard(self):
         id_label_dict1 = {str(x): {"primary": ["cat"]} for
                           x in range(0, int(20e3))}
@@ -202,26 +146,25 @@ class TFRecordSpliterTester(unittest.TestCase):
         self.assertGreaterEqual(stats['ele'], stats['cat'])
 
 
-    def testRemoveLabelTypes(self):
-        test_dict = {'1': {'labels/primary': ['cat', 'dog'], 'labels/color': ['white', 'gray']},
-                     '2': {'labels/primary': ['elephant'], 'labels/color': ['black']},
-                     '3': {'labels/primary': ['leopard'],
-                           'labels/color': ['brown']}}
-        tt = self.splitter._remove_label_types(test_dict, 'labels/primary')
-
-        self.assertEqual(tt['3'],{'labels/color': ['brown']})
-        self.assertEqual(tt['1'],{'labels/color': ['white', 'gray']})
-        self.assertEqual(tt['2'],{'labels/color': ['black']})
-
-
-    def testKeepOnlyLabels(self):
-        test_dict = {'1': {'labels/primary': ['cat', 'dog']},
-                     '2': {'labels/primary': ['elephant']},
-                     '3': {'labels/primary': ['leopard', 'dog']}}
-
-        tt = self.splitter._keep_only_labels(test_dict, {'labels/primary': ['dog']})
-
-        self.assertEqual(tt['3'],{'labels/primary': ['dog']})
-        self.assertEqual(tt['1'],{'labels/primary': ['dog']})
-        self.assertNotIn('2', tt)
-
+    # def testRemoveLabelTypes(self):
+    #     test_dict = {'1': {'labels/primary': ['cat', 'dog'], 'labels/color': ['white', 'gray']},
+    #                  '2': {'labels/primary': ['elephant'], 'labels/color': ['black']},
+    #                  '3': {'labels/primary': ['leopard'],
+    #                        'labels/color': ['brown']}}
+    #     tt = self.splitter._remove_label_types(test_dict, 'labels/primary')
+    #
+    #     self.assertEqual(tt['3'],{'labels/color': ['brown']})
+    #     self.assertEqual(tt['1'],{'labels/color': ['white', 'gray']})
+    #     self.assertEqual(tt['2'],{'labels/color': ['black']})
+    #
+    #
+    # def testKeepOnlyLabels(self):
+    #     test_dict = {'1': {'labels/primary': ['cat', 'dog']},
+    #                  '2': {'labels/primary': ['elephant']},
+    #                  '3': {'labels/primary': ['leopard', 'dog']}}
+    #
+    #     tt = self.splitter._keep_only_labels(test_dict, {'labels/primary': ['dog']})
+    #
+    #     self.assertEqual(tt['3'],{'labels/primary': ['dog']})
+    #     self.assertEqual(tt['1'],{'labels/primary': ['dog']})
+    #     self.assertNotIn('2', tt)

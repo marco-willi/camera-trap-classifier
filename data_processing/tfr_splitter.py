@@ -9,6 +9,7 @@ from config.config import logging
 from data_processing.utils import id_to_zero_one, n_records_in_tfr
 from data_processing.data_reader import DatasetReader
 from data_processing.data_inventory import DatasetInventory
+from data_processing.label_handler import LabelHandler
 
 
 class TFRecordSplitter(object):
@@ -122,23 +123,24 @@ class TFRecordSplitter(object):
                 except tf.errors.OutOfRangeError:
                     break
 
+        # convert label dict to inventory
+        data_inv = self._convert_id_label_dict_to_inventory(id_label_dict)
+
         # keep only specific labels
         if self.keep_only_labels is not None:
-            id_label_dict = self._keep_only_labels(id_label_dict,
-                                                   self.keep_only_labels)
+            data_inv.label_handler.keep_only_labels(self.keep_only_labels)
 
         # keep only specific label types
         if self.remove_label_types is not None:
-            id_label_dict = self._remove_label_types(id_label_dict,
-                                                     self.remove_label_types)
+            data_inv.label_handler.remove_label_types(self.remove_label_types)
 
         # map labels if specified
         if self.class_mapping is not None:
-            id_label_dict = self._map_labels(id_label_dict, self.class_mapping)
+            data_inv.label_handler.map_labels(self.class_mapping)
 
-        # create label to numeric mapper
-        label_to_numeric_mapper = self._map_labels_to_numeric(id_label_dict)
-        self.label_to_numeric_mapper = label_to_numeric_mapper
+        # change labels to numeric
+        data_inv.label_handler.map_labels_to_numeric()
+        self.label_to_numeric_mapper = data_inv.label_handler.labels_to_numeric
 
         # Check if all files exist
         if not overwrite_existing_files:
@@ -147,9 +149,8 @@ class TFRecordSplitter(object):
                              % output_file_names)
                 return None
 
-        # change labels to numeric
-        id_label_dict = self._map_labels(id_label_dict,
-                                         label_to_numeric_mapper)
+        # Convert data inventory back to id_label_dict
+        id_label_dict = self._convert_inventory_to_id_label_dict(data_inv)
 
         # assign each id to a splitting value
         id_to_split_assignments = self._assign_id_to_set(
@@ -220,6 +221,7 @@ class TFRecordSplitter(object):
             inv[record_id] = {'labels': dict()}
             for label_type, label_list in label_types.items():
                 inv[record_id]['labels'][label_type] = label_list
+        data_inv.label_handler = LabelHandler(data_inv.data_inventory)
         return data_inv
 
     def _convert_inventory_to_id_label_dict(self, inventory):
@@ -231,24 +233,6 @@ class TFRecordSplitter(object):
                 id_label_dict[record_id][label_type] = labels
         return id_label_dict
 
-    def _remove_label_types(self, id_label_dict, label_types_list):
-        """ Remove all label types in label_types_list """
-        inv = self._convert_id_label_dict_to_inventory(id_label_dict)
-        inv.remove_label_types(label_types_list)
-        id_label_dict_new = self._convert_inventory_to_id_label_dict(inv)
-        return id_label_dict_new
-
-    def _keep_only_labels(self, id_label_dict, label_type_labels):
-        """ Keep only labels in label_type_list """
-        inv = self._convert_id_label_dict_to_inventory(id_label_dict)
-        inv.keep_only_labels(label_type_labels)
-        id_label_dict_new = self._convert_inventory_to_id_label_dict(inv)
-        return id_label_dict_new
-
-    def _between(self, value, lower, upper):
-        """ Check if value is between lower and upper """
-        return (value <= upper) and (value > lower)
-
     def _convert_to_list(self, input):
         """ Convert input to list if str, else raise error """
         if isinstance(input, list):
@@ -258,59 +242,6 @@ class TFRecordSplitter(object):
         else:
             raise ValueError("Function input: %s has to be a list, is: %s"
                              % (input, type(input)))
-
-    def _map_labels_to_numeric(self, records_info):
-        """ Map Labels To Numerics """
-        # Create inventory of all label types and labels
-        # input data test: {'lalal': {'primary': ['cat'],
-        #  'color':["brown", "white"]}, "1233":
-        #  {"primary": ["cat", "dog"], 'color': ["purple"]}}
-        # Output: {'color': {'brown': 0, 'purple': 1, 'white': 2},
-        #    'primary': {'cat': 0, 'dog': 1}}
-
-        label_dict = dict()
-        for record_id, label_types in records_info.items():
-            for label_type, label_list in label_types.items():
-                if label_type not in label_dict:
-                    label_dict[label_type] = dict()
-                for label in label_list:
-                    if label not in label_dict[label_type]:
-                        label_dict[label_type][label] = dict()
-                    label_dict[label_type][label] = ''
-
-        # Map labels of each label type alphabetically
-        for label_type, labels in label_dict.items():
-            label_list = list(labels.keys())
-            label_list.sort()
-            for i, sorted_label in enumerate(label_list):
-                label_dict[label_type][sorted_label] = i
-
-        return label_dict
-
-    def _map_labels(self, records_info, mapper):
-        """ Map existing labels to new labels """
-        # Example class mapping: {'primary': {'cat':'elephant', 'dog':
-        #    'giraffe'},'color':{'white':'brown', 'purple': 'brown'}}
-        # Example record: {'lalal': {'primary': ['cat'],
-        #     'color':["brown", "white"]}, "1233":
-        #      {"primary": ["cat", "dog"], 'color': ["purple"]}}
-        # Example result: {'1233': {'color': ['brown'], 'primary':
-        #     ['giraffe', 'elephant']}, 'lalal':
-        #      {'color': ['brown'], 'primary': ['elephant']}}
-        for record_id, label_types in records_info.items():
-            for label_type, label_list in label_types.items():
-                new_label_list = set()
-                if label_type in mapper:
-                    for label in label_list:
-                        if label in mapper[label_type]:
-                            mapped_label = \
-                                mapper[label_type][label]
-                            new_label_list.add(mapped_label)
-                        else:
-                            new_label_list.add(label)
-                    records_info[record_id][label_type] = \
-                        list(new_label_list)
-        return records_info
 
     # assign each id to a set
     def _assign_id_to_set(self, id_label_dict,

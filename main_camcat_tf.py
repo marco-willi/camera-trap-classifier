@@ -10,7 +10,7 @@ from pre_processing.image_transformations import (
         preprocess_image_default, resize_jpeg, resize_image)
 import tensorflow as tf
 import numpy as np
-from data_processing.utils import calc_n_batches_per_epoch, create_default_class_mapper
+from data_processing.utils import calc_n_batches_per_epoch
 from config.config import logging
 #import matplotlib.pyplot as plt
 from training.utils import (
@@ -35,7 +35,7 @@ n_classes = 3
 batch_size = 128
 image_save_side_max = 330
 balanced_sampling_min= False
-balanced_sampling_label_type = None
+balanced_sampling_label_type = 'primary'
 image_proc_args = {
     'output_height': 224,
     'output_width': 224,
@@ -50,12 +50,13 @@ image_proc_args = {
 # Convert some Parameters
 ####################################
 
-balanced_sampling_label_type = 'labels/' + balanced_sampling_label_type
+if balanced_sampling_label_type is not None:
+    balanced_sampling_label_type = 'labels/' + balanced_sampling_label_type
 
 # Create Data Inventory
 dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_class_directories(path_to_images)
-dataset_inventory.remove_multi_label_records()
+dataset_inventory.label_handler.remove_multi_label_records()
 
 
 # Create TFRecod Encoder / Decoder
