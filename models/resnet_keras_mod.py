@@ -217,21 +217,21 @@ class ResnetBuilder(object):
         return flatten1
 
     @staticmethod
-    def build_resnet_18(inputs,  output_names):
+    def build_resnet_18(inputs):
         return ResnetBuilder.build(inputs, basic_block, [2, 2, 2, 2])
 
     @staticmethod
-    def build_resnet_34(inputs,  output_names):
+    def build_resnet_34(inputs):
         return ResnetBuilder.build(inputs, basic_block, [3, 4, 6, 3])
 
     @staticmethod
-    def build_resnet_50(inputs,  output_names):
+    def build_resnet_50(inputs):
         return ResnetBuilder.build(inputs, bottleneck, [3, 4, 6, 3])
 
     @staticmethod
-    def build_resnet_101(inputs,  output_names):
+    def build_resnet_101(inputs):
         return ResnetBuilder.build(inputs, bottleneck, [3, 4, 23, 3])
 
     @staticmethod
-    def build_resnet_152(inputs,  output_names):
+    def build_resnet_152(inputs):
         return ResnetBuilder.build(inputs, bottleneck, [3, 8, 36, 3])
