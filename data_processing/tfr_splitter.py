@@ -67,7 +67,7 @@ class TFRecordSplitter(object):
         if self.keep_only_labels is not None:
             keep_only_labels_clean = dict()
             for label_type, labels in self.keep_only_labels.items():
-                labels_list = self._convert_to_list(self.keep_only_labels)
+                labels_list = self._convert_to_list(labels)
                 keep_only_labels_clean['labels/' + label_type] = labels_list
 
             self.keep_only_labels = keep_only_labels_clean
