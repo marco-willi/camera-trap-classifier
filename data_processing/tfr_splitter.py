@@ -124,21 +124,26 @@ class TFRecordSplitter(object):
                     break
 
         # convert label dict to inventory
+        logging.debug("Converting label dictionary to data inventory")
         data_inv = self._convert_id_label_dict_to_inventory(id_label_dict)
 
         # keep only specific labels
         if self.keep_only_labels is not None:
+            logging.debug("Keep only labels")
             data_inv.label_handler.keep_only_labels(self.keep_only_labels)
 
         # keep only specific label types
         if self.remove_label_types is not None:
+            logging.debug("Remove label types")
             data_inv.label_handler.remove_label_types(self.remove_label_types)
 
         # map labels if specified
         if self.class_mapping is not None:
+            logging.debug("Mapping labels")
             data_inv.label_handler.map_labels(self.class_mapping)
 
         # change labels to numeric
+        logging.debug("Mapping labels to numerics")
         data_inv.label_handler.map_labels_to_numeric()
         self.label_to_numeric_mapper = data_inv.label_handler.labels_to_numeric
 
@@ -150,9 +155,11 @@ class TFRecordSplitter(object):
                 return None
 
         # Convert data inventory back to id_label_dict
+        logging.debug("Convert data inv to label dictionary")
         id_label_dict = self._convert_inventory_to_id_label_dict(data_inv)
 
         # assign each id to a splitting value
+        logging.debug("Assigning split Ids")
         id_to_split_assignments = self._assign_id_to_set(
             id_label_dict, split_names,
             split_props, balanced_sampling_min,
@@ -160,7 +167,7 @@ class TFRecordSplitter(object):
 
         # Write TFrecord files for each split
         for i, split in enumerate(self.split_names):
-
+            logging.debug("Reading base file to write: %s" % split)
             iterator = dataset_reader.get_iterator(
                  self.files_to_split, batch_size=128,
                  is_train=False, n_repeats=1,
@@ -176,6 +183,7 @@ class TFRecordSplitter(object):
                 with tf.Session() as sess:
                     while True:
                         try:
+                            logging.debug("Starting to retrieve new batch of data")
                             batch_dict = OrderedDict()
                             batch_data = sess.run(iterator)
                             self._extract_id_labels(batch_dict,
@@ -183,6 +191,7 @@ class TFRecordSplitter(object):
                                                     self.output_labels_clean)
                             # For Each Record Get Split Assignment
                             # and add to current split if match
+                            logging.debug("Starting to write new batch of data")
                             for ii, idd in enumerate(batch_dict.keys()):
                                 if (idd in id_to_split_assignments) and \
                                    (id_to_split_assignments[idd] == split):
