@@ -8,13 +8,15 @@ class DatasetReader(object):
 
     def get_iterator(self, tfr_files, batch_size, is_train, n_repeats,
                      output_labels, max_multi_label_number=None,
-                     buffer_size=2048, **kwargs):
+                     buffer_size=512, **kwargs):
         """ Create Iterator from TFRecord """
 
         assert type(output_labels) is list, "label_list must be of " + \
             " type list is of type %s" % type(output_labels)
 
         labels = ['labels/' + label for label in output_labels]
+
+        logging.info("Creating dataset TFR iterator")
 
         dataset = tf.data.TFRecordDataset(tfr_files)
 

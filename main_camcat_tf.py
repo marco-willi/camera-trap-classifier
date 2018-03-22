@@ -107,11 +107,13 @@ tfr_writer.encode_inventory_to_tfr(
 
 
 # Split TFrecord into Train/Val/Test
+logging.debug("Creating TFRecordSplitter")
 tfr_splitter = TFRecordSplitter(
         files_to_split=path_to_tfr_output + "all.tfrecord",
         tfr_encoder=tfr_encoder_decoder.encode_record,
         tfr_decoder=tfr_encoder_decoder.decode_record)
 
+logging.debug("Splitting TFR File")
 tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
                             split_names=['train', 'val', 'test'],
@@ -132,9 +134,11 @@ num_to_label_mapper = {v: k for k, v in tfr_splitter.label_to_numeric_mapper['la
 tfr_splitter.get_record_numbers_per_file()
 
 # Create Dataset Reader
+logging.debug("Create Dataset Reader")
 data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
 # Calculate Dataset Image Means and Stdevs for a dummy batch
+logging.debug("Get Dataset Reader for calculating datset stats")
 batch_data= data_reader.get_iterator(
         tfr_files=[tfr_splitter.get_split_paths()['train']],
         batch_size=1024,
@@ -295,6 +299,7 @@ logger = CSVLogger(path_to_model_output + 'log.csv',
 
 # Train Model
 epoch = 0
+logging.debug("Start Model Training")
 while not early_stopping.stop_training:
 
     # Train model
@@ -319,7 +324,7 @@ while not early_stopping.stop_training:
 predictor = estimator.predict(input_feeder_train)
 
 pred_labels = ['labels/' + x for x in model_labels]
-
+logging.debug("Start Predictions")
 for pred in predictor:
     for pred_label in pred_labels:
         logging.info(pred[(pred_label, 'probabilities')])
