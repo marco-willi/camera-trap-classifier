@@ -272,8 +272,7 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         patience_after_reduction=2,
         reduction_mult=0.1,
         min_lr=1e-5,
-        minimize=True
-        )
+        minimize=True)
 
 lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
 
