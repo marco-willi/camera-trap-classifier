@@ -93,10 +93,8 @@ dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_class_directories(path_to_images)
 dataset_inventory.label_handler.remove_multi_label_records()
 
-
 # Create TFRecod Encoder / Decoder
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
-
 
 # Write TFRecord file from Data Inventory
 tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)

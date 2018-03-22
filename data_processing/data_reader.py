@@ -1,5 +1,4 @@
 """ Class To Read TFRecord Files """
-from config.config import logging
 import tensorflow as tf
 
 
