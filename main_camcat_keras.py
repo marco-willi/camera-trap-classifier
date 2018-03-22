@@ -184,7 +184,7 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['val'],
                                                    batch_size)
 
 # Define Model
-from models.resnet_keras_mod import build_resnet_18
+from models.resnet_keras_mod import ResnetBuilder
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import Input
 from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
@@ -199,7 +199,9 @@ def create_model(input_feeder, target_labels):
     data = input_feeder()
     model_input = Input(tensor=data['images'])
 
-    model_output = build_resnet_18(model_input)
+    res_builder = ResnetBuilder()
+
+    model_output = res_builder.build_resnet_18(model_input)
 
     model = Model(inputs=model_input, outputs=model_output)
 
