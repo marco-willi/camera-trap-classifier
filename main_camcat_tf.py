@@ -286,10 +286,11 @@ early_stopping = EarlyStopping(stop_after_n_rounds=5, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         initial_lr=hparams['learning_rate'],
         reduce_after_n_rounds=3,
-        stop_after_n_rounds=2,
+        patience_after_reduction=2,
         reduction_mult=0.1,
         min_lr=1e-5,
         minimize=True)
+
 
 lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
 
