@@ -7,7 +7,7 @@ from data_processing.data_writer import DatasetWriter
 from data_processing.tfr_splitter import TFRecordSplitter
 from pre_processing.image_transformations import (
         preprocess_image,
-        preprocess_image_default, resize_jpeg, resize_image)
+        preprocess_image_default, resize_jpeg)
 import tensorflow as tf
 import numpy as np
 from data_processing.utils  import calc_n_batches_per_epoch
@@ -272,6 +272,7 @@ while not early_stopping.stop_training:
     # Redue LR
     reduce_lr_on_plateau.addResult(loss_val[0])
     lr_setter.lr = reduce_lr_on_plateau.current_lr
+
 
 
 predictor = estimator.predict(input_feeder_val)

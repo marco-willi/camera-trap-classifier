@@ -29,7 +29,28 @@ path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_orig
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
 
+keep_labels = {
+'primary': [
+    'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
+    'domesticanimal', 'otter', 'hyaenaspotted', 'MACAQUE', 'aardvark',
+    'reedbuck', 'waterbuck', 'bird', 'genet', 'blank', 'porcupine',
+    'caracal', 'aardwolf', 'bushbaby', 'bushbuck', 'mongoose', 'polecat',
+    'honeyBadger', 'reptile', 'cheetah', 'pangolin', 'giraffe', 'rodent',
+    'leopard', 'roansable', 'hippopotamus', 'rabbithare', 'warthog', 'kudu',
+    'batEaredFox', 'gemsbock', 'africancivet', 'rhino', 'wildebeest',
+    'monkeybaboon', 'zebra', 'bushpig', 'elephant', 'nyala', 'jackal',
+    'serval', 'buffalo', 'vehicle', 'eland', 'impala', 'lion',
+    'wilddog', 'duikersteenbok', 'HUMAN', 'wildcat']}
+
+map_labels_empty = {'primary': {x: 'species' for x in keep_labels['primary'] if x not in ['vehicle', 'blank']}}
+map_labels_empty['primary']['vehicle'] = 'vehicle'
+map_labels_empty['primary']['blank'] = 'blank'
+
+
 model_labels = ['primary']
+keep_only_labels=None
+class_mapping=None
+
 label_mapper = None
 n_classes = 3
 batch_size = 128
@@ -86,7 +107,9 @@ tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             balanced_sampling_min=balanced_sampling_min,
                             balanced_sampling_label_type=balanced_sampling_label_type,
                             output_labels=model_labels,
-                            overwrite_existing_files=False)
+                            overwrite_existing_files=False,
+                            keep_only_labels=keep_only_labels,
+                            class_mapping=class_mapping)
 
 
 # Check numbers

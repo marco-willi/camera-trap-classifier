@@ -14,7 +14,7 @@ from data_processing.utils import calc_n_batches_per_epoch
 from config.config import logging
 #import matplotlib.pyplot as plt
 from training.utils import (
-    LearningRateSetter, EarlyStopping, ReduceLearningRateOnPlateau)
+    LearningRateSetter, EarlyStopping, ReduceLearningRateOnPlateau, CSVLogger)
 
 ########################
 # Parameters
@@ -28,9 +28,44 @@ path_to_images = '/host/data_hdd/images/camera_catalogue/all'
 path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_keras/'
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
+labels_all = {
+  'primary': [
+    'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
+    'domesticanimal', 'otter', 'hyaenaspotted', 'MACAQUE', 'aardvark',
+    'reedbuck', 'waterbuck', 'bird', 'genet', 'blank', 'porcupine',
+    'caracal', 'aardwolf', 'bushbaby', 'bushbuck', 'mongoose', 'polecat',
+    'honeyBadger', 'reptile', 'cheetah', 'pangolin', 'giraffe', 'rodent',
+    'leopard', 'roansable', 'hippopotamus', 'rabbithare', 'warthog', 'kudu',
+    'batEaredFox', 'gemsbock', 'africancivet', 'rhino', 'wildebeest',
+    'monkeybaboon', 'zebra', 'bushpig', 'elephant', 'nyala', 'jackal',
+    'serval', 'buffalo', 'vehicle', 'eland', 'impala', 'lion',
+    'wilddog', 'duikersteenbok', 'HUMAN', 'wildcat']}
+
+keep_labels_all = {
+  'primary': [
+    'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
+    'domesticanimal', 'hyaenaspotted', 'aardvark',
+    'reedbuck', 'waterbuck', 'bird', 'genet', 'blank', 'porcupine',
+    'caracal', 'aardwolf', 'bushbaby', 'bushbuck', 'mongoose',
+    'honeyBadger', 'cheetah', 'giraffe', 'rodent',
+    'leopard', 'roansable', 'hippopotamus', 'rabbithare', 'warthog', 'kudu',
+    'batEaredFox', 'gemsbock', 'africancivet', 'rhino', 'wildebeest',
+    'monkeybaboon', 'zebra', 'bushpig', 'elephant', 'nyala', 'jackal',
+    'serval', 'buffalo', 'vehicle', 'eland', 'impala', 'lion',
+    'wilddog', 'duikersteenbok', 'HUMAN', 'wildcat']}
+
+
+keep_labels_species = {x: y.copy() for x, y in keep_labels_all.items()}
+keep_labels_species['primary'].remove('vehicle')
+keep_labels_species['primary'].remove('blank')
+
+map_labels_empty = {'primary': {x: 'species' for x in keep_labels_all['primary'] if x not in ['vehicle', 'blank']}}
+map_labels_empty['primary']['vehicle'] = 'vehicle'
+map_labels_empty['primary']['blank'] = 'blank'
 
 model_labels = ['primary']
-label_mapper = None
+keep_only_labels=keep_labels_all
+class_mapping=None
 n_classes = 3
 batch_size = 128
 image_save_side_max = 330
@@ -86,7 +121,9 @@ tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             balanced_sampling_min=balanced_sampling_min,
                             balanced_sampling_label_type=balanced_sampling_label_type,
                             output_labels=model_labels,
-                            overwrite_existing_files=False)
+                            overwrite_existing_files=False,
+                            keep_only_labels=keep_only_labels,
+                            class_mapping=class_mapping)
 
 
 # Check numbers
@@ -255,7 +292,11 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
 lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
 
 
+logger = CSVLogger(path_to_model_output + 'log.csv',
+                   metrics_names=['val_loss_' + x for x in model_labels])
+
 # Train Model
+epoch = 0
 while not early_stopping.stop_training:
 
     # Train model
@@ -272,6 +313,10 @@ while not early_stopping.stop_training:
     reduce_lr_on_plateau.addResult(loss_val[0])
     lr_setter.lr = reduce_lr_on_plateau.current_lr
 
+    # add result to log file
+    logger.addResults(epoch, res_val)
+    epoch += 1
+
 
 predictor = estimator.predict(input_feeder_train)
 
@@ -279,5 +324,5 @@ pred_labels = ['labels/' + x for x in model_labels]
 
 for pred in predictor:
     for pred_label in pred_labels:
-        print(pred[(pred_label, 'probabilities')])
-        print(num_to_label_mapper[pred[(pred_label, 'classes')]])
+        logging.info(pred[(pred_label, 'probabilities')])
+        logging.info(print(num_to_label_mapper[pred[(pred_label, 'classes')]]))

@@ -1,11 +1,46 @@
 """ Utils for Model Training """
-from config.config import logging
+import csv
+import os
+
 import numpy as np
 import tensorflow as tf
 
+from config.config import logging
+
+
+class CSVLogger(object):
+    """ Log stats to a csv """
+    def __init__(self, path_to_logfile, metrics_names, row_id_name="epoch"):
+        self.path_to_logfile= path_to_logfile
+        self.metrics_names = metrics_names
+        self.row_id_name = row_id_name
+
+        assert isinstance(metrics_names, list), "metrics_names must be a list"
+
+    def addResults(self, row_id, metrics):
+        """ Add Metrics to Log File """
+        row_to_write = [row_id] + metrics
+
+        assert isinstance(metrics, list), "metrics must be a list"
+
+        # Append if file exists
+        if os.path.exists(self.path_to_logfile):
+            with open(self.path_to_logfile, 'a', newline='') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=',')
+                csvwriter.writerow(row_to_write)
+
+        # Create new file if it does not exist
+        else:
+            with open(self.path_to_logfile, 'w', newline='') as csvfile:
+                csvwriter = csv.writer(csvfile, delimiter=',')
+                # Write Header
+                header_row = [self.row_id_name] + self.metrics_names
+                csvwriter.writerow(header_row)
+                csvwriter.writerow(row_to_write)
+
 
 class LearningRateSetter(tf.train.SessionRunHook):
-
+    """ Hook to change learning rate in a TF Graph """
     def __init__(self, lr):
         self.lr = lr
 
