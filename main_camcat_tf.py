@@ -162,13 +162,13 @@ image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs
 
 
-# plot some images and their labels to check
-for i in range(0, 30):
-    img = data['images'][i,:,:,:]
-    lbl = data['labels/primary'][i]
-    print("Label: %s" % num_to_label_mapper[int(lbl)])
-    plt.imshow(img)
-    plt.show()
+# # plot some images and their labels to check
+# for i in range(0, 30):
+#     img = data['images'][i,:,:,:]
+#     lbl = data['labels/primary'][i]
+#     print("Label: %s" % num_to_label_mapper[int(lbl)])
+#     plt.imshow(img)
+#     plt.show()
 
 
 
