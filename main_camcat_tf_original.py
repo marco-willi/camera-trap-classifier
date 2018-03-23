@@ -14,7 +14,7 @@ from data_processing.utils import calc_n_batches_per_epoch
 from config.config import logging
 #import matplotlib.pyplot as plt
 from training.utils import (
-    LearningRateSetter, EarlyStopping, ReduceLearningRateOnPlateau)
+    LearningRateSetter, EarlyStopping, ReduceLearningRateOnPlateau, CSVLogger)
 
 ########################
 # Parameters
@@ -29,8 +29,8 @@ path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_orig
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
 
-keep_labels = {
-'primary': [
+labels_all = {
+  'primary': [
     'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
     'domesticanimal', 'otter', 'hyaenaspotted', 'MACAQUE', 'aardvark',
     'reedbuck', 'waterbuck', 'bird', 'genet', 'blank', 'porcupine',
@@ -42,17 +42,31 @@ keep_labels = {
     'serval', 'buffalo', 'vehicle', 'eland', 'impala', 'lion',
     'wilddog', 'duikersteenbok', 'HUMAN', 'wildcat']}
 
-map_labels_empty = {'primary': {x: 'species' for x in keep_labels['primary'] if x not in ['vehicle', 'blank']}}
+keep_labels_all = {
+  'primary': [
+    'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
+    'domesticanimal', 'hyaenaspotted', 'aardvark',
+    'reedbuck', 'waterbuck', 'bird', 'genet', 'blank', 'porcupine',
+    'caracal', 'aardwolf', 'bushbaby', 'bushbuck', 'mongoose',
+    'honeyBadger', 'cheetah', 'giraffe', 'rodent',
+    'leopard', 'roansable', 'hippopotamus', 'rabbithare', 'warthog', 'kudu',
+    'batEaredFox', 'gemsbock', 'africancivet', 'rhino', 'wildebeest',
+    'monkeybaboon', 'zebra', 'bushpig', 'elephant', 'nyala', 'jackal',
+    'serval', 'buffalo', 'vehicle', 'eland', 'impala', 'lion',
+    'wilddog', 'duikersteenbok', 'HUMAN', 'wildcat']}
+
+
+keep_labels_species = {x: y.copy() for x, y in keep_labels_all.items()}
+keep_labels_species['primary'].remove('vehicle')
+keep_labels_species['primary'].remove('blank')
+
+map_labels_empty = {'primary': {x: 'species' for x in keep_labels_all['primary'] if x not in ['vehicle', 'blank']}}
 map_labels_empty['primary']['vehicle'] = 'vehicle'
 map_labels_empty['primary']['blank'] = 'blank'
 
-
-model_labels = ['primary']
-keep_only_labels=None
+label_types_to_model = ['primary']
+keep_only_labels=keep_labels_species
 class_mapping=None
-
-label_mapper = None
-n_classes = 3
 batch_size = 128
 image_save_side_max = 330
 balanced_sampling_min= False
@@ -67,6 +81,7 @@ image_proc_args = {
     'resize_side_max': 500}
 
 
+
 ####################################
 # Convert some Parameters
 ####################################
@@ -74,15 +89,17 @@ image_proc_args = {
 if balanced_sampling_label_type is not None:
     balanced_sampling_label_type = 'labels/' + balanced_sampling_label_type
 
+label_types_to_model_clean = ['labels/' + x for x in label_types_to_model]
+
+
 # Create Data Inventory
 dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_class_directories(path_to_images)
 dataset_inventory.label_handler.remove_multi_label_records()
-
+dataset_inventory.log_stats()
 
 # Create TFRecod Encoder / Decoder
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
-
 
 # Write TFRecord file from Data Inventory
 tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
@@ -95,40 +112,50 @@ tfr_writer.encode_inventory_to_tfr(
 
 
 # Split TFrecord into Train/Val/Test
+logging.debug("Creating TFRecordSplitter")
 tfr_splitter = TFRecordSplitter(
         files_to_split=path_to_tfr_output + "all.tfrecord",
         tfr_encoder=tfr_encoder_decoder.encode_record,
         tfr_decoder=tfr_encoder_decoder.decode_record)
 
+logging.debug("Splitting TFR File")
 tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
                             split_names=['train', 'val', 'test'],
                             split_props=[0.9, 0.05, 0.05],
                             balanced_sampling_min=balanced_sampling_min,
                             balanced_sampling_label_type=balanced_sampling_label_type,
-                            output_labels=model_labels,
+                            output_labels=label_types_to_model,
                             overwrite_existing_files=False,
                             keep_only_labels=keep_only_labels,
                             class_mapping=class_mapping)
+
 
 
 # Check numbers
 tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.label_to_numeric_mapper
-num_to_label_mapper = {v: k for k, v in tfr_splitter.label_to_numeric_mapper['labels/primary'].items()}
+num_to_label_mapper = {
+    k: {v2: k2 for k2, v2 in v.items()}
+    for k, v in tfr_splitter.label_to_numeric_mapper.items()}
+n_classes_per_label_type = [len(num_to_label_mapper[x]) for x in \
+                            label_types_to_model_clean]
+
 tfr_splitter.get_record_numbers_per_file()
 
 # Create Dataset Reader
+logging.debug("Create Dataset Reader")
 data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
 # Calculate Dataset Image Means and Stdevs for a dummy batch
-batch_data= data_reader.get_iterator(
+logging.debug("Get Dataset Reader for calculating datset stats")
+batch_data = data_reader.get_iterator(
         tfr_files=[tfr_splitter.get_split_paths()['train']],
         batch_size=1024,
         is_train=False,
         n_repeats=1,
-        output_labels=model_labels,
+        output_labels=label_types_to_model,
         image_pre_processing_fun=preprocess_image_default,
         image_pre_processing_args=image_proc_args,
         max_multi_label_number=None,
@@ -145,7 +172,8 @@ image_stdevs = list(np.std(data['images'], axis=(0, 1, 2)))
 image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs
 
-
+logging.info("Image Means: %s" % image_means)
+logging.info("Image Stdevs: %s" % image_stdevs)
 ## plot some images and their labels to check
 #for i in range(0, 30):
 #    img = data['images'][i,:,:,:]
@@ -162,14 +190,14 @@ def input_feeder_train():
                 tfr_files=[tfr_splitter.get_split_paths()['train']],
                 batch_size=batch_size,
                 is_train=True,
-                n_repeats=1,
-                output_labels=model_labels,
+                n_repeats=None,
+                output_labels=label_types_to_model,
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
                 labels_are_numeric=True,
                 one_hot_labels=False,
-                num_classes_list=[n_classes])
+                num_classes_list=n_classes_per_label_type)
 
     features = {'images': batch_dict['images']}
     labels = {key: batch_dict[key] for key in batch_dict \
@@ -181,14 +209,14 @@ def input_feeder_val():
                 tfr_files=[tfr_splitter.get_split_paths()['val']],
                 batch_size=batch_size,
                 is_train=False,
-                n_repeats=1,
-                output_labels=model_labels,
+                n_repeats=None,
+                output_labels=label_types_to_model,
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
                 labels_are_numeric=True,
                 one_hot_labels=False,
-                num_classes_list=[n_classes])
+                num_classes_list=n_classes_per_label_type)
 
     features = {'images': batch_dict['images']}
     labels = {key: batch_dict[key] for key in batch_dict \
@@ -233,8 +261,8 @@ hparams = {
     'weight_decay': 1e-4,
     'image_target_size': [image_proc_args['output_height'], image_proc_args['output_width']],
     'image_n_color_channels': 3,
-    'n_classes': [n_classes],
-    'output_labels': ['labels/' + x for x in model_labels],
+    'n_classes': n_classes_per_label_type,
+    'output_labels': label_types_to_model_clean,
     'batch_size': batch_size,
     'transfer_learning': False,
     'transfer_learning_layers': 'dense',
@@ -277,29 +305,39 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
 lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
 
 
+logger = CSVLogger(path_to_model_output + 'log.csv',
+                   metrics_names=['val_loss_' + x for x in label_types_to_model])
+
 # Train Model
+epoch = 0
+logging.debug("Start Model Training")
 while not early_stopping.stop_training:
 
     # Train model
-    estimator.train(input_feeder_train, hooks=[lr_setter])
+    estimator.train(input_feeder_train, hooks=[lr_setter], steps=n_batches_per_epoch_train)
 
     # Eval Model
-    res_val = estimator.evaluate(input_feeder_val)
+    res_val = estimator.evaluate(input_feeder_val, steps=n_batches_per_epoch_val)
 
     # add loss to early stopper
-    loss_val = [res_val['loss/labels/' + x] for x in model_labels]
+    loss_val = [res_val['loss/labels/' + x] for x in label_types_to_model]
     early_stopping.addResult(loss_val[0])
 
     # Redue LR
     reduce_lr_on_plateau.addResult(loss_val[0])
     lr_setter.lr = reduce_lr_on_plateau.current_lr
 
+    # add result to log file
+    logger.addResults(epoch, res_val)
+    epoch += 1
 
-predictor = estimator.predict(input_feeder_train)
 
-pred_labels = ['labels/' + x for x in model_labels]
 
+predictor = estimator.predict(input_feeder_train, steps=n_batches_per_epoch_train)
+
+pred_labels = label_types_to_model_clean
+logging.debug("Start Predictions")
 for pred in predictor:
     for pred_label in pred_labels:
-        print(pred[(pred_label, 'probabilities')])
-        print(num_to_label_mapper[pred[(pred_label, 'classes')]])
+        logging.info(pred[(pred_label, 'probabilities')])
+        logging.info(print(num_to_label_mapper[pred_label][pred[(pred_label, 'classes')]]))

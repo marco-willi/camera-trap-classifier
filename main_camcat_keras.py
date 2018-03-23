@@ -25,8 +25,8 @@ path_to_images = '/host/data_hdd/images/camera_catalogue/all'
 path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only/'
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
-keep_labels = {
-'primary': [
+labels_all = {
+  'primary': [
     'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
     'domesticanimal', 'otter', 'hyaenaspotted', 'MACAQUE', 'aardvark',
     'reedbuck', 'waterbuck', 'bird', 'genet', 'blank', 'porcupine',
@@ -38,15 +38,31 @@ keep_labels = {
     'serval', 'buffalo', 'vehicle', 'eland', 'impala', 'lion',
     'wilddog', 'duikersteenbok', 'HUMAN', 'wildcat']}
 
-map_labels_empty = {'primary': {x: 'species' for x in keep_labels['primary'] if x not in ['vehicle', 'blank']}}
+keep_labels_all = {
+  'primary': [
+    'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
+    'domesticanimal', 'hyaenaspotted', 'aardvark',
+    'reedbuck', 'waterbuck', 'bird', 'genet', 'blank', 'porcupine',
+    'caracal', 'aardwolf', 'bushbaby', 'bushbuck', 'mongoose',
+    'honeyBadger', 'cheetah', 'giraffe', 'rodent',
+    'leopard', 'roansable', 'hippopotamus', 'rabbithare', 'warthog', 'kudu',
+    'batEaredFox', 'gemsbock', 'africancivet', 'rhino', 'wildebeest',
+    'monkeybaboon', 'zebra', 'bushpig', 'elephant', 'nyala', 'jackal',
+    'serval', 'buffalo', 'vehicle', 'eland', 'impala', 'lion',
+    'wilddog', 'duikersteenbok', 'HUMAN', 'wildcat']}
+
+
+keep_labels_species = {x: y.copy() for x, y in keep_labels_all.items()}
+keep_labels_species['primary'].remove('vehicle')
+keep_labels_species['primary'].remove('blank')
+
+map_labels_empty = {'primary': {x: 'species' for x in keep_labels_all['primary'] if x not in ['vehicle', 'blank']}}
 map_labels_empty['primary']['vehicle'] = 'vehicle'
 map_labels_empty['primary']['blank'] = 'blank'
 
-model_labels = ['primary']
-keep_only_labels=None
+label_types_to_model = ['primary']
+keep_only_labels=keep_labels_species
 class_mapping=None
-label_mapper = None
-n_classes = 3
 batch_size = 128
 image_save_side_max = 330
 balanced_sampling_min= False
@@ -68,11 +84,13 @@ image_proc_args = {
 if balanced_sampling_label_type is not None:
     balanced_sampling_label_type = 'labels/' + balanced_sampling_label_type
 
+label_types_to_model_clean = ['labels/' + x for x in label_types_to_model]
+
 # Create Data Inventory
 dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_class_directories(path_to_images)
 dataset_inventory.label_handler.remove_multi_label_records()
-
+dataset_inventory.log_stats()
 
 # Create TFRecod Encoder / Decoder
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
@@ -89,18 +107,20 @@ tfr_writer.encode_inventory_to_tfr(
 
 
 # Split TFrecord into Train/Val/Test
+logging.debug("Creating TFRecordSplitter")
 tfr_splitter = TFRecordSplitter(
         files_to_split=path_to_tfr_output + "all.tfrecord",
         tfr_encoder=tfr_encoder_decoder.encode_record,
         tfr_decoder=tfr_encoder_decoder.decode_record)
 
+logging.debug("Splitting TFR File")
 tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_prefix="split",
                             split_names=['train', 'val', 'test'],
                             split_props=[0.9, 0.05, 0.05],
                             balanced_sampling_min=balanced_sampling_min,
                             balanced_sampling_label_type=balanced_sampling_label_type,
-                            output_labels=model_labels,
+                            output_labels=label_types_to_model,
                             overwrite_existing_files=False,
                             keep_only_labels=keep_only_labels,
                             class_mapping=class_mapping)
@@ -110,19 +130,24 @@ tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
 tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.label_to_numeric_mapper
-num_to_label_mapper = {v: k for k, v in tfr_splitter.label_to_numeric_mapper['labels/primary'].items()}
-
+num_to_label_mapper = {
+    k: {v2: k2 for k2, v2 in v.items()}
+    for k, v in tfr_splitter.label_to_numeric_mapper.items()}
+n_classes_per_label_type = [len(num_to_label_mapper[x]) for x in \
+                            label_types_to_model_clean]
 
 # Create Dataset Reader
+logging.debug("Create Dataset Reader")
 data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
 # Calculate Dataset Image Means and Stdevs for a dummy batch
-batch_data= data_reader.get_iterator(
+logging.debug("Get Dataset Reader for calculating datset stats")
+batch_data = data_reader.get_iterator(
         tfr_files=[tfr_splitter.get_split_paths()['train']],
         batch_size=1024,
         is_train=False,
         n_repeats=1,
-        output_labels=model_labels,
+        output_labels=label_types_to_model,
         image_pre_processing_fun=preprocess_image_default,
         image_pre_processing_args=image_proc_args,
         max_multi_label_number=None,
@@ -138,6 +163,9 @@ image_stdevs = list(np.std(data['images'], axis=(0, 1, 2)))
 
 image_proc_args['image_means'] = image_means
 image_proc_args['image_stdevs'] = image_stdevs
+
+logging.info("Image Means: %s" % image_means)
+logging.info("Image Stdevs: %s" % image_stdevs)
 
 
 ## plot some images and their labels to check
@@ -157,7 +185,7 @@ def input_feeder_train():
                 batch_size=batch_size,
                 is_train=True,
                 n_repeats=None,
-                output_labels=model_labels,
+                output_labels=label_types_to_model,
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
@@ -170,7 +198,7 @@ def input_feeder_val():
                 batch_size=batch_size,
                 is_train=False,
                 n_repeats=None,
-                output_labels=model_labels,
+                output_labels=label_types_to_model,
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
@@ -186,7 +214,7 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['val'],
 # Define Model
 from models.resnet_keras_mod import ResnetBuilder
 from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers import Input
+from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
 from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
 from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard, CSVLogger
@@ -194,20 +222,22 @@ from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard, CSVL
 
 def create_model(input_feeder, target_labels):
 
-    target_labels_clean = ['labels/' + x for x in target_labels]
-
     data = input_feeder()
     model_input = Input(tensor=data['images'])
-
     res_builder = ResnetBuilder()
+    model_flat = res_builder.build_resnet_18(model_input)
 
-    model_output = res_builder.build_resnet_18(model_input)
+    # TODO FIX:
+    all_outputs = list()
 
-    model = Model(inputs=model_input, outputs=model_output)
+    for n, name in zip(n_classes_per_label_type, target_labels):
+        all_outputs.append(Dense(n, activation='softmax', name=name)(model_flat))
+
+    model = Model(inputs=model_input, outputs=all_outputs)
 
     # TODO: build multiple outputs in architecture and map to labels
     target_tensors = {x: tf.cast(data[x], tf.float32) \
-                      for x in target_labels_clean}
+                      for x in target_labels}
 
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
     model.compile(loss='sparse_categorical_crossentropy',
@@ -243,8 +273,8 @@ tensorboard = TensorBoard(log_dir=path_to_model_output,
                           write_grads=False, write_images=False)
 
 
-train_model = create_model(input_feeder_train, model_labels)
-val_model = create_model(input_feeder_val, model_labels)
+train_model = create_model(input_feeder_train, label_types_to_model_clean)
+val_model = create_model(input_feeder_val, label_types_to_model_clean)
 
 
 for i in range(0, 50):
