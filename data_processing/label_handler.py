@@ -137,10 +137,14 @@ class LabelHandler(object):
                 elif len(record_data['labels'][label_type]) == 0:
                     ids_to_remove.append(record_id)
 
-        for record_to_remove in ids_to_remove:
-            logging.info("Record %s has not all label types: %s" %
-                         (record_to_remove, all_label_types))
+        for i, record_to_remove in enumerate(ids_to_remove):
+            if i < 10:
+                logging.info("Record %s has not all label types: %s" %
+                             (record_to_remove, all_label_types))
             self.inv_data.pop(record_to_remove, None)
+
+        logging.info("Removed %s records due to having not all label types" %
+                     len(ids_to_remove))
 
     def _create_mapping_labels_to_numeric(self):
         """ Map Labels To Numerics """
