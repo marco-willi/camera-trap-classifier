@@ -40,7 +40,7 @@ def my_model_fn(features, labels, mode, params):
 
     for label, n_class in zip(params['output_labels'], params["n_classes"]):
         if n_class > 2:
-            metric_class_ids = n_class-1
+            metric_class_ids = [x for x in range(0, n_class)]
         else:
             metric_class_ids = None
         head_list.append(tf.contrib.learn.multi_class_head(
@@ -50,6 +50,7 @@ def my_model_fn(features, labels, mode, params):
                             label_name=label, head_name=label))
 
     head = tf.contrib.learn.multi_head(head_list)
+    #head = tf.contrib.estimator.multi_head(head_list)
 
     # 1. Prediction mode
     if mode == tf.estimator.ModeKeys.PREDICT:
