@@ -37,10 +37,16 @@ def my_model_fn(features, labels, mode, params):
             inputs=inputs)
 
     head_list = list()
+
     for label, n_class in zip(params['output_labels'], params["n_classes"]):
+        if n_class > 2:
+            metric_class_ids = n_class-1
+        else:
+            metric_class_ids = None
         head_list.append(tf.contrib.learn.multi_class_head(
-                            n_class,
+                            n_classes=n_class,
                             #loss_fn=tf.losses.sparse_softmax_cross_entropy,
+                            metric_class_ids=metric_class_ids,
                             label_name=label, head_name=label))
 
     head = tf.contrib.learn.multi_head(head_list)
