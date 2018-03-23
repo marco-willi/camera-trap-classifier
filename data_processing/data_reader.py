@@ -25,7 +25,7 @@ class DatasetReader(object):
         dataset = dataset.map(lambda x: self.tfr_decoder(
                 serialized_example=x,
                 output_labels=labels,
-                **kwargs)
+                **kwargs), num_parallel_calls=4
                 )
 
         if max_multi_label_number is not None:
@@ -44,6 +44,8 @@ class DatasetReader(object):
             dataset = dataset.shuffle(buffer_size=buffer_size)
 
         dataset = dataset.repeat(n_repeats)
+
+        dataset = dataset.prefetch(buffer_size=buffer_size)
 
         iterator = dataset.make_one_shot_iterator()
 
