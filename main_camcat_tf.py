@@ -326,7 +326,7 @@ while not early_stopping.stop_training:
     lr_setter.lr = reduce_lr_on_plateau.current_lr
 
     # add result to log file
-    logger.addResults(epoch, res_val)
+    logger.addResults(epoch, loss_val)
     epoch += 1
 
 
