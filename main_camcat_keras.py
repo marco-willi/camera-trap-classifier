@@ -204,6 +204,17 @@ def input_feeder_val():
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
+def input_feeder_test():
+    return data_reader.get_iterator(
+                tfr_files=[tfr_splitter.get_split_paths()['test']],
+                batch_size=batch_size,
+                is_train=False,
+                n_repeats=None,
+                output_labels=label_types_to_model,
+                image_pre_processing_fun=preprocess_image_default,
+                image_pre_processing_args=image_proc_args,
+                max_multi_label_number=None,
+                labels_are_numeric=True)
 
 n_batches_per_epoch_train = calc_n_batches_per_epoch(tfr_n_records['train'],
                                                      batch_size)

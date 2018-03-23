@@ -221,6 +221,26 @@ def input_feeder_val():
     return features, labels
 
 
+def input_feeder_test():
+    batch_dict = data_reader.get_iterator(
+                tfr_files=[tfr_splitter.get_split_paths()['test']],
+                batch_size=batch_size,
+                is_train=False,
+                n_repeats=1,
+                output_labels=label_types_to_model,
+                image_pre_processing_fun=preprocess_image_default,
+                image_pre_processing_args=image_proc_args,
+                max_multi_label_number=None,
+                labels_are_numeric=True,
+                one_hot_labels=False,
+                num_classes_list=n_classes_per_label_type)
+
+    features = {'images': batch_dict['images']}
+    labels = {key: batch_dict[key] for key in batch_dict \
+                 if key not in ['images', 'id']}
+    return features, labels
+
+
 #test_data = input_feeder_val()
 #with tf.Session() as sess:
 #    imgs, labs = sess.run(test_data)
@@ -330,7 +350,7 @@ while not early_stopping.stop_training:
     epoch += 1
 
 
-predictor = estimator.predict(input_feeder_train, steps=n_batches_per_epoch_train)
+predictor = estimator.predict(input_feeder_test)
 
 pred_labels = label_types_to_model_clean
 logging.debug("Start Predictions")
