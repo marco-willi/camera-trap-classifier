@@ -40,7 +40,7 @@ def my_model_fn(features, labels, mode, params):
     for label, n_class in zip(params['output_labels'], params["n_classes"]):
         head_list.append(tf.contrib.learn.multi_class_head(
                             n_class,
-                            loss_fn=tf.losses.sparse_softmax_cross_entropy,
+                            #loss_fn=tf.losses.sparse_softmax_cross_entropy,
                             label_name=label, head_name=label))
 
     head = tf.contrib.learn.multi_head(head_list)

@@ -193,7 +193,7 @@ def input_feeder_train():
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
                 labels_are_numeric=True,
-                one_hot_labels=False,
+                one_hot_labels=True,
                 num_classes_list=n_classes_per_label_type)
 
     features = {'images': batch_dict['images']}
@@ -212,7 +212,7 @@ def input_feeder_val():
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
                 labels_are_numeric=True,
-                one_hot_labels=False,
+                one_hot_labels=True,
                 num_classes_list=n_classes_per_label_type)
 
     features = {'images': batch_dict['images']}
@@ -232,7 +232,7 @@ def input_feeder_test():
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
                 labels_are_numeric=True,
-                one_hot_labels=False,
+                one_hot_labels=True,
                 num_classes_list=n_classes_per_label_type)
 
     features = {'images': batch_dict['images']}
