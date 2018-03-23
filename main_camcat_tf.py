@@ -324,7 +324,8 @@ lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
 
 
 logger = CSVLogger(path_to_model_output + 'log.csv',
-                   metrics_names=['val_loss_' + x for x in label_types_to_model])
+                   metrics_names=['val_loss_' + x for x in label_types_to_model] + \
+                   ['val_accuracy_' + x for x in label_types_to_model])
 
 # Train Model
 epoch = 0
@@ -337,16 +338,24 @@ while not early_stopping.stop_training:
     # Eval Model
     res_val = estimator.evaluate(input_feeder_val, steps=n_batches_per_epoch_val)
 
+    logging.info("Eval Results")
+    for metric, value in res_val.items():
+        logging.info("    Metric: %s Res %s" % (metric, value))
+
     # add loss to early stopper
     loss_val = [res_val['loss/labels/' + x] for x in label_types_to_model]
-    early_stopping.addResult(loss_val[0])
+    acc_val = [res_val['accuracy/labels/' + x] for x in label_types_to_model]
+
+    loss_total = res_val['loss']
+    early_stopping.addResult(loss_total)
 
     # Redue LR
-    reduce_lr_on_plateau.addResult(loss_val[0])
+    reduce_lr_on_plateau.addResult(loss_total)
     lr_setter.lr = reduce_lr_on_plateau.current_lr
 
     # add result to log file
-    logger.addResults(epoch, loss_val)
+    vals_to_log = loss_val + acc_val
+    logger.addResults(epoch, vals_to_log)
     epoch += 1
 
 
