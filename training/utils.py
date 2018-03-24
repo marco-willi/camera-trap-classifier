@@ -117,6 +117,7 @@ class ReduceLearningRateOnPlateau(object):
         self.results = list()
         self.minimize = minimize
         self.stop_learning = False
+        self.reduced_in_last_step = False
 
         assert self.reduction_abs is None or \
             self.reduction_mult is None, \
@@ -124,6 +125,7 @@ class ReduceLearningRateOnPlateau(object):
 
     def addResult(self, result):
         """ Add a result """
+        self.reduced_in_last_step = False
         if self.minimize:
             self.results.append(result)
         else:
@@ -134,6 +136,7 @@ class ReduceLearningRateOnPlateau(object):
         if old_lr != self.current_lr:
             logging.info("Changing learning rate from %s to %s" %
                          (old_lr, self.current_lr))
+            self.reduced_in_last_step = True
 
     def _reduce_lr(self):
         """ Reduce Learning Rate """

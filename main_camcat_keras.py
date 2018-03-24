@@ -311,8 +311,9 @@ for i in range(0, 50):
 
     # Reduce Learning Rate if necessary
     reduce_lr_on_plateau.addResult(val_loss)
-    train_model.optimizer.lr.assign(reduce_lr_on_plateau.current_lr)
-    logging.info("Current Learning Rate: %s" % reduce_lr_on_plateau.current_lr)
+    if reduce_lr_on_plateau.reduced_in_last_step:
+        train_model.optimizer.lr.assign(reduce_lr_on_plateau.current_lr)
+        logging.info("Setting LR to: %s" % reduce_lr_on_plateau.current_lr)
 
     # Check if training should be stopped
     early_stopping.addResult(val_loss)
