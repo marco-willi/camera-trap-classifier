@@ -95,24 +95,24 @@ def my_model_fn(features, labels, mode, params):
 
         reg_losses = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
 
-        def _train_op_fn(loss, optimizer=optimizer):
-            update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-            train_op = tf.group(optimizer.minimize(loss, global_step), update_ops)
+        def _train_op_fn(loss, reg_loss=reg_losses, optimizer=optimizer):
+            #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            #train_op = tf.group(optimizer.minimize(loss, global_step), update_ops)
             # regularization = tf.losses.get_regularization_loss()
             # loss_total = loss + params['weight_decay'] * regularization
             # l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables()
             #      if 'batch_normalization' not in v.name])
-            # loss_total = loss + params['weight_decay'] * l2_loss
+            loss_total = loss + reg_losses
 
-            #return optimizer.minimize(loss_total, global_step)
-            return train_op
+            return optimizer.minimize(loss_total, global_step)
+            #return train_op
 
         return head.create_estimator_spec(
             features=features,
             mode=mode,
             labels=labels,
-            optimizer=optimizer,
-            #train_op_fn=_train_op_fn,
-            logits=logits,
-            regularization_losses=reg_losses
+            #optimizer=optimizer,
+            train_op_fn=_train_op_fn,
+            logits=logits
+            #regularization_losses=reg_losses
             )
