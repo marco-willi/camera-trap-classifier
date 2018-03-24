@@ -103,7 +103,8 @@ tfr_writer.encode_inventory_to_tfr(
         path_to_tfr_output + "all.tfrecord",
         image_pre_processing_fun=resize_jpeg,
         image_pre_processing_args={"max_side": image_save_side_max},
-        overwrite_existing_file=False)
+        overwrite_existing_file=False,
+        prefix_to_labels='labels/')
 
 
 # Split TFrecord into Train/Val/Test

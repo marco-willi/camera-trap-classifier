@@ -83,7 +83,8 @@ class TFRecordSplitter(object):
                        balanced_sampling_label_type=None,
                        overwrite_existing_files=True,
                        keep_only_labels=None,
-                       remove_label_types=None):
+                       remove_label_types=None,
+                       map_labels_to_numerics=True):
         """ Split a TFR file according to split proportions """
 
         self.split_names = split_names
@@ -143,9 +144,13 @@ class TFRecordSplitter(object):
             data_inv.label_handler.map_labels(self.class_mapping)
 
         # change labels to numeric
-        logging.debug("Mapping labels to numerics")
-        data_inv.label_handler.map_labels_to_numeric()
-        self.label_to_numeric_mapper = data_inv.label_handler.labels_to_numeric
+        if map_labels_to_numerics:
+            logging.debug("Mapping labels to numerics")
+            data_inv.label_handler.map_labels_to_numeric()
+            self.label_to_numeric_mapper = data_inv.label_handler.labels_to_numeric
+
+        # Store all labels
+        self.all_labels = data_inv.label_handler.get_all_labels()
 
         # Check if all files exist
         if not overwrite_existing_files:
@@ -200,9 +205,10 @@ class TFRecordSplitter(object):
                                     record_dict['labels'] = id_label_dict[idd]
                                     record_dict['images'] = \
                                         list(batch_data['images'][ii])
+                                    #logging.info("Writing: %s" % record_dict['labels'])
                                     serialized = self.tfr_encoder(
                                         record_dict,
-                                        labels_are_numeric=True)
+                                        labels_are_numeric=map_labels_to_numerics)
                                     writer.write(serialized)
                                 else:
                                     continue

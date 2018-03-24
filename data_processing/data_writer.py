@@ -18,7 +18,8 @@ class DatasetWriter(object):
          image_pre_processing_fun=None,
          image_pre_processing_args=None,
          random_shuffle_before_save=True,
-         overwrite_existing_file=True):
+         overwrite_existing_file=True,
+         prefix_to_labels=''):
         """ Export Data Inventory to a TFRecord file """
 
         if os.path.exists(output_file) and not overwrite_existing_file:
@@ -84,10 +85,14 @@ class DatasetWriter(object):
                     data_inventory.remove_record(record_id)
                     continue
 
+                # add prefix to labels
+                label_data = {prefix_to_labels + k: v for k, v in
+                              record_data['labels'].items()}
+
                 # Create Record to Serialize
                 record_to_serialize = dict()
                 record_to_serialize['id'] = record_id
-                record_to_serialize['labels'] = record_data['labels']
+                record_to_serialize['labels'] = label_data
                 record_to_serialize['images'] = raw_images
 
                 serialized_record = self.tfr_encoder(record_to_serialize,

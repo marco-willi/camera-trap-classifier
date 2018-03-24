@@ -22,6 +22,8 @@ class DatasetReader(object):
 
         dataset = tf.data.TFRecordDataset(tfr_files)
 
+        dataset = dataset.prefetch(buffer_size=batch_size)
+
         dataset = dataset.map(lambda x: self.tfr_decoder(
                 serialized_example=x,
                 output_labels=labels,
@@ -45,7 +47,7 @@ class DatasetReader(object):
 
         dataset = dataset.repeat(n_repeats)
 
-        dataset = dataset.prefetch(buffer_size=buffer_size)
+        dataset = dataset.prefetch(1)
 
         iterator = dataset.make_one_shot_iterator()
 

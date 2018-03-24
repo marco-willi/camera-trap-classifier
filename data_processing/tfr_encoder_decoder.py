@@ -35,7 +35,7 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                                               prefix='')
         else:
             label_dict = wrap_dict_bytes_list(record_data['labels'],
-                                              prefix='labels/')
+                                              prefix='')
 
         # Store Id of Record
         tfrecord_data = {

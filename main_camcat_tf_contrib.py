@@ -22,12 +22,11 @@ from training.utils import (
 
 path_to_images = "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\ss"
 path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\ss\\"
-path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_tf_original\\"
+path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras_tf\\"
 
 path_to_images = '/host/data_hdd/images/camera_catalogue/all'
-path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_original'
+path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_keras_contrib/'
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
-
 
 labels_all = {
   'primary': [
@@ -80,8 +79,6 @@ image_proc_args = {
     'resize_side_min': 224,
     'resize_side_max': 500}
 
-
-
 ####################################
 # Convert some Parameters
 ####################################
@@ -111,6 +108,7 @@ tfr_writer.encode_inventory_to_tfr(
         overwrite_existing_file=False,
         prefix_to_labels='labels/')
 
+
 # Split TFrecord into Train/Val/Test
 logging.debug("Creating TFRecordSplitter")
 tfr_splitter = TFRecordSplitter(
@@ -128,21 +126,25 @@ tfr_splitter.split_tfr_file(output_path_main=path_to_tfr_output,
                             output_labels=label_types_to_model,
                             overwrite_existing_files=False,
                             keep_only_labels=keep_only_labels,
-                            class_mapping=class_mapping)
-
+                            class_mapping=class_mapping,
+                            map_labels_to_numerics=False)
 
 
 # Check numbers
 tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
-tfr_splitter.label_to_numeric_mapper
-num_to_label_mapper = {
-    k: {v2: k2 for k2, v2 in v.items()}
-    for k, v in tfr_splitter.label_to_numeric_mapper.items()}
-n_classes_per_label_type = [len(num_to_label_mapper[x]) for x in \
-                            label_types_to_model_clean]
+#tfr_splitter.label_to_numeric_mapper
+#num_to_label_mapper = {
+#    k: {v2: k2 for k2, v2 in v.items()}
+#    for k, v in tfr_splitter.label_to_numeric_mapper.items()}
+#n_classes_per_label_type = [len(num_to_label_mapper[x]) for x in \
+#                            label_types_to_model_clean]
 
 tfr_splitter.get_record_numbers_per_file()
+tfr_splitter.all_labels
+n_classes_per_label_type = [len(tfr_splitter.all_labels[x]) for x in \
+                            label_types_to_model_clean]
+
 
 # Create Dataset Reader
 logging.debug("Create Dataset Reader")
@@ -152,6 +154,7 @@ data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 logging.debug("Get Dataset Reader for calculating datset stats")
 batch_data = data_reader.get_iterator(
         tfr_files=[tfr_splitter.get_split_paths()['train']],
+        #tfr_files=path_to_tfr_output + "all.tfrecord",
         batch_size=1024,
         is_train=False,
         n_repeats=1,
@@ -159,7 +162,7 @@ batch_data = data_reader.get_iterator(
         image_pre_processing_fun=preprocess_image_default,
         image_pre_processing_args=image_proc_args,
         max_multi_label_number=None,
-        labels_are_numeric=True)
+        labels_are_numeric=False)
 
 
 with tf.Session() as sess:
@@ -174,14 +177,15 @@ image_proc_args['image_stdevs'] = image_stdevs
 
 logging.info("Image Means: %s" % image_means)
 logging.info("Image Stdevs: %s" % image_stdevs)
-## plot some images and their labels to check
+
+# plot some images and their labels to check
+#import matplotlib.pyplot as plt
 #for i in range(0, 30):
 #    img = data['images'][i,:,:,:]
 #    lbl = data['labels/primary'][i]
-#    print("Label: %s" % num_to_label_mapper[int(lbl)])
+#    print("Label: %s" % lbl)
 #    plt.imshow(img)
 #    plt.show()
-
 
 
 # Prepare Data Feeders for Training / Validation Data
@@ -195,7 +199,7 @@ def input_feeder_train():
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
-                labels_are_numeric=True,
+                labels_are_numeric=False,
                 one_hot_labels=False,
                 num_classes_list=n_classes_per_label_type)
 
@@ -214,7 +218,7 @@ def input_feeder_val():
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
-                labels_are_numeric=True,
+                labels_are_numeric=False,
                 one_hot_labels=False,
                 num_classes_list=n_classes_per_label_type)
 
@@ -222,6 +226,7 @@ def input_feeder_val():
     labels = {key: batch_dict[key] for key in batch_dict \
                  if key not in ['images', 'id']}
     return features, labels
+
 
 def input_feeder_test():
     batch_dict = data_reader.get_iterator(
@@ -233,14 +238,15 @@ def input_feeder_test():
                 image_pre_processing_fun=preprocess_image_default,
                 image_pre_processing_args=image_proc_args,
                 max_multi_label_number=None,
-                labels_are_numeric=True,
-                one_hot_labels=True,
+                labels_are_numeric=False,
+                one_hot_labels=False,
                 num_classes_list=n_classes_per_label_type)
 
     features = {'images': batch_dict['images']}
     labels = {key: batch_dict[key] for key in batch_dict \
                  if key not in ['images', 'id']}
     return features, labels
+
 
 #test_data = input_feeder_val()
 #with tf.Session() as sess:
@@ -268,7 +274,7 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['val'],
 ######################################
 
 
-from models.tf_resnet import my_model_fn
+from models.tf_keras_resnet_contrib_estimator import my_model_fn
 from tensorflow.python.estimator.warm_starting_util import WarmStartSettings
 from tensorflow.python.estimator.estimator import Estimator
 from tensorflow.contrib.learn import Experiment
@@ -286,7 +292,8 @@ hparams = {
     'transfer_learning_layers': 'dense',
     'inter_op_parallelism_threads': 0,
     'intra_op_parallelism_threads': 0,
-    'multi_gpu': False
+    'multi_gpu': False,
+    'label_vocabulary': {k: list(v.keys()) for k, v  in tfr_splitter.all_labels.items()}
 }
 
 
@@ -298,6 +305,7 @@ session_config = tf.ConfigProto(
 
 run_config = tf.estimator.RunConfig(
     model_dir=path_to_model_output,
+    tf_random_seed=123,
     save_summary_steps=n_batches_per_epoch_train,
     save_checkpoints_steps=n_batches_per_epoch_train,
     session_config=session_config)
@@ -319,6 +327,7 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         reduction_mult=0.1,
         min_lr=1e-5,
         minimize=True)
+
 
 lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
 
@@ -359,7 +368,6 @@ while not early_stopping.stop_training:
     epoch += 1
 
 
-
 predictor = estimator.predict(input_feeder_test)
 
 pred_labels = label_types_to_model_clean
@@ -367,4 +375,4 @@ logging.debug("Start Predictions")
 for pred in predictor:
     for pred_label in pred_labels:
         logging.info(pred[(pred_label, 'probabilities')])
-        logging.info(print(num_to_label_mapper[pred_label][pred[(pred_label, 'classes')]]))
+        logging.info(pred[(pred_label, 'classes')])
