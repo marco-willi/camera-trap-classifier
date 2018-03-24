@@ -47,7 +47,7 @@ class DatasetReader(object):
 
         dataset = dataset.repeat(n_repeats)
 
-        dataset = dataset.prefetch(1)
+        dataset = dataset.prefetch(16)
 
         iterator = dataset.make_one_shot_iterator()
 
