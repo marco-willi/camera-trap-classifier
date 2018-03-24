@@ -109,6 +109,8 @@ def my_model_fn(features, labels, mode, params):
             features=features,
             mode=mode,
             labels=labels,
-            train_op_fn=_train_op_fn,
-            logits=logits
+            optimizer=optimizer,
+            #train_op_fn=_train_op_fn,
+            logits=logits,
+            regularization_losses=tf.GraphKeys.REGULARIZATION_LOSSES * params['weight_decay']
             )
