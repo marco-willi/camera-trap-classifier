@@ -93,6 +93,8 @@ def my_model_fn(features, labels, mode, params):
             learning_rate=learning_rate,
             momentum=params['momentum'])
 
+        reg_losses = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+
         def _train_op_fn(loss, optimizer=optimizer):
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             train_op = tf.group(optimizer.minimize(loss, global_step), update_ops)
@@ -112,5 +114,5 @@ def my_model_fn(features, labels, mode, params):
             optimizer=optimizer,
             #train_op_fn=_train_op_fn,
             logits=logits,
-            regularization_losses=tf.GraphKeys.REGULARIZATION_LOSSES * params['weight_decay']
+            regularization_losses=reg_losses
             )

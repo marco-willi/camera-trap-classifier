@@ -95,7 +95,7 @@ def my_model_fn(features, labels, mode, params):
             #train_op = tf.group(optimizer.minimize(loss, global_step), update_ops)
 
             regularization = tf.losses.get_regularization_loss()
-            loss_total = loss + params['weight_decay'] * regularization
+            loss_total = loss + regularization
             return optimizer.minimize(loss_total, global_step)
 
         return head.create_model_fn_ops(
