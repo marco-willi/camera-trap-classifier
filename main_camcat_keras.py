@@ -134,8 +134,13 @@ tfr_splitter.label_to_numeric_mapper
 num_to_label_mapper = {
     k: {v2: k2 for k2, v2 in v.items()}
     for k, v in tfr_splitter.label_to_numeric_mapper.items()}
-n_classes_per_label_type = [len(num_to_label_mapper[x]) for x in \
+
+tfr_splitter.get_record_numbers_per_file()
+tfr_splitter.all_labels
+n_classes_per_label_type = [len(tfr_splitter.all_labels[x]) for x in \
                             label_types_to_model_clean]
+
+logging.info("N_classes per label type: %s" % n_classes_per_label_type)
 
 # Create Dataset Reader
 logging.debug("Create Dataset Reader")
