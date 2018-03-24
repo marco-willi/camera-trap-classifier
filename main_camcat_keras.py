@@ -62,7 +62,7 @@ map_labels_empty['primary']['blank'] = 'blank'
 
 label_types_to_model = ['primary']
 keep_only_labels=keep_labels_species
-class_mapping=None
+class_mapping=map_labels_empty
 batch_size = 128
 image_save_side_max = 330
 balanced_sampling_min= False
