@@ -1,3 +1,5 @@
+from __future__ import division
+
 import six
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.models import Model

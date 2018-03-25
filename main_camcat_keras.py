@@ -22,7 +22,7 @@ path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\s
 path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras\\"
 
 path_to_images = '/host/data_hdd/images/camera_catalogue/all'
-path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only/'
+path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only_blank/'
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
 labels_all = {
@@ -235,6 +235,7 @@ from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
 from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
 from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard, CSVLogger
+from tensorflow.python.keras import backend as K
 
 
 def create_model(input_feeder, target_labels):
@@ -248,7 +249,8 @@ def create_model(input_feeder, target_labels):
     all_outputs = list()
 
     for n, name in zip(n_classes_per_label_type, target_labels):
-        all_outputs.append(Dense(n, activation='softmax', name=name)(model_flat))
+        all_outputs.append(Dense(units=n, kernel_initializer="he_normal",
+                           activation='softmax', name=name)(model_flat))
 
     model = Model(inputs=model_input, outputs=all_outputs)
 
@@ -257,6 +259,7 @@ def create_model(input_feeder, target_labels):
                       for x in target_labels}
 
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
+    # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
@@ -315,6 +318,7 @@ for i in range(0, 50):
         logging.info("Eval - %s: %s" % (metric, val))
 
     # Reduce Learning Rate if necessary
+    reduce_lr_on_plateau.current_lr = K.eval(train_model.optimizer.lr)
     reduce_lr_on_plateau.addResult(val_loss)
     if reduce_lr_on_plateau.reduced_in_last_step:
         train_model.optimizer.lr.assign(reduce_lr_on_plateau.current_lr)
