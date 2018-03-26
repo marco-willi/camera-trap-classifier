@@ -142,7 +142,12 @@ tfr_splitter.all_labels
 n_classes_per_label_type = [len(tfr_splitter.all_labels[x]) for x in \
                             label_types_to_model_clean]
 
-logging.info("N_classes per label type: %s" % n_classes_per_label_type)
+for label_type, labels in tfr_splitter.all_labels.items():
+    for label, no_recs in labels.items():
+        label_char = num_to_label_mapper[label_type][label]
+        logging.info("Label Type: %s Label: %s Records: %s" %
+                     (label_type, label_char, no_recs))
+
 
 # Create Dataset Reader
 logging.debug("Create Dataset Reader")
