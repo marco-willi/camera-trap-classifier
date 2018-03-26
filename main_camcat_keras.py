@@ -22,7 +22,7 @@ path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\s
 path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras\\"
 
 path_to_images = '/host/data_hdd/images/camera_catalogue/all'
-path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only_blank/'
+path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only_species2/'
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
 labels_all = {
@@ -61,7 +61,9 @@ map_labels_empty['primary']['vehicle'] = 'vehicle'
 map_labels_empty['primary']['blank'] = 'blank'
 
 label_types_to_model = ['primary']
-keep_only_labels=keep_labels_all
+#keep_only_labels=keep_labels_all
+#class_mapping=map_labels_empty
+keep_only_labels=keep_labels_species
 class_mapping=map_labels_empty
 batch_size = 128
 image_save_side_max = 330
