@@ -271,7 +271,6 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['val'],
 # Model Training
 ######################################
 
-
 from models.tf_keras_resnet_contrib_estimator import my_model_fn
 from tensorflow.python.estimator.warm_starting_util import WarmStartSettings
 from tensorflow.python.estimator.estimator import Estimator

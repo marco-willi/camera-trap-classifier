@@ -6,7 +6,6 @@ from models.resnet_keras_mod import ResnetBuilder
 from config.config import logging
 
 
-
 def my_model_fn(features, labels, mode, params):
 
     K.set_session(tf.get_default_session())
@@ -43,12 +42,12 @@ def my_model_fn(features, labels, mode, params):
         if n_class > 2:
             current_head = tf.contrib.estimator.multi_class_head(
                             n_classes=n_class,
-                            #label_vocabulary=params['label_vocabulary'][label],
+                            label_vocabulary=params['label_vocabulary'][label],
                             loss_reduction=tf.losses.Reduction.MEAN,
                             name=label)
         else:
             current_head = tf.contrib.estimator.binary_classification_head(
-                #label_vocabulary=params['label_vocabulary'][label],
+                label_vocabulary=params['label_vocabulary'][label],
                 loss_reduction=tf.losses.Reduction.MEAN,
                 name=label)
         head_list.append(current_head)

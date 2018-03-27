@@ -325,7 +325,7 @@ for i in range(0, 50):
     model_lr = K.eval(train_model.optimizer.lr)
     reduce_lr_on_plateau.addResult(val_loss, model_lr)
     if reduce_lr_on_plateau.reduced_in_last_step:
-        train_model.optimizer.lr.assign(reduce_lr_on_plateau.new_lr)
+        K.set_value(train_model.optimizer.lr, reduce_lr_on_plateau.new_lr)
         logging.info("Setting LR to: %s" % K.eval(train_model.optimizer.lr))
 
     # Check if training should be stopped
