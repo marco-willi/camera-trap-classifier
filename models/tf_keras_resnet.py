@@ -83,12 +83,17 @@ def my_model_fn(features, labels, mode, params):
                                 if params['transfer_learning_layers'] in v.name]
 
         learning_rate = tf.placeholder(dtype=tf.float32, name="learning_rate")
+        #learning_rate = 1 / (1 + params['learning_rate_decay'] * global_step)
 
-        tf.summary.scalar('learning_rate_summary', learning_rate)
+        #tf.summary.scalar('learning_rate_summary', learning_rate)
 
-        optimizer = tf.train.MomentumOptimizer(
+        # optimizer = tf.train.MomentumOptimizer(
+        #     learning_rate=learning_rate,
+        #     momentum=params['momentum'])
+
+        optimizer = tf.train.AdamOptimizer(
             learning_rate=learning_rate,
-            momentum=params['momentum'])
+            epsilon=0.1)
 
         def _train_op_fn(loss, optimizer=optimizer):
             #update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)

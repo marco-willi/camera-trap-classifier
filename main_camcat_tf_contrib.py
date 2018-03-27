@@ -283,6 +283,7 @@ hparams = {
     'momentum': 0.9,
     'learning_rate': 1e-2,
     'weight_decay': 1e-4,
+    'learning_rate_decay': 1e-4,
     'image_target_size': [image_proc_args['output_height'], image_proc_args['output_width']],
     'image_n_color_channels': 3,
     'n_classes': n_classes_per_label_type,
@@ -321,7 +322,6 @@ estimator = Estimator(
 
 early_stopping = EarlyStopping(stop_after_n_rounds=5, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
-        initial_lr=hparams['learning_rate'],
         reduce_after_n_rounds=3,
         patience_after_reduction=2,
         reduction_mult=0.1,
@@ -329,12 +329,13 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         minimize=True)
 
 
-lr_setter = LearningRateSetter(reduce_lr_on_plateau.initial_lr)
+lr_setter = LearningRateSetter(hparams['learning_rate'])
 
 
 logger = CSVLogger(path_to_model_output + 'log.csv',
-                   metrics_names=['val_loss_' + x for x in label_types_to_model] + \
-                   ['val_accuracy_' + x for x in label_types_to_model])
+                   metrics_names=['val_loss_' + x for x in
+                    label_types_to_model] + ['val_accuracy_' + x for x in
+                    label_types_to_model])
 
 # Train Model
 epoch = 0
@@ -342,10 +343,12 @@ logging.debug("Start Model Training")
 while not early_stopping.stop_training:
 
     # Train model
-    estimator.train(input_feeder_train, hooks=[lr_setter], steps=n_batches_per_epoch_train)
+    estimator.train(input_feeder_train, hooks=[lr_setter],
+                    steps=n_batches_per_epoch_train)
 
     # Eval Model
-    res_val = estimator.evaluate(input_feeder_val, steps=n_batches_per_epoch_val)
+    res_val = estimator.evaluate(input_feeder_val,
+                                 steps=n_batches_per_epoch_val)
 
     logging.info("EVal Results")
     for metric, value in res_val.items():
@@ -359,8 +362,15 @@ while not early_stopping.stop_training:
     early_stopping.addResult(loss_total)
 
     # Redue LR
-    reduce_lr_on_plateau.addResult(loss_total)
-    lr_setter.lr = reduce_lr_on_plateau.current_lr
+    #reduce_lr_on_plateau.addResult(loss_total)
+    #lr_setter.lr = reduce_lr_on_plateau.current_lr
+
+    # Reduce Learning Rate if necessary
+    # model_lr = lr_setter.lr
+    # reduce_lr_on_plateau.addResult(loss_total, model_lr)
+    # if reduce_lr_on_plateau.reduced_in_last_step:
+    #     lr_setter.lr = reduce_lr_on_plateau.new_lr
+    #     logging.info("Setting LR to: %s" % lr_setter.lr)
 
     # add result to log file
     vals_to_log = loss_val + acc_val
