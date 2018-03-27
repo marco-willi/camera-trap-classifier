@@ -1,10 +1,12 @@
 general:
   logging: debug
-  logging_to_disk: True
+  logging_to_disk: False
   identifier: timestamp
 
-project:
-  name: camera_catalogue
+run:
+  project: camera_catalogue
+  experiment: species
+  identifier: timestamp
 
 paths:
   images: D:/Studium_GD/Zooniverse/Data/transfer_learning_project/images/
@@ -12,11 +14,39 @@ paths:
   logging_output: D:/Studium_GD/Zooniverse/Data/transfer_learning_project/logs/
   model_saves: D:/Studium_GD/Zooniverse/Data/transfer_learning_project/models/
 
-model:
-  name: resent18.py
-  config: default
-  
-training_splits:
-  train: 0.8
-  validation: 0.1
-  test: 0.1
+
+models:
+  resnet18:
+    batch_size: 128
+
+projects:
+  camera_catalogue:
+    image_processing:
+      image_save_side_max: 330
+      output_height: 224
+      output_width: 224
+      resize_side_min': 224
+      resize_side_max': 500
+    paths:
+      master_tfr:
+    training_splits:
+      train: 0.9
+      validation: 0.05
+      test: 0.05
+    experiments:
+      empty_vehicle_species:
+        model: resnet18
+        labels_project: panthera
+        labels_version: empty
+        label_types_to_model:
+          - 'primary'
+        balanced_sampling_min: False
+        balanced_sampling_label_type: 'primary'
+      species:
+        model: resnet18
+        labels_project: panthera
+        labels_version: species
+        label_types_to_model:
+          - 'primary'
+        balanced_sampling_min: False
+        balanced_sampling_label_type: 'primary'

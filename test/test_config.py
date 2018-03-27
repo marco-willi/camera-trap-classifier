@@ -8,7 +8,7 @@ class LoadConfigTestCase(unittest.TestCase):
         print("Load CFG")
         self.cfg_obj = Config('test/test_files/test_config.yaml')
         self.cfg_obj.load_config()
-        self.cfg = self.cfg_obj.get_config()
+        self.cfg = self.cfg_obj.cfg
 
     def testTop(self):
         self.assertEqual(self.cfg['top_level_entry'], 'top_level_value')

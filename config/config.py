@@ -4,21 +4,23 @@ import errno
 import yaml
 import logging
 import sys
+from datetime import datetime
 
 ##############################
-# Parse Config File
+# Config Class
 ##############################
 
-class Config():
+
+class Config(object):
     def __init__(self, filename='config.yaml'):
         self.filename = filename
+        self.ts = datetime.now().strftime('%Y%m%d%H%m')
 
     def load_config(self):
         self._load_from_disk()
         self._clean_paths()
-
-    def get_config(self):
-        return self.cfg
+        self._prepare_current_experiment()
+        self._prepare_current_experiment()
 
     def _load_from_disk(self):
         if os.path.exists(self.filename):
@@ -39,27 +41,39 @@ class Config():
         for v in config['paths'].values():
             v = v + os.path.sep + project_name
 
+    def _prepare_current_experiment(self):
+        project = self.cfg['run']['project']
+        exp = self.cfg['run']['experiment']
+        exp_data = self.cfg['projects'][project]['experiments'][exp]
+        project_data = self.cfg['projects'][project]
+        self.current_project = project_data
+        self.current_exp = exp_data
+        for k, v in self.current_project.items():
+            if not k == 'experiments':
+                if k not in self.current_exp:
+                    self.current_exp[k] = v
+
+
+
+# Load Configuration
+cfg = Config()
+cfg.load_config()
 
 
 ##############################
 # Logging
 ##############################
 
-# timestamp and logging file name
-# ts = str(config['general']['ts'])
-# if 'experiment_id' in cfg_model:
-#     exp_id = cfg_model['experiment_id'] + '_'
-# else:
-#     exp_id = ''
-#
-# # logging handlers
+# logging handlers
 handlers = list()
-#
-# if cfg_model['logging_to_disk'] == 1:
-#     # handlers to log stuff to (file and stdout)
-#     file_handler = logging.FileHandler(
-#         filename=cfg_path['logs'] + exp_id + ts + '_run.log')
-#     handlers.append(file_handler)
+
+log_path = cfg.cfg['paths']['logging_output']
+
+if cfg.cfg['general']['logging_to_disk']:
+    # handlers to log stuff to (file and stdout)
+    file_handler = logging.FileHandler(
+        filename=log_path + 'run.log')
+    handlers.append(file_handler)
 
 stdout_handler = logging.StreamHandler(sys.stdout)
 handlers.append(stdout_handler)
@@ -71,5 +85,4 @@ logging.basicConfig(level=logging.INFO,
                     handlers=handlers)
 
 # log parameters / config
-#logging.info("Path Parameters: %s" % cfg_path)
-#logging.info("Model Parameters: %s" % cfg_model)
+logging.info("Configuration: %s" % cfg.cfg)
