@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.layers import Input
+from tensorflow.python.keras.layers import Input, Dense
 
 from models.resnet_keras_mod import ResnetBuilder
 from config.config import logging
@@ -43,16 +43,16 @@ def my_model_fn(features, labels, mode, params):
         if n_class > 2:
             current_head = tf.contrib.estimator.multi_class_head(
                             n_classes=n_class,
-                            label_vocabulary=params['label_vocabulary'][label],
+                            #label_vocabulary=params['label_vocabulary'][label],
                             loss_reduction=tf.losses.Reduction.MEAN,
                             name=label)
         else:
             current_head = tf.contrib.estimator.binary_classification_head(
-                label_vocabulary=params['label_vocabulary'][label],
+                #label_vocabulary=params['label_vocabulary'][label],
                 loss_reduction=tf.losses.Reduction.MEAN,
                 name=label)
         head_list.append(current_head)
-        logits_current = tf.layers.dense(inputs=flat_output, units=n_class)
+        logits_current = Dense(units=n_class, kernel_initializer="he_normal")(flat_output)
         logits[label] = logits_current
 
     head = tf.contrib.estimator.multi_head(head_list)
@@ -86,12 +86,15 @@ def my_model_fn(features, labels, mode, params):
                                 if params['transfer_learning_layers'] in v.name]
 
         learning_rate = tf.placeholder(dtype=tf.float32, name="learning_rate")
+        #tf.summary.scalar('learning_rate_summary', learning_rate)
 
-        tf.summary.scalar('learning_rate_summary', learning_rate)
+        # optimizer = tf.train.MomentumOptimizer(
+        #     learning_rate=learning_rate,
+        #     momentum=params['momentum'])
 
-        optimizer = tf.train.MomentumOptimizer(
+        optimizer = tf.train.AdamOptimizer(
             learning_rate=learning_rate,
-            momentum=params['momentum'])
+            epsilon=0.1)
 
         reg_losses = tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
 

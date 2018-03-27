@@ -261,8 +261,6 @@ def input_feeder_test():
 #    plt.show()
 #
 
-
-
 n_batches_per_epoch_train = calc_n_batches_per_epoch(tfr_n_records['train'],
                                                      batch_size)
 
@@ -297,12 +295,10 @@ hparams = {
     'label_vocabulary': {k: list(v.keys()) for k, v  in tfr_splitter.all_labels.items()}
 }
 
-
 session_config = tf.ConfigProto(
   inter_op_parallelism_threads=hparams['inter_op_parallelism_threads'],
   intra_op_parallelism_threads=hparams['intra_op_parallelism_threads'],
   allow_soft_placement=True)
-
 
 run_config = tf.estimator.RunConfig(
     model_dir=path_to_model_output,
@@ -311,14 +307,12 @@ run_config = tf.estimator.RunConfig(
     save_checkpoints_steps=n_batches_per_epoch_train,
     session_config=session_config)
 
-
 estimator = Estimator(
     model_fn=my_model_fn,
     params=hparams,
     config=run_config,
     warm_start_from=None
     )
-
 
 early_stopping = EarlyStopping(stop_after_n_rounds=5, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
@@ -328,14 +322,12 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         min_lr=1e-5,
         minimize=True)
 
-
 lr_setter = LearningRateSetter(hparams['learning_rate'])
 
-
-logger = CSVLogger(path_to_model_output + 'log.csv',
-                   metrics_names=['val_loss_' + x for x in
-                    label_types_to_model] + ['val_accuracy_' + x for x in
-                    label_types_to_model])
+logger = CSVLogger(
+    path_to_model_output + 'log.csv',
+    metrics_names=['val_loss_' + x for x in label_types_to_model] +
+                  ['val_accuracy_' + x for x in label_types_to_model])
 
 # Train Model
 epoch = 0
