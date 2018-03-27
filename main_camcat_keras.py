@@ -22,7 +22,7 @@ path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\s
 path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras\\"
 
 path_to_images = '/host/data_hdd/images/camera_catalogue/all'
-path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only_species2/'
+path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/keras_only_species3/'
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
 labels_all = {
@@ -252,7 +252,6 @@ def create_model(input_feeder, target_labels):
     res_builder = ResnetBuilder()
     model_flat = res_builder.build_resnet_18(model_input)
 
-    # TODO FIX:
     all_outputs = list()
 
     for n, name in zip(n_classes_per_label_type, target_labels):
@@ -261,8 +260,7 @@ def create_model(input_feeder, target_labels):
 
     model = Model(inputs=model_input, outputs=all_outputs)
 
-    # TODO: build multiple outputs in architecture and map to labels
-    target_tensors = {x: tf.cast(data[x], tf.float32) \
+    target_tensors = {x: tf.cast(data[x], tf.float32)
                       for x in target_labels}
 
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
@@ -325,11 +323,11 @@ for i in range(0, 50):
         logging.info("Eval - %s: %s" % (metric, val))
 
     # Reduce Learning Rate if necessary
-    reduce_lr_on_plateau.current_lr = K.eval(train_model.optimizer.lr)
-    reduce_lr_on_plateau.addResult(val_loss)
+    model_lr = K.eval(train_model.optimizer.lr)
+    reduce_lr_on_plateau.addResult(val_loss, model_lr)
     if reduce_lr_on_plateau.reduced_in_last_step:
-        train_model.optimizer.lr.assign(reduce_lr_on_plateau.current_lr)
-        logging.info("Setting LR to: %s" % reduce_lr_on_plateau.current_lr)
+        train_model.optimizer.lr.assign(reduce_lr_on_plateau.new_lr)
+        logging.info("Setting LR to: %s" % K.eval(train_model.optimizer.lr))
 
     # Check if training should be stopped
     early_stopping.addResult(val_loss)
