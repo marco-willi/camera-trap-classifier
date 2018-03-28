@@ -69,7 +69,7 @@ batch_size = 128
 image_save_side_max = 330
 balanced_sampling_min= False
 balanced_sampling_label_type = 'primary'
-image_proc_args = {
+image_proc_args_train = {
     'output_height': 224,
     'output_width': 224,
     'image_means': [0, 0, 0],
@@ -78,6 +78,14 @@ image_proc_args = {
     'resize_side_min': 224,
     'resize_side_max': 500}
 
+image_proc_args_test = {
+    'output_height': 224,
+    'output_width': 224,
+    'image_means': [0, 0, 0],
+    'image_stdevs': [1, 1, 1],
+    'is_training': False,
+    'resize_side_min': 224,
+    'resize_side_max': 500}
 
 ####################################
 # Convert some Parameters
@@ -200,7 +208,7 @@ def input_feeder_train():
                 n_repeats=None,
                 output_labels=label_types_to_model,
                 image_pre_processing_fun=preprocess_image_default,
-                image_pre_processing_args=image_proc_args,
+                image_pre_processing_args=image_proc_args_train,
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
@@ -213,7 +221,7 @@ def input_feeder_val():
                 n_repeats=None,
                 output_labels=label_types_to_model,
                 image_pre_processing_fun=preprocess_image_default,
-                image_pre_processing_args=image_proc_args,
+                image_pre_processing_args=image_proc_args_test,
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
@@ -225,7 +233,7 @@ def input_feeder_test():
                 n_repeats=None,
                 output_labels=label_types_to_model,
                 image_pre_processing_fun=preprocess_image_default,
-                image_pre_processing_args=image_proc_args,
+                image_pre_processing_args=image_proc_args_test,
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
