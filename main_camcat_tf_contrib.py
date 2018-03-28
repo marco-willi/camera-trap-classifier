@@ -25,7 +25,7 @@ path_to_tfr_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\s
 path_to_model_output = "D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\models\\ss\\resnet_keras_tf\\"
 
 path_to_images = '/host/data_hdd/images/camera_catalogue/all'
-path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_keras_contrib/'
+path_to_model_output = '/host/data_hdd/camtrap/camera_catalogue/training/tf_keras_contrib2/'
 path_to_tfr_output = '/host/data_hdd/camtrap/camera_catalogue/data/'
 
 labels_all = {
