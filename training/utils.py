@@ -239,9 +239,6 @@ class ReduceLearningRateOnPlateau(object):
         reduce = self._calc_if_reduction_needed()
         if reduce:
             new_lr = self._reduce_lr(current_model_lr)
-            logging.info("Changing learning rate from %s to %s" %
-                         (current_model_lr, new_lr))
-            self.reduced_in_last_step = True
             self.new_lr = new_lr
 
     def _reduce_lr(self, old_lr):
@@ -253,7 +250,11 @@ class ReduceLearningRateOnPlateau(object):
             new_lr = old_lr * self.reduction_mult
 
         new_lr = np.max([new_lr, self.min_lr])
-        logging.info("Reducing - old:%s new:%s" % (old_lr, new_lr))
+
+        if not old_lr == new_lr:
+            logging.info("Changing learning rate from %s to %s"
+                         % (old_lr, new_lr))
+            self.reduced_in_last_step = True
         return new_lr
 
     def _calc_if_reduction_needed(self):
