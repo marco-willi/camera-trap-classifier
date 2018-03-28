@@ -283,7 +283,7 @@ def create_model(input_feeder, target_labels):
 
 
 # Callbacks and Monitors
-early_stopping = EarlyStopping(stop_after_n_rounds=6, minimize=True)
+early_stopping = EarlyStopping(stop_after_n_rounds=10, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         reduce_after_n_rounds=3,
         patience_after_reduction=2,
@@ -294,7 +294,7 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
 csv_logger = CSVLogger(path_to_model_output + 'training.log')
 
 checkpointer = ModelCheckpoint(
-        filepath=path_to_model_output + 'weights.{epoch:02d}-{loss:.2f}.hdf5',
+        filepath=path_to_model_output + 'weights.{epoch:02d}_{loss:.2f}.hdf5',
         monitor='loss',
         verbose=0,
         save_best_only=False,
@@ -311,7 +311,7 @@ train_model = create_model(input_feeder_train, label_types_to_model_clean)
 val_model = create_model(input_feeder_val, label_types_to_model_clean)
 
 
-for i in range(0, 50):
+for i in range(0, 70):
     logging.info("Starting Epoch %s" % (i+1))
     train_model.fit(epochs=i+1,
                     steps_per_epoch=n_batches_per_epoch_train,
