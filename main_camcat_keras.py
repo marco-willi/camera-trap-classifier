@@ -250,8 +250,8 @@ from models.resnet_keras_mod import ResnetBuilder
 from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
-from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
-from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard, CSVLogger
+from training.utils import ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger
+from tensorflow.python.keras.callbacks import ModelCheckpoint, TensorBoard
 from tensorflow.python.keras import backend as K
 
 
@@ -285,13 +285,18 @@ def create_model(input_feeder, target_labels):
 # Callbacks and Monitors
 early_stopping = EarlyStopping(stop_after_n_rounds=10, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
-        reduce_after_n_rounds=3,
+        reduce_after_n_rounds=4,
         patience_after_reduction=2,
         reduction_mult=0.1,
         min_lr=1e-5,
         minimize=True)
 
-csv_logger = CSVLogger(path_to_model_output + 'training.log')
+#csv_logger = CSVLogger(path_to_model_output + 'training.log')
+
+logger = CSVLogger(
+    path_to_model_output + 'log.csv',
+    metrics_names=['val_loss', 'val_acc',
+                   'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
 
 checkpointer = ModelCheckpoint(
         filepath=path_to_model_output + 'weights.{epoch:02d}_{loss:.2f}.hdf5',
@@ -327,9 +332,17 @@ for i in range(0, 70):
 
     val_loss = results[val_model.metrics_names == 'loss']
 
+    vals_to_log = list()
+
     for val, metric in zip(val_model.metrics_names, results):
 
         logging.info("Eval - %s: %s" % (metric, val))
+        vals_to_log.append(val)
+
+    # Log Results on Validation Set
+    vals_to_log.append(K.eval(train_model.optimizer.lr))
+
+    logger.addResults(i+1, vals_to_log)
 
     # Reduce Learning Rate if necessary
     model_lr = K.eval(train_model.optimizer.lr)
