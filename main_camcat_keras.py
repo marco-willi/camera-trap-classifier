@@ -170,7 +170,7 @@ batch_data = data_reader.get_iterator(
         n_repeats=1,
         output_labels=label_types_to_model,
         image_pre_processing_fun=preprocess_image_default,
-        image_pre_processing_args=image_proc_args,
+        image_pre_processing_args=image_proc_args_test,
         max_multi_label_number=None,
         labels_are_numeric=True)
 
@@ -182,8 +182,10 @@ with tf.Session() as sess:
 image_means = list(np.mean(data['images'], axis=(0, 1, 2)))
 image_stdevs = list(np.std(data['images'], axis=(0, 1, 2)))
 
-image_proc_args['image_means'] = image_means
-image_proc_args['image_stdevs'] = image_stdevs
+image_proc_args_test['image_means'] = image_means
+image_proc_args_test['image_stdevs'] = image_stdevs
+image_proc_args_train['image_means'] = image_means
+image_proc_args_train['image_stdevs'] = image_stdevs
 
 logging.info("Image Means: %s" % image_means)
 logging.info("Image Stdevs: %s" % image_stdevs)
