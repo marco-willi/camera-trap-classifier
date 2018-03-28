@@ -348,10 +348,10 @@ def preprocess_image(image, output_height, output_width, image_means,
 
 def preprocess_image_default(image, output_height, output_width,
                              is_training,
-                             image_means=[0, 0, 0],
-                             image_stdevs=[1, 1, 1],
                              resize_side_min,
                              resize_side_max,
+                             image_means=[0, 0, 0],
+                             image_stdevs=[1, 1, 1],
                              min_crop_size=0.8):
     """ Default Image Pre-Processing """
 
