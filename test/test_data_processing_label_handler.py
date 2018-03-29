@@ -3,6 +3,18 @@ from data_processing.data_inventory import DatasetInventory
 from data_processing.label_handler import LabelHandler
 
 
+#dinv = DatasetInventory()
+#test_path_json = './test/test_files/json_data_file.json'
+#dinv.create_from_json(test_path_json)
+#inventory = dinv.data_inventory
+#
+#
+#
+#dinv.label_handler.keep_only_labels({"primary": ["elephant"], "color": ['brown', 'black']})
+#assertIn('is_elephant', inventory)
+#assertEqual(1, len(inventory.keys()))
+
+
 class LabelHandlerTests(unittest.TestCase):
     """ Test Creation of Dataset Inventory """
 
@@ -46,8 +58,18 @@ class LabelHandlerTests(unittest.TestCase):
         self.assertIn('is_elephant', self.inventory)
         self.assertEqual(1, len(self.inventory.keys()))
 
+    def testKeepOnlyLabelsAndRemoveOthersMulti(self):
+        self.dinv.label_handler.keep_only_labels({"primary": ["elephant"], "color": ['brown', 'black']})
+        self.assertIn('is_elephant', self.inventory)
+        self.assertEqual(1, len(self.inventory.keys()))
+
     def testKeepOnlyLabels(self):
         self.dinv.label_handler.keep_only_labels({"primary": ["dog", "cat"]})
+        self.assertIn("multi_labels", self.inventory)
+        self.assertNotIn('is_elephant', self.inventory)
+
+    def testKeepOnlyLabelsNotInLabelList(self):
+        self.dinv.label_handler.keep_only_labels({"primary": ["dog", "cat", "genet"]})
         self.assertIn("multi_labels", self.inventory)
         self.assertNotIn('is_elephant', self.inventory)
 

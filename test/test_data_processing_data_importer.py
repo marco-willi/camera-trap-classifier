@@ -13,14 +13,12 @@ class ImportFromCSVPantheraTester(unittest.TestCase):
     def testNormalCase(self):
         self.assertEqual(self.data["record_bird_1"],
                          {'labels': {'species': ['Bird'],
-                                     'counts': [1],
                                      'count_category': ['1']},
                           'images': ["~/a/b/record_bird_1.JPG"]})
 
     def testNAinCounts(self):
         self.assertEqual(self.data["record_human_NA"],
                          {'labels': {'species': ['HUMAN'],
-                                     'counts': [-1],
                                      'count_category': ['NA']},
                           'images': ["~/a/b/record_human_NA.JPG"]})
 
@@ -34,15 +32,14 @@ class ImportFromCSVPantheraTester(unittest.TestCase):
     def testDuplicateSpeciesOnlyOnceInList(self):
         self.assertEqual(self.data["record_multi_LionLion"],
                          {'labels': {'species': ['Lion'],
-                                     'counts': [1],
                                      'count_category': ['1']},
                           'images': ["~/a/b/record_multi_LionLion.JPG"]})
 
     def testMultiSpeciesConsolidation(self):
         self.assertIn('Zebra', self.data["record_multi_ZebraGiraffe"]['labels']['species'])
         self.assertIn('Giraffe', self.data["record_multi_ZebraGiraffe"]['labels']['species'])
-        self.assertIn(1, self.data["record_multi_ZebraGiraffe"]['labels']['counts'])
-        self.assertIn(2, self.data["record_multi_ZebraGiraffe"]['labels']['counts'])
+        # self.assertIn(1, self.data["record_multi_ZebraGiraffe"]['labels']['counts'])
+        # self.assertIn(2, self.data["record_multi_ZebraGiraffe"]['labels']['counts'])
         self.assertEqual(["~/a/b/record_multi_ZebraGiraffe.JPG"], self.data["record_multi_ZebraGiraffe"]['images'])
 
 

@@ -39,6 +39,11 @@ dataset_inventory.label_handler.remove_multi_label_records()
 dataset_inventory.log_stats()
 
 
+if cfg.current_exp['balanced_sampling_label_type'] is not None:
+    cfg.current_exp['balanced_sampling_label_type'] = 'labels/' + cfg.current_exp['balanced_sampling_label_type']
+
+label_types_to_model_clean = ['labels/' + x for x in cfg.current_exp['label_types_to_model']]
+
 # Create TFRecod Encoder / Decoder
 logging.info("Creating TFRecord Data")
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
@@ -50,7 +55,7 @@ tfr_writer.encode_inventory_to_tfr(
         dataset_inventory,
         cfg.current_paths['tfr_master'],
         image_pre_processing_fun=resize_jpeg,
-        image_pre_processing_args={"max_side": cfg.current_exp['image_processing']['image_save_side_max']},
+        image_pre_processing_args={"max_side": cfg.current_exp['image_save_side_max']},
         overwrite_existing_file=False,
         prefix_to_labels='labels/')
 
