@@ -96,7 +96,8 @@ class LabelHandler(object):
             else:
                 labels_to_remove = set(to_remove[label_type].keys())
                 for label in label_type_labels[label_type]:
-                    labels_to_remove.remove(label)
+                    if label in labels_to_remove:
+                        labels_to_remove.remove(label)
                 to_remove[label_type] = list(labels_to_remove)
 
         self.remove_labels(to_remove)
