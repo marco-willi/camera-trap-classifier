@@ -72,18 +72,18 @@ def get_label_info(location='panthera', experiment="empty"):
 
         label_mapping = None
 
-        if type == 'empty':
+        if experiment == 'empty':
             label_mapping = {'species': {x: 'Species' for x in
                 keep_labels['species'] if x not in ['Vehicle', 'Blank']}}
             label_mapping['species']['Vehicle'] = 'Vehicle'
             label_mapping['species']['Blank'] = 'Blank'
 
-        elif type == 'species':
+        elif experiment == 'species':
             keep_labels['species'].remove('Vehicle')
             keep_labels['species'].remove('Blank')
 
         else:
-            raise NotImplementedError("type: %s not implemented" % type)
+            raise NotImplementedError("experiment: %s not implemented" % experiment)
 
     if location == 'panthera':
         labels_all = {
@@ -114,21 +114,21 @@ def get_label_info(location='panthera', experiment="empty"):
 
         label_mapping = None
 
-        if type == 'empty':
+        if experiment == 'empty':
             label_mapping = {'primary': {x: 'species' for x in
                 keep_labels['primary'] if x not in ['vehicle', 'blank']}}
             label_mapping['primary']['vehicle'] = 'vehicle'
             label_mapping['primary']['blank'] = 'blank'
 
-        elif type == 'species':
+        elif experiment == 'species':
             keep_labels['primary'].remove('vehicle')
             keep_labels['primary'].remove('blank')
 
         else:
-            raise NotImplementedError("type: %s not implemented" % type)
+            raise NotImplementedError("experiment: %s not implemented" % experiment)
 
     else:
-        raise NotImplementedError("dataset: %s not implemented" % dataset)
+        raise NotImplementedError("location: %s not implemented" % location)
 
     res = {'labels_all': labels_all, 'keep_labels': keep_labels,
            'label_mapping': label_mapping}
