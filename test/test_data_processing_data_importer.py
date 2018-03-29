@@ -1,5 +1,49 @@
 import unittest
-from data_processing.data_importer import ImportFromJson, ImportFromImageDirs
+from data_processing.data_importer import ImportFromJson, ImportFromImageDirs, ImportFromPantheraCSV
+
+
+class ImportFromCSVPantheraTester(unittest.TestCase):
+    """ Test Import from Json """
+
+    def setUp(self):
+        self.csv_importer = ImportFromPantheraCSV()
+        self.test_path_csv = './test/test_files/panthera.csv'
+        self.data = self.csv_importer.read_from_csv(self.test_path_csv)
+
+    def testNormalCase(self):
+        self.assertEqual(self.data["record_bird_1"],
+                         {'labels': {'species': ['Bird'],
+                                     'counts': [1],
+                                     'count_category': ['1']},
+                          'images': ["~/a/b/record_bird_1.JPG"]})
+
+    def testNAinCounts(self):
+        self.assertEqual(self.data["record_human_NA"],
+                         {'labels': {'species': ['HUMAN'],
+                                     'counts': [-1],
+                                     'count_category': ['NA']},
+                          'images': ["~/a/b/record_human_NA.JPG"]})
+
+    def testCountCats(self):
+        self.assertEqual(self.data["record_elephant_10"]['labels']['count_category'], ['10'])
+        self.assertEqual(self.data["record_elephant_11"]['labels']['count_category'], ['11-50'])
+        self.assertEqual(self.data["record_elephant_50"]['labels']['count_category'], ['11-50'])
+        self.assertEqual(self.data["record_elephant_51"]['labels']['count_category'], ['51+'])
+
+
+    def testDuplicateSpeciesOnlyOnceInList(self):
+        self.assertEqual(self.data["record_multi_LionLion"],
+                         {'labels': {'species': ['Lion'],
+                                     'counts': [1],
+                                     'count_category': ['1']},
+                          'images': ["~/a/b/record_multi_LionLion.JPG"]})
+
+    def testMultiSpeciesConsolidation(self):
+        self.assertIn('Zebra', self.data["record_multi_ZebraGiraffe"]['labels']['species'])
+        self.assertIn('Giraffe', self.data["record_multi_ZebraGiraffe"]['labels']['species'])
+        self.assertIn(1, self.data["record_multi_ZebraGiraffe"]['labels']['counts'])
+        self.assertIn(2, self.data["record_multi_ZebraGiraffe"]['labels']['counts'])
+        self.assertEqual(["~/a/b/record_multi_ZebraGiraffe.JPG"], self.data["record_multi_ZebraGiraffe"]['images'])
 
 
 class ImportFromJsonTester(unittest.TestCase):
