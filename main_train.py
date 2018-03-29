@@ -35,7 +35,7 @@ labels_data = get_label_info(location=cfg.cfg['run']['location'],
 logging.info("Building Dataset Inventory")
 dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_panthera_csv(cfg.current_paths['inventory'])
-#dataset_inventory.label_handler.remove_multi_label_records()
+dataset_inventory.label_handler.remove_multi_label_records()
 dataset_inventory.log_stats()
 
 
@@ -67,6 +67,7 @@ split_props = [cfg.current_exp['training_splits'][x] for x in split_names]
 logging.debug("Splitting TFR File")
 tfr_splitter.split_tfr_file(
     output_path_main=cfg.current_paths['exp_data'],
+    #output_path_main='/host/data_hdd/southern_africa/experiments/species/data/',
     output_prefix="split",
     split_names=split_names,
     split_props=split_props,

@@ -142,8 +142,11 @@ class LabelHandler(object):
 
         for i, record_to_remove in enumerate(ids_to_remove):
             if i < 10:
-                logging.info("Record %s has not all label types: %s" %
-                             (record_to_remove, all_label_types))
+                logging.info(
+                    "Record %s has not all label types - has: %s all: %s" %
+                    (record_to_remove,
+                     self.inv_data[record_to_remove]['labels'],
+                     all_label_types))
             self.inv_data.pop(record_to_remove, None)
 
         logging.info("Removed %s records due to having not all label types" %
