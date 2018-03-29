@@ -334,10 +334,10 @@ for i in range(0, 70):
 
     vals_to_log = list()
 
-    for val, metric in zip(val_model.metrics_names, results):
+    for metric, value in zip(val_model.metrics_names, results):
 
-        logging.info("Eval - %s: %s" % (metric, val))
-        vals_to_log.append(val)
+        logging.info("Eval - %s: %s" % (metric, value))
+        vals_to_log.append(value)
 
     # Log Results on Validation Set
     vals_to_log.append(K.eval(train_model.optimizer.lr))

@@ -1,6 +1,7 @@
 """ Class To Create Dataset Inventory """
 from config.config import logging
-from data_processing.data_importer import ImportFromJson, ImportFromImageDirs
+from data_processing.data_importer import (
+    ImportFromJson, ImportFromImageDirs, ImportFromPantheraCSV)
 from data_processing.label_handler import LabelHandler
 
 
@@ -27,6 +28,15 @@ class DatasetInventory(object):
     def remove_record(self, id_to_remove):
         """ Remove specific record """
         self.data_inventory.pop(id_to_remove, None)
+
+    def create_from_panthera_csv(self, path_to_csv):
+        """ Create Inventory from a csv file according to Panthera-style
+            formats
+        """
+        csv_reader = ImportFromPantheraCSV()
+        self.data_inventory = csv_reader.read_from_csv(path_to_csv)
+        self.label_handler = LabelHandler(self.data_inventory)
+        self.label_handler.remove_not_all_label_types_present()
 
     def create_from_class_directories(self, root_path):
         """ Create inventory from path which contains class-specific
@@ -70,11 +80,26 @@ class DatasetInventory(object):
                         label_stats[label_type][label] = 0
                     label_stats[label_type][label] += 1
 
-        # Log stats
-        for k, v in label_stats.items():
-            for label, label_count in v.items():
-                logging.info("Label Type: %s - %s records for %s" %
-                             (k, label_count, label))
+        # Log Stats
+        for label_type, labels in label_stats.items():
+            label_list = list()
+            count_list = list()
+            for label, count in labels.items():
+                label_list.append(label)
+                count_list.append(count)
+            total_counts = sum(count_list)
+            sort_index = sorted(range(len(count_list)), reverse=True,
+                                key=lambda k: count_list[k])
+            for idx in sort_index:
+                logging.info("Label Type: %s Label: %s Records: %s / %s (%s %%)" %
+                             (label_type, label_list[idx], count_list[idx],
+                              total_counts,
+                              round(100 * (count_list[idx]/total_counts), 4)))
+
+        # for k, v in label_stats.items():
+        #     for label, label_count in v.items():
+        #         logging.info("Label Type: %s - %s records for %s" %
+        #                      (k, label_count, label))
 
         # Multiple Labels per Label Type
         for k, v in label_type_stats.items():

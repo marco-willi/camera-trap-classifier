@@ -1,9 +1,133 @@
 """ Class To Import and Read Datasets """
 import os
 import json
+import csv
+import copy
 
 from config.config import logging
 from data_processing.utils import clean_input_path
+
+
+class ImportFromPantheraCSV(object):
+    """ Read Data from CSV """
+
+    def read_from_csv(self, path_to_csv):
+        """ Read Data From CSV """
+        data_dict = self._read_csv(path_to_csv)
+        self._calc_and_log_stats(data_dict)
+        return data_dict
+
+    def _calc_and_log_stats(self, data_dict):
+        """ Calc some Stats """
+
+        # for each label type and label calculate how often it occurs
+        label_stats = dict()
+        for k, v in data_dict.items():
+            for label_type, labels in v['labels'].items():
+                if label_type not in label_stats:
+                    label_stats[label_type] = dict()
+                for label in labels:
+                    if label not in label_stats[label_type]:
+                        label_stats[label_type][label] = 0
+                    label_stats[label_type][label] += 1
+
+        # print ordered statistics
+        for label_type, labels in label_stats.items():
+            label_list = list()
+            count_list = list()
+            for label, count in labels.items():
+                label_list.append(label)
+                count_list.append(count)
+            total_counts = sum(count_list)
+            sort_index = sorted(range(len(count_list)), reverse=True,
+                                key=lambda k: count_list[k])
+            for idx in sort_index:
+                logging.info("Label Type: %s Label: %s Records: %s (%s %%)" %
+                             (label_type, label_list[idx], count_list[idx],
+                              round(100 * (count_list[idx]/total_counts), 4)))
+
+    def _consolidate(self, existing, duplicate):
+        """ Consolidate records with identical id """
+        # check if identical species
+        consol = copy.deepcopy(existing)
+
+        for label_type, labels in duplicate['labels'].items():
+            if label_type in existing['labels']:
+                labels_all = set(labels).union(set(existing['labels'][label_type]))
+                consol['labels'][label_type] = list(labels_all)
+
+        return consol
+
+    def _categorize_counts(self, count):
+        """ Categorize Counts """
+        if count == -1:
+            return "NA"
+        elif count < 11:
+            return str(count)
+        elif count < 51:
+            return "11-50"
+        else:
+            return "51+"
+
+    def _read_csv(self, path_to_csv):
+        """ Read CSV File """
+        assert os.path.exists(path_to_csv), \
+            "Path: %s does not exist" % path_to_csv
+        data_dict = dict()
+        try:
+            with open(path_to_csv, 'r') as f:
+                csv_reader = csv.reader(f, delimiter=',', quotechar='"')
+                duplicate_count = 0
+                for i, row in enumerate(csv_reader):
+                    # check header
+                    if i == 0:
+                        assert row == ['image', 'species',
+                                       'count', 'survey', 'dir'], \
+                               "Header of CSV is not as expected"
+                    else:
+                        # extract fields from csv
+                        _id = row[0]
+                        species = row[1]
+                        try:
+                            species_count = int(row[2])
+                        except:
+                            if row[2] == 'NA':
+                                species_count = -1
+                            elif row[2] == '11-50':
+                                species_count = 11
+                            elif row[2] == '51+':
+                                species_count = 51
+                            else:
+                                species_count = -1
+                                logging.info("Record: %s has invalid count: observed %s - saved: %s" %
+                                             (_id, row[2], species_count))
+                        survey = row[3]
+                        image_path = row[4]
+                        species_count_cat = self._categorize_counts(species_count)
+                        new_record = {'images': [image_path],
+                                      'labels': {'species': [species],
+                                                 'counts': [species_count],
+                                                 'count_category': [species_count_cat]}}
+                        if _id in data_dict:
+                            new_record = self._consolidate(data_dict[_id], new_record)
+                            if duplicate_count < 30:
+                                logging.info("ID: %s already exists - consolidating" % _id)
+                                logging.info("   OLD Record:")
+                                for k, v in data_dict[_id].items():
+                                    logging.info("    Attr: %s - Value: %s" % (k, v))
+                                logging.info("   Consolidated Record:")
+                                for k, v in new_record.items():
+                                    logging.info("    Attr: %s - Value: %s" % (k, v))
+                            elif duplicate_count==30:
+                                logging.info("More IDs already exist - consolidating all...")
+                            duplicate_count += 1
+
+
+                        data_dict[_id] = new_record
+        except Exception as e:
+            logging.error('Failed to read csv:\n' + str(e))
+
+        return data_dict
 
 
 class ImportFromJson(object):
@@ -25,7 +149,6 @@ class ImportFromJson(object):
                 data_dict = json.load(f)
         except Exception as e:
             logging.error('Failed to read Json:\n' + str(e))
-            raise
 
         n_records = len(data_dict.keys())
         logging.info("Read %s records from %s" % (n_records, path_to_json))
