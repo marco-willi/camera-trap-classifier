@@ -24,7 +24,7 @@ class DatasetInventory(object):
         all_ids = list(self.data_inventory.keys())
         n_total = len(all_ids)
         n_choices = int(n_total * p_keep)
-        choices = random.choices(all_ids, k=n_choices)
+        choices = random.sample(all_ids, k=n_choices)
 
         for id in choices:
             new_data_inv = self.data_inventory[id]
