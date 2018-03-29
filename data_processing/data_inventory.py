@@ -1,4 +1,6 @@
 """ Class To Create Dataset Inventory """
+import random
+
 from config.config import logging
 from data_processing.data_importer import (
     ImportFromJson, ImportFromImageDirs, ImportFromPantheraCSV)
@@ -12,6 +14,22 @@ class DatasetInventory(object):
     def __init__(self):
         self.data_inventory = None
         self.label_handler = None
+
+    def randomly_remove_samples_to_percent(self, p_keep):
+        """ Randomly sample a percentage of all records """
+        if not p_keep <= 1:
+            raise ValueError("p has to be between 0 and 1")
+
+        new_data_inv = dict()
+        all_ids = list(self.data_inventory.keys())
+        n_total = len(all_ids)
+        n_choices = int(n_total * p_keep)
+        choices = random.choices(all_ids, k=n_choices)
+
+        for id in choices:
+            new_data_inv = self.data_inventory[id]
+
+        self.data_inventory = new_data_inv
 
     def get_all_record_ids(self):
         """ Get all ids of the inventory """

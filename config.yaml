@@ -40,14 +40,14 @@ locations:
         labels_project: panthera
         labels_version: empty
         label_types_to_model:
-          - 'primary'
-        balanced_sampling_min: False
-        balanced_sampling_label_type: 'primary'
+          - 'species'
+        balanced_sampling_min: True
+        balanced_sampling_label_type: 'species'
       species:
         model: resnet18
         labels_project: panthera
         labels_version: species
         label_types_to_model:
-          - 'primary'
+          - 'species'
         balanced_sampling_min: False
-        balanced_sampling_label_type: 'primary'
+        balanced_sampling_label_type: 'species'
