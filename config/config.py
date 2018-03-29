@@ -47,8 +47,8 @@ class Config(object):
         """ Create Paths and Directories """
         # general paths
         root = self.cfg['paths']['root']
-        exp = root + self.cfg['paths']['experiments']
-        models = root + self.cfg['paths']['models']
+        exp = self.cfg['paths']['experiments']
+        models = self.cfg['paths']['models']
 
         # location specific paths
         location = self.cfg['run']['location']
@@ -59,8 +59,8 @@ class Config(object):
         inventory_path = location_path + 'data' + os.path.sep + inventory_file
 
         # experiment specific paths
-        exp_path = exp + self.cfg['run']['experiment'] + os.path.sep
-        model_path = models + self.cfg['run']['experiment'] + os.path.sep
+        exp_path = location_path + exp + self.cfg['run']['experiment'] + os.path.sep
+        model_path = location_path + models + self.cfg['run']['experiment'] + os.path.sep
 
         exp_data = exp_path + 'data' + os.path.sep
         run_dir = exp_path + self.run_id + os.path.sep
