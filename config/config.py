@@ -38,10 +38,10 @@ class Config(object):
         for v in self.cfg['paths'].values():
             os.path.normpath(v) + os.path.sep
 
-    def _add_project_name_to_paths(config, project_name=''):
-        """ Add project name to paths """
+    def _add_location_name_to_paths(config, location_name=''):
+        """ Add location name to paths """
         for v in config['paths'].values():
-            v = v + os.path.sep + project_name
+            v = v + os.path.sep + location_name
 
     def _prepare_current_paths(self):
         """ Create Paths and Directories """
@@ -50,13 +50,13 @@ class Config(object):
         exp = root + self.cfg['paths']['experiments']
         models = root + self.cfg['paths']['models']
 
-        # project specific paths
-        project = self.cfg['run']['project']
-        project_path = root + project + os.path.sep
-        tfr_master_file = self.cfg['projects'][project]['paths']['master_tfr']
-        tfr_master_path = project_path + 'data' + os.path.sep + tfr_master_file
-        inventory_file = self.cfg['projects'][project]['paths']['inventory']
-        inventory_path = project_path + 'data' + os.path.sep + inventory_file
+        # location specific paths
+        location = self.cfg['run']['location']
+        location_path = root + location + os.path.sep
+        tfr_master_file = self.cfg['locations'][location]['paths']['master_tfr']
+        tfr_master_path = location_path + 'data' + os.path.sep + tfr_master_file
+        inventory_file = self.cfg['locations'][location]['paths']['inventory']
+        inventory_path = location_path + 'data' + os.path.sep + inventory_file
 
         # experiment specific paths
         exp_path = exp + self.cfg['run']['experiment'] + os.path.sep
@@ -78,17 +78,17 @@ class Config(object):
 
     def _prepare_current_experiment(self):
         """ Compile relevant information for current experiment """
-        project = self.cfg['run']['project']
+        location = self.cfg['run']['location']
         exp = self.cfg['run']['experiment']
         model = self.cfg['run']
-        exp_data = self.cfg['projects'][project]['experiments'][exp]
+        exp_data = self.cfg['locations'][location]['experiments'][exp]
         model = exp_data['model']
         model_cfg = self.cfg['models'][model]
-        project_data = self.cfg['projects'][project]
-        self.current_project = project_data
+        location_data = self.cfg['locations'][location]
+        self.current_location = location_data
         self.current_exp = exp_data
         self.current_model = model_cfg
-        for k, v in self.current_project.items():
+        for k, v in self.current_location.items():
             if not k == 'experiments':
                 if k not in self.current_exp:
                     self.current_exp[k] = v

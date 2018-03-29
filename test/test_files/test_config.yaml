@@ -18,7 +18,7 @@ general:
   logging_to_disk: False
 
 run:
-  project: southern_africa
+  location: southern_africa
   experiment: species
   identifier: timestamp
 
@@ -32,7 +32,7 @@ models:
   resnet18:
     batch_size: 128
 
-projects:
+locations:
   southern_africa:
     experiment_id: 'ts'
     image_processing:
