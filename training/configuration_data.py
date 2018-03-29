@@ -85,7 +85,7 @@ def get_label_info(location='panthera', experiment="empty"):
         else:
             raise NotImplementedError("experiment: %s not implemented" % experiment)
 
-    if location == 'panthera':
+    elif location == 'panthera':
         labels_all = {
           'primary': [
             'bat', 'hartebeest', 'insect', 'klipspringer', 'hyaenabrown',
