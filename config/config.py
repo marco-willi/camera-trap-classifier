@@ -65,9 +65,9 @@ class Config(object):
         exp_data = exp_path + 'data' + os.path.sep
         run_dir = exp_path + self.run_id + os.path.sep
 
-        # # check and create path if not exist
-        # for path in [exp_data, run_dir]:
-        #     create_path(path, create_path=True)
+        # check and create path if not exist
+        for path in [run_dir]:
+            create_path(path, create_path=True)
         paths = {'tfr_master': tfr_master_path,
                  'inventory': inventory_path,
                  'exp_data': exp_data,
@@ -93,6 +93,7 @@ class Config(object):
                 if k not in self.current_exp:
                     self.current_exp[k] = v
 
+
 # Load Configuration
 cfg = Config()
 cfg.load_config()
@@ -105,8 +106,7 @@ cfg.load_config()
 # logging handlers
 handlers = list()
 
-#log_path = cfg.cfg['paths']['logging_output']
-log_path = ''
+log_path = cfg.current_paths['run_data']
 
 if cfg.cfg['general']['logging_to_disk']:
     # handlers to log stuff to (file and stdout)

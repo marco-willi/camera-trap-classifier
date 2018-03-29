@@ -5,14 +5,15 @@ from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
 from tensorflow.python.keras.callbacks import (
-    ModelCheckpoint, TensorBoard, CSVLogger)
+    ModelCheckpoint, TensorBoard)
 from tensorflow.python.keras import backend as K
 # import matplotlib.pyplot as plt
 
 from config.config import logging
 from config.config import cfg
 from training.configuration_data import get_label_info
-from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
+from training.utils import (
+        ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger)
 from models.resnet_keras_mod import ResnetBuilder
 
 from data_processing.data_inventory import DatasetInventory
@@ -134,6 +135,16 @@ logging.info("Image Means: %s" % image_means)
 logging.info("Image Stdevs: %s" % image_stdevs)
 
 
+## plot some images and their labels to check
+#for i in range(0, 30):
+#    img = data['images'][i,:,:,:]
+#    lbl = data['labels/primary'][i]
+#    print("Label: %s" % num_to_label_mapper[int(lbl)])
+#    plt.imshow(img)
+#    plt.show()
+#
+
+
 # Prepare Data Feeders for Training / Validation Data
 logging.info("Preparing Data Feeders")
 def input_feeder_train():
@@ -151,7 +162,7 @@ def input_feeder_train():
 
 def input_feeder_val():
     return data_reader.get_iterator(
-                tfr_files=[tfr_splitter.get_split_paths()['val']],
+                tfr_files=[tfr_splitter.get_split_paths()['validation']],
                 batch_size=cfg.current_model['batch_size'],
                 is_train=False,
                 n_repeats=None,
@@ -179,7 +190,7 @@ logging.info("Calculating batches per epoch")
 n_batches_per_epoch_train = calc_n_batches_per_epoch(tfr_n_records['train'],
                                                      cfg.current_model['batch_size'])
 
-n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['val'],
+n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['validation'],
                                                    cfg.current_model['batch_size'])
 
 n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['test'],
@@ -194,7 +205,6 @@ def create_model(input_feeder, target_labels):
     model_input = Input(tensor=data['images'])
     res_builder = ResnetBuilder()
     model_flat = res_builder.build_resnet_18(model_input)
-
     all_outputs = list()
 
     for n, name in zip(n_classes_per_label_type, target_labels):
@@ -224,17 +234,21 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         min_lr=1e-5,
         minimize=True)
 
-csv_logger = CSVLogger(cfg.cfg['paths']['model_output'] + 'training.log')
+logger = CSVLogger(
+    cfg.current_paths['run_data'] + 'training.log',
+    metrics_names=['val_loss', 'val_acc',
+                   'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
+
 
 checkpointer = ModelCheckpoint(
-        filepath=cfg.cfg['paths']['model_output'] + 'weights.{epoch:02d}-{loss:.2f}.hdf5',
+        filepath=cfg.current_paths['run_data'] + 'weights.{epoch:02d}-{loss:.2f}.hdf5',
         monitor='loss',
         verbose=0,
         save_best_only=False,
         save_weights_only=False,
         mode='auto', period=1)
 
-tensorboard = TensorBoard(log_dir=cfg.cfg['paths']['model_output'],
+tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           histogram_freq=0,
                           batch_size=cfg.current_model['batch_size'], write_graph=True,
                           write_grads=False, write_images=False)
@@ -260,9 +274,17 @@ for i in range(0, 70):
 
     val_loss = results[val_model.metrics_names == 'loss']
 
-    for val, metric in zip(val_model.metrics_names, results):
+    vals_to_log = list()
 
-        logging.info("Eval - %s: %s" % (metric, val))
+    for metric, value in zip(val_model.metrics_names, results):
+
+        logging.info("Eval - %s: %s" % (metric, value))
+        vals_to_log.append(value)
+
+    # Log Results on Validation Set
+    vals_to_log.append(K.eval(train_model.optimizer.lr))
+
+    logger.addResults(i+1, vals_to_log)
 
     # Reduce Learning Rate if necessary
     model_lr = K.eval(train_model.optimizer.lr)
