@@ -27,8 +27,8 @@ from data_processing.utils import calc_n_batches_per_epoch
 
 # get label information
 logging.info("Getting Label Information")
-labels_data = get_label_info(dataset=cfg.current_exp['labels_project'],
-                             type=cfg.current_exp['labels_version'])
+labels_data = get_label_info(location=cfg.cfg['run']['location'],
+                             experiment=cfg.cfg['run']['experiment'])
 
 
 # Create Data Inventory

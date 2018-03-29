@@ -106,7 +106,6 @@ class ImportFromPantheraCSV(object):
                         species_count_cat = self._categorize_counts(species_count)
                         new_record = {'images': [image_path],
                                       'labels': {'species': [species],
-                                                 'counts': [species_count],
                                                  'count_category': [species_count_cat]}}
 
                         if species == 'NA':
