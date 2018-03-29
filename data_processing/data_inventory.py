@@ -27,7 +27,7 @@ class DatasetInventory(object):
         choices = random.sample(all_ids, k=n_choices)
 
         for id in choices:
-            new_data_inv = self.data_inventory[id]
+            new_data_inv[id] = self.data_inventory[id]
 
         self.data_inventory = new_data_inv
 
