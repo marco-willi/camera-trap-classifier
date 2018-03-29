@@ -170,6 +170,12 @@ def calc_n_batches_per_epoch(n_total, batch_size):
     return int(n_batches_per_epoch)
 
 
+def create_path(path, create_path=True):
+    if not os.path.exists(path) & create_path:
+        os.mkdir(path)
+    else:
+        NameError("Path %s not Found" % path)
+
 # # TODO: Improve
 # def create_default_class_mapper(all_labels, class_mapping=None):
 #     """ Map Classes to Integers for modelling """

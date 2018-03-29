@@ -34,8 +34,8 @@ labels_data = get_label_info(dataset=cfg.current_exp['labels_project'],
 # Create Data Inventory
 logging.info("Building Dataset Inventory")
 dataset_inventory = DatasetInventory()
-dataset_inventory.create_from_panthera_csv(cfg.current_exp['paths']['inventory'])
-dataset_inventory.label_handler.remove_multi_label_records()
+dataset_inventory.create_from_panthera_csv(cfg.current_paths['inventory'])
+#dataset_inventory.label_handler.remove_multi_label_records()
 dataset_inventory.log_stats()
 
 
@@ -48,7 +48,7 @@ tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
 tfr_writer.encode_inventory_to_tfr(
         dataset_inventory,
-        cfg.cfg['paths']['tfr_master'] + "all.tfrecord",
+        cfg.current_paths['tfr_master'],
         image_pre_processing_fun=resize_jpeg,
         image_pre_processing_args={"max_side": cfg.current_exp['image_processing']['image_save_side_max']},
         overwrite_existing_file=False,
@@ -57,7 +57,7 @@ tfr_writer.encode_inventory_to_tfr(
 # Split TFrecord into Train/Val/Test
 logging.debug("Creating TFRecordSplitter")
 tfr_splitter = TFRecordSplitter(
-        files_to_split=path_to_tfr_output + "all.tfrecord",
+        files_to_split=cfg.current_paths['tfr_master'],
         tfr_encoder=tfr_encoder_decoder.encode_record,
         tfr_decoder=tfr_encoder_decoder.decode_record)
 
@@ -66,7 +66,7 @@ split_props = [cfg.current_exp['training_splits'][x] for x in split_names]
 
 logging.debug("Splitting TFR File")
 tfr_splitter.split_tfr_file(
-    output_path_main=path_to_tfr_output,
+    output_path_main=cfg.current_paths['exp_data'],
     output_prefix="split",
     split_names=split_names,
     split_props=split_props,
@@ -75,7 +75,7 @@ tfr_splitter.split_tfr_file(
     output_labels=cfg.current_exp['label_types_to_model'],
     overwrite_existing_files=False,
     keep_only_labels=labels_data['keep_labels'],
-    class_mapping=labels_data['label_mapping')
+    class_mapping=labels_data['label_mapping'])
 
 # Check numbers
 tfr_splitter.log_record_numbers_per_file()

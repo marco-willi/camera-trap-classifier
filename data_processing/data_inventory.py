@@ -91,10 +91,11 @@ class DatasetInventory(object):
             sort_index = sorted(range(len(count_list)), reverse=True,
                                 key=lambda k: count_list[k])
             for idx in sort_index:
-                logging.info("Label Type: %s Label: %s Records: %s / %s (%s %%)" %
-                             (label_type, label_list[idx], count_list[idx],
-                              total_counts,
-                              round(100 * (count_list[idx]/total_counts), 4)))
+                logging.info(
+                    "Label Type: %s Label: %s Records: %s / %s (%s %%)" %
+                    (label_type, label_list[idx], count_list[idx],
+                     total_counts,
+                     round(100 * (count_list[idx]/total_counts), 4)))
 
         # for k, v in label_stats.items():
         #     for label, label_count in v.items():

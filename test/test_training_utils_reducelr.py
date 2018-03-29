@@ -58,7 +58,6 @@ class ReduceLeraningRateOnPlateauTester(unittest.TestCase):
             else:
                 self.assertFalse(self.red.reduced_in_last_step)
 
-
     def testCorrectLearningRateCalculation(self):
         self.red = ReduceLearningRateOnPlateau(
             reduce_after_n_rounds=3,
@@ -88,8 +87,6 @@ class ReduceLeraningRateOnPlateauTester(unittest.TestCase):
                 self.assertAlmostEqual(model_lr, 0.001)
             else:
                 self.assertAlmostEqual(model_lr, 0.0001)
-
-
 
     def testMinLearningRate(self):
         self.red = ReduceLearningRateOnPlateau(

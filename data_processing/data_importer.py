@@ -108,6 +108,10 @@ class ImportFromPantheraCSV(object):
                                       'labels': {'species': [species],
                                                  'counts': [species_count],
                                                  'count_category': [species_count_cat]}}
+
+                        if species == 'NA':
+                            continue
+
                         if _id in data_dict:
                             new_record = self._consolidate(data_dict[_id], new_record)
                             if duplicate_count < 30:

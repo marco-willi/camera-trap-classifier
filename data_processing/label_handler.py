@@ -106,6 +106,8 @@ class LabelHandler(object):
         ids_to_remove = self.find_multi_label_records()
         for id_to_remove in ids_to_remove:
             self.inv_data.pop(id_to_remove, None)
+        logging.info("Removed %s records with multiple labels" %
+                     len(ids_to_remove))
 
     def _convert_to_list(self, input):
         """ Convert input to list if str, else raise error """

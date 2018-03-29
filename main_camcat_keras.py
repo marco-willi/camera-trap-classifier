@@ -283,10 +283,10 @@ def create_model(input_feeder, target_labels):
 
 
 # Callbacks and Monitors
-early_stopping = EarlyStopping(stop_after_n_rounds=10, minimize=True)
+early_stopping = EarlyStopping(stop_after_n_rounds=7, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
-        reduce_after_n_rounds=4,
-        patience_after_reduction=2,
+        reduce_after_n_rounds=3,
+        patience_after_reduction=3,
         reduction_mult=0.1,
         min_lr=1e-5,
         minimize=True)
