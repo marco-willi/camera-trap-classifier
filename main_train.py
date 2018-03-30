@@ -143,6 +143,17 @@ logging.info("Image Stdevs: %s" % image_stdevs)
 #    plt.imshow(img)
 #    plt.show()
 #
+# plot some images and their labels to check
+import matplotlib.pyplot as plt
+for i in range(0, 100):
+    img = data['images'][i,:,:,:]
+    lbl = data['labels/species'][i]
+    lbl_c = num_to_label_mapper['labels/species'][int(lbl)]
+    print("Label: %s" % num_to_label_mapper['labels/species'][int(lbl)])
+    save_path = cfg.current_paths['exp_data'] +\
+                'sample_image_' + str(i) +'_' + lbl_c + '.jpeg'
+    plt.imsave(save_path, img)
+
 
 
 # Prepare Data Feeders for Training / Validation Data
