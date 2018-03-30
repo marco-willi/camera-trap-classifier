@@ -297,3 +297,13 @@ class ReduceLearningRateOnPlateau(object):
 
             current_min_res = np.min(result_history)
         return change_lr
+
+
+def get_most_rescent_file_with_string(dirpath, in_str='', excl_str='!'):
+    """ get most recent file from directory, that includes string """
+    a = [s for s in os.listdir(dirpath)
+         if os.path.isfile(os.path.join(dirpath, s))]
+    a.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)))
+    b = [x for x in a if (in_str in x) and not (excl_str in x)]
+    latest = b[-1]
+    return dirpath + os.path.sep + latest
