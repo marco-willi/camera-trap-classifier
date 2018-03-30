@@ -265,7 +265,7 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
 
 logger = CSVLogger(
     cfg.current_paths['run_data'] + 'training.log',
-    metrics_names=['val_loss', 'val_acc',
+    es=['val_loss', 'val_acc',
                    'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
 
 
@@ -319,26 +319,26 @@ for i in range(0, 70):
     # Run evaluation model
     results = val_model.evaluate(steps=n_batches_per_epoch_val)
 
-    val_loss = results[val_model_base.metrics_names == 'loss']
+    val_loss = results[val_model.metrics_names == 'loss']
 
     vals_to_log = list()
 
-    for metric, value in zip(val_model_base.metrics_names, results):
+    for metric, value in zip(val_model.metrics_names, results):
 
         logging.info("Eval - %s: %s" % (metric, value))
         vals_to_log.append(value)
 
     # Log Results on Validation Set
-    vals_to_log.append(K.eval(train_model_base.optimizer.lr))
+    vals_to_log.append(K.eval(train_model.optimizer.lr))
 
     logger.addResults(i+1, vals_to_log)
 
     # Reduce Learning Rate if necessary
-    model_lr = K.eval(train_model_base.optimizer.lr)
+    model_lr = K.eval(train_model.optimizer.lr)
     reduce_lr_on_plateau.addResult(val_loss, model_lr)
     if reduce_lr_on_plateau.reduced_in_last_step:
-        K.set_value(train_model_base.optimizer.lr, reduce_lr_on_plateau.new_lr)
-        logging.info("Setting LR to: %s" % K.eval(train_model_base.optimizer.lr))
+        K.set_value(train_model.optimizer.lr, reduce_lr_on_plateau.new_lr)
+        logging.info("Setting LR to: %s" % K.eval(train_model.optimizer.lr))
 
     # Check if training should be stopped
     early_stopping.addResult(val_loss)
