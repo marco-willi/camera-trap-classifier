@@ -218,8 +218,7 @@ if cfg.current_exp['initialize_weights']:
     init_cfg = cfg.current_exp['initialize_cfg']
     root_path = cfg.current_paths['root']
 
-
-    if init_cfg['model_name'] == 'latest:
+    if init_cfg['model_name'] == 'latest':
         model_path = root_path + init_cfg['model_dir']
         model_file = get_most_rescent_file_with_string(
                 model_path, in_str='.hdf5')
@@ -230,6 +229,7 @@ if cfg.current_exp['initialize_weights']:
     model = load_model(model_file)
 
 model_pre = None
+
 
 def create_model(input_feeder, target_labels, model_pre=None):
     """ Create Keras Model """
@@ -257,10 +257,6 @@ def create_model(input_feeder, target_labels, model_pre=None):
                   metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
                   target_tensors=target_tensors)
     return model
-
-
-
-
 
 
 # Callbacks and Monitors
