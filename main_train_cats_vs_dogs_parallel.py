@@ -243,9 +243,9 @@ def create_model(input_feeder, target_labels, n_gpus=cfg.cfg['general']['number_
                       for x in target_labels}
 
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
-    opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+    #opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
     model.compile(loss='sparse_categorical_crossentropy',
-                  optimizer='rmsprop',
+                  optimizer=opt,
                   metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
                   target_tensors=target_tensors)
 
@@ -331,12 +331,12 @@ for i in range(0, 70):
 
     logger.addResults(i+1, vals_to_log)
 
-    # # Reduce Learning Rate if necessary
-    # model_lr = K.eval(train_model.optimizer.lr)
-    # reduce_lr_on_plateau.addResult(val_loss, model_lr)
-    # if reduce_lr_on_plateau.reduced_in_last_step:
-    #     K.set_value(train_model.optimizer.lr, reduce_lr_on_plateau.new_lr)
-    #     logging.info("Setting LR to: %s" % K.eval(train_model.optimizer.lr))
+    # Reduce Learning Rate if necessary
+    model_lr = K.eval(train_model.optimizer.lr)
+    reduce_lr_on_plateau.addResult(val_loss, model_lr)
+    if reduce_lr_on_plateau.reduced_in_last_step:
+        K.set_value(train_model.optimizer.lr, reduce_lr_on_plateau.new_lr)
+        logging.info("Setting LR to: %s" % K.eval(train_model.optimizer.lr))
 
     # Check if training should be stopped
     early_stopping.addResult(val_loss)
