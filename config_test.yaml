@@ -1,0 +1,92 @@
+general:
+  debug: False
+  logging: debug
+  logging_to_disk: False
+  number_of_gpus: 1
+
+run:
+ location: cats_and_dogs
+ experiment: cats_vs_dogs
+ identifier: timestamp
+
+paths:
+  root: '/host/data_hdd/'
+  experiments: 'experiments/'
+  models: 'models/'
+
+paths_debug:
+  root: 'D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\'
+  experiments: 'experiments\\'
+  models: 'models\\'
+
+models:
+  resnet18:
+    batch_size: 128
+  cats_vs_dogs:
+    batch_size: 128
+
+locations:
+  southern_africa:
+    experiment_id: 'ts'
+    image_save_side_max: 500
+    image_processing:
+      output_height: 224
+      output_width: 224
+      resize_side_min: 224
+      resize_side_max: 500
+    paths:
+      master_tfr: 'master.tfrecord'
+      #inventory: 'D:\Studium_GD\Zooniverse\CamCatProject\data\inventory_list.csv'
+      inventory: 'inventory_list.csv'
+    training_splits:
+      train: 0.9
+      validation: 0.05
+      test: 0.05
+    experiments:
+      empty_vehicle_species:
+        model: resnet18
+        labels_project: panthera
+        labels_version: empty
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: True
+        balanced_sampling_label_type: 'species'
+      species:
+        model: resnet18
+        labels_project: panthera
+        labels_version: species
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: False
+        balanced_sampling_label_type: 'species'
+  cats_and_dogs:
+    experiment_id: 'ts'
+    image_save_side_max: 200
+    image_processing:
+      output_height: 150
+      output_width: 150
+      resize_side_min: 150
+      resize_side_max: 200
+    paths:
+      master_tfr: 'master.tfrecord'
+      inventory: 'inventory_list.csv'
+      images: "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all"
+    training_splits:
+      train: 0.9
+      validation: 0.05
+      test: 0.05
+    experiments:
+      cats_vs_dogs:
+        model: cats_vs_dogs
+        labels_project: cats_vs_dogs
+        labels_version: cats_vs_dogs
+        label_types_to_model:
+          - 'primary'
+        balanced_sampling_min: True
+        balanced_sampling_label_type: 'primary'
+        initialize_weights: False
+        initialize_cfg:
+          model_dir: "cats_and_dogs\\experiments\\cats_vs_dogs\\run_201803300903\\"
+          model_name: 'latest'
+          replace_last_layer: False
+          starting_epoch_zero: False

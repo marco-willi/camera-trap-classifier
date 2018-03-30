@@ -227,9 +227,9 @@ if cfg.current_exp['initialize_weights']:
     else:
         model_file = root_path + init_cfg['model_dir'] + init_cfg['model_name']
 
-    model = load_model(model_file, compile=False)
+    model = load_model(model_file)
 
-
+model_pre = None
 
 def create_model(input_feeder, target_labels, model_pre=None):
     """ Create Keras Model """
@@ -292,8 +292,8 @@ tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           write_grads=False, write_images=False)
 
 
-train_model = create_model(input_feeder_train, label_types_to_model_clean, model_pre=model)
-val_model = create_model(input_feeder_val, label_types_to_model_clean, model_pre=model)
+train_model = create_model(input_feeder_train, label_types_to_model_clean, model_pre=model_pre)
+val_model = create_model(input_feeder_val, label_types_to_model_clean, model_pre=model_pre)
 
 
 for i in range(0, 70):
