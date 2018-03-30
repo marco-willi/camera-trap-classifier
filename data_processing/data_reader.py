@@ -43,7 +43,8 @@ class DatasetReader(object):
                                **label_pad_dict}))
 
         else:
-            dataset = dataset.batch(batch_size)
+            dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
+            #dataset = dataset.batch(batch_size)
 
         dataset = dataset.repeat(n_repeats)
 

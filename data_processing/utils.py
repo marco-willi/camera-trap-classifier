@@ -162,11 +162,12 @@ def id_to_zero_one(value):
     return num
 
 
-def calc_n_batches_per_epoch(n_total, batch_size):
+def calc_n_batches_per_epoch(n_total, batch_size, drop_remainder=True):
     """ Calculate n batches per epoch """
     n_batches_per_epoch = n_total // batch_size
     remainder = np.min([n_total % batch_size, 1])
-    n_batches_per_epoch += remainder
+    if not drop_remainder:
+        n_batches_per_epoch += remainder
     return int(n_batches_per_epoch)
 
 
