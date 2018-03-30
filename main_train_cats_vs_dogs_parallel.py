@@ -243,7 +243,7 @@ def create_model(input_feeder, target_labels, n_gpus=cfg.cfg['general']['number_
                       for x in target_labels}
 
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
-    # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+    opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
