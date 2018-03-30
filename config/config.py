@@ -46,9 +46,14 @@ class Config(object):
     def _prepare_current_paths(self):
         """ Create Paths and Directories """
         # general paths
-        root = self.cfg['paths']['root']
-        exp = self.cfg['paths']['experiments']
-        models = self.cfg['paths']['models']
+        if self.cfg['general']['debug']:
+            paths = 'paths_debug'
+        else:
+            paths = 'paths'
+
+        root = self.cfg[paths]['root']
+        exp = self.cfg[paths]['experiments']
+        models = self.cfg[paths]['models']
 
         # location specific paths
         location = self.cfg['run']['location']
@@ -72,7 +77,8 @@ class Config(object):
                  'inventory': inventory_path,
                  'exp_data': exp_data,
                  'run_data': run_dir,
-                 'model_saves': model_path}
+                 'model_saves': model_path,
+                 'root': root}
 
         self.current_paths = paths
 
