@@ -217,7 +217,7 @@ from training.utils import get_most_rescent_file_with_string
 
 
 
-def create_model(input_feeder, target_labels, n_gpus=1):
+def create_model(input_feeder, target_labels, n_gpus=cfg.cfg['general']['number_of_gpus']):
     """ Create Keras Model """
     data = input_feeder()
     model_input = Input(tensor=data['images'])
@@ -250,8 +250,6 @@ def create_model(input_feeder, target_labels, n_gpus=1):
                   target_tensors=target_tensors)
 
     return model, base_model
-
-
 
 
 # Callbacks and Monitors

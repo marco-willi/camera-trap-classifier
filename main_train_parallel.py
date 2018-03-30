@@ -138,15 +138,15 @@ logging.info("Image Stdevs: %s" % image_stdevs)
 
 
 # plot some images and their labels to check
-import matplotlib.pyplot as plt
-for i in range(0, 100):
-    img = data['images'][i,:,:,:]
-    lbl = data['labels/species'][i]
-    lbl_c = num_to_label_mapper['labels/species'][int(lbl)]
-    print("Label: %s" % num_to_label_mapper['labels/species'][int(lbl)])
-    save_path = cfg.current_paths['exp_data'] +\
-                'sample_image_' + str(i) +'_' + lbl_c + '.jpeg'
-    plt.imsave(save_path, img)
+# import matplotlib.pyplot as plt
+# for i in range(0, 100):
+#     img = data['images'][i,:,:,:]
+#     lbl = data['labels/species'][i]
+#     lbl_c = num_to_label_mapper['labels/species'][int(lbl)]
+#     print("Label: %s" % num_to_label_mapper['labels/species'][int(lbl)])
+#     save_path = cfg.current_paths['exp_data'] +\
+#                 'sample_image_' + str(i) +'_' + lbl_c + '.jpeg'
+#     plt.imsave(save_path, img)
 
 
 
@@ -204,7 +204,7 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['test'],
 # Load Model Architecture and build output layer
 logging.info("Building Model")
 
-def create_model(input_feeder, target_labels,  n_gpus=1):
+def create_model(input_feeder, target_labels,  n_gpus=cfg.cfg['general']['number_of_gpus']):
     """ Create Keras Model """
 
     # create data feeder
@@ -309,26 +309,26 @@ for i in range(0, 70):
     # Run evaluation model
     results = val_model.evaluate(steps=n_batches_per_epoch_val)
 
-    val_loss = results[val_model_base.metrics_names == 'loss']
+    val_loss = results[val_model.metrics_names == 'loss']
 
     vals_to_log = list()
 
-    for metric, value in zip(val_model_base.metrics_names, results):
+    for metric, value in zip(val_model.metrics_names, results):
 
         logging.info("Eval - %s: %s" % (metric, value))
         vals_to_log.append(value)
 
     # Log Results on Validation Set
-    vals_to_log.append(K.eval(train_model_base.optimizer.lr))
+    vals_to_log.append(K.eval(train_model.optimizer.lr))
 
     logger.addResults(i+1, vals_to_log)
 
     # Reduce Learning Rate if necessary
-    model_lr = K.eval(train_model_base.optimizer.lr)
+    model_lr = K.eval(train_model.optimizer.lr)
     reduce_lr_on_plateau.addResult(val_loss, model_lr)
     if reduce_lr_on_plateau.reduced_in_last_step:
-        K.set_value(train_model_base.optimizer.lr, reduce_lr_on_plateau.new_lr)
-        logging.info("Setting LR to: %s" % K.eval(train_model_base.optimizer.lr))
+        K.set_value(train_model.optimizer.lr, reduce_lr_on_plateau.new_lr)
+        logging.info("Setting LR to: %s" % K.eval(train_model.optimizer.lr))
 
     # Check if training should be stopped
     early_stopping.addResult(val_loss)
