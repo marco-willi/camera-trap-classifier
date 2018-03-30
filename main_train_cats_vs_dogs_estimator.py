@@ -29,11 +29,11 @@ from data_processing.utils import calc_n_batches_per_epoch
 
 
 # Create Data Inventory
-logging.info("Building Dataset Inventory")
-dataset_inventory = DatasetInventory()
-dataset_inventory.create_from_class_directories(cfg.current_exp['paths']['images'])
-dataset_inventory.label_handler.remove_multi_label_records()
-dataset_inventory.log_stats()
+# logging.info("Building Dataset Inventory")
+# dataset_inventory = DatasetInventory()
+# dataset_inventory.create_from_class_directories(cfg.current_exp['paths']['images'])
+# dataset_inventory.label_handler.remove_multi_label_records()
+# dataset_inventory.log_stats()
 
 
 if cfg.current_exp['balanced_sampling_label_type'] is not None:
@@ -48,13 +48,13 @@ tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 
 # Write TFRecord file from Data Inventory
 tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
-tfr_writer.encode_inventory_to_tfr(
-        dataset_inventory,
-        cfg.current_paths['tfr_master'],
-        image_pre_processing_fun=resize_jpeg,
-        image_pre_processing_args={"max_side": cfg.current_exp['image_save_side_max']},
-        overwrite_existing_file=False,
-        prefix_to_labels='labels/')
+# tfr_writer.encode_inventory_to_tfr(
+#         dataset_inventory,
+#         cfg.current_paths['tfr_master'],
+#         image_pre_processing_fun=resize_jpeg,
+#         image_pre_processing_args={"max_side": cfg.current_exp['image_save_side_max']},
+#         overwrite_existing_file=False,
+#         prefix_to_labels='labels/')
 
 # Split TFrecord into Train/Val/Test
 logging.debug("Creating TFRecordSplitter")
