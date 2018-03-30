@@ -5,12 +5,12 @@ general:
   number_of_gpus: 1
 
 run:
-#  location: southern_africa
-#  experiment: species
+   location: southern_africa
+   experiment: species
+   identifier: timestamp
+#  location: cats_and_dogs
+#  experiment: cats_vs_dogs
 #  identifier: timestamp
-  location: cats_and_dogs
-  experiment: cats_vs_dogs
-  identifier: timestamp
 
 paths:
   root: '/host/data_hdd/'
