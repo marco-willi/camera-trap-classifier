@@ -265,7 +265,7 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
 
 logger = CSVLogger(
     cfg.current_paths['run_data'] + 'training.log',
-    es=['val_loss', 'val_acc',
+    metrics_names=['val_loss', 'val_acc',
                    'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
 
 
