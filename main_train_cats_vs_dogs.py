@@ -28,11 +28,11 @@ from data_processing.utils import calc_n_batches_per_epoch
 
 
 # Create Data Inventory
-logging.info("Building Dataset Inventory")
-dataset_inventory = DatasetInventory()
-dataset_inventory.create_from_class_directories(cfg.current_exp['paths']['images'])
-dataset_inventory.label_handler.remove_multi_label_records()
-dataset_inventory.log_stats()
+# logging.info("Building Dataset Inventory")
+# dataset_inventory = DatasetInventory()
+# dataset_inventory.create_from_class_directories(cfg.current_exp['paths']['images'])
+# dataset_inventory.label_handler.remove_multi_label_records()
+# dataset_inventory.log_stats()
 
 
 if cfg.current_exp['balanced_sampling_label_type'] is not None:
