@@ -1,11 +1,7 @@
 """ Train a Keras TF Model"""
 import tensorflow as tf
 import numpy as np
-from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.layers import Input, Dense
-from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
-from tensorflow.python.keras.callbacks import (
-    ModelCheckpoint, TensorBoard)
+from tensorflow.python.keras.callbacks import TensorBoard
 from tensorflow.python.keras import backend as K
 # import matplotlib.pyplot as plt
 
@@ -13,7 +9,8 @@ from config.config import logging
 from config.config import cfg
 from training.configuration_data import get_label_info
 from training.utils import (
-        ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger)
+        ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger,
+        ModelCheckpointer)
 from training.model_library import create_model
 
 from data_processing.data_inventory import DatasetInventory
@@ -31,7 +28,6 @@ logging.info("Getting Label Information")
 labels_data = get_label_info(location=cfg.cfg['run']['location'],
                              experiment=cfg.cfg['run']['experiment'])
 
-
 # Create Data Inventory
 logging.info("Building Dataset Inventory")
 dataset_inventory = DatasetInventory()
@@ -42,9 +38,11 @@ dataset_inventory.log_stats()
 
 
 if cfg.current_exp['balanced_sampling_label_type'] is not None:
-    cfg.current_exp['balanced_sampling_label_type'] = 'labels/' + cfg.current_exp['balanced_sampling_label_type']
+    cfg.current_exp['balanced_sampling_label_type'] = \
+        'labels/' + cfg.current_exp['balanced_sampling_label_type']
 
-label_types_to_model_clean = ['labels/' + x for x in cfg.current_exp['label_types_to_model']]
+label_types_to_model_clean = ['labels/' + x for x in
+                              cfg.current_exp['label_types_to_model']]
 
 # Create TFRecod Encoder / Decoder
 logging.info("Creating TFRecord Data")
@@ -57,7 +55,8 @@ tfr_writer.encode_inventory_to_tfr(
         dataset_inventory,
         cfg.current_paths['tfr_master'],
         image_pre_processing_fun=resize_jpeg,
-        image_pre_processing_args={"max_side": cfg.current_exp['image_save_side_max']},
+        image_pre_processing_args={"max_side":
+                                   cfg.current_exp['image_save_side_max']},
         overwrite_existing_file=False,
         prefix_to_labels='labels/')
 
@@ -74,7 +73,6 @@ split_props = [cfg.current_exp['training_splits'][x] for x in split_names]
 logging.debug("Splitting TFR File")
 tfr_splitter.split_tfr_file(
     output_path_main=cfg.current_paths['exp_data'],
-    #output_path_main='/host/data_hdd/southern_africa/experiments/species/data/',
     output_prefix="split",
     split_names=split_names,
     split_props=split_props,
@@ -135,7 +133,6 @@ cfg.current_exp['image_processing']['image_stdevs'] = image_stdevs
 logging.info("Image Means: %s" % image_means)
 logging.info("Image Stdevs: %s" % image_stdevs)
 
-
 ## plot some images and their labels to check
 #for i in range(0, 30):
 #    img = data['images'][i,:,:,:]
@@ -145,24 +142,23 @@ logging.info("Image Stdevs: %s" % image_stdevs)
 #    plt.show()
 #
 # plot some images and their labels to check
-import matplotlib.pyplot as plt
-for i in range(0, 100):
-    img = data['images'][i,:,:,:]
-    lbl = data['labels/species'][i]
-    lbl_c = num_to_label_mapper['labels/species'][int(lbl)]
-    print("Label: %s" % num_to_label_mapper['labels/species'][int(lbl)])
-    save_path = cfg.current_paths['exp_data'] +\
-                'sample_image_' + str(i) +'_' + lbl_c + '.jpeg'
-    plt.imsave(save_path, img)
-
-
+# import matplotlib.pyplot as plt
+# for i in range(0, 100):
+#     img = data['images'][i,:,:,:]
+#     lbl = data['labels/species'][i]
+#     lbl_c = num_to_label_mapper['labels/species'][int(lbl)]
+#     print("Label: %s" % num_to_label_mapper['labels/species'][int(lbl)])
+#     save_path = cfg.current_paths['exp_data'] +\
+#                 'sample_image_' + str(i) +'_' + lbl_c + '.jpeg'
+#     plt.imsave(save_path, img)
 
 # Prepare Data Feeders for Training / Validation Data
 logging.info("Preparing Data Feeders")
+
 def input_feeder_train():
     return data_reader.get_iterator(
                 tfr_files=[tfr_splitter.get_split_paths()['train']],
-                batch_size=cfg.current_model['batch_size'],
+                batch_size=cfg.cfg['general']['batch_size'],
                 is_train=True,
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
@@ -172,10 +168,11 @@ def input_feeder_train():
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
+
 def input_feeder_val():
     return data_reader.get_iterator(
                 tfr_files=[tfr_splitter.get_split_paths()['validation']],
-                batch_size=cfg.current_model['batch_size'],
+                batch_size=cfg.cfg['general']['batch_size'],
                 is_train=False,
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
@@ -185,10 +182,11 @@ def input_feeder_val():
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
+
 def input_feeder_test():
     return data_reader.get_iterator(
                 tfr_files=[tfr_splitter.get_split_paths()['test']],
-                batch_size=cfg.current_model['batch_size'],
+                batch_size=cfg.cfg['general']['batch_size'],
                 is_train=False,
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
@@ -199,28 +197,35 @@ def input_feeder_test():
                 labels_are_numeric=True)
 
 logging.info("Calculating batches per epoch")
-n_batches_per_epoch_train = calc_n_batches_per_epoch(tfr_n_records['train'],
-                                                     cfg.current_model['batch_size'])
 
-n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['validation'],
-                                                   cfg.current_model['batch_size'])
+n_batches_per_epoch_train = calc_n_batches_per_epoch(
+    tfr_n_records['train'],
+    cfg.cfg['general']['batch_size'])
 
-n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['test'],
-                                                   cfg.current_model['batch_size'])
+n_batches_per_epoch_val = calc_n_batches_per_epoch(
+    tfr_n_records['validation'],
+    cfg.cfg['general']['batch_size'])
+
+n_batches_per_epoch_val = calc_n_batches_per_epoch(
+    tfr_n_records['test'],
+    cfg.cfg['general']['batch_size'])
 
 # Load Model Architecture and build output layer
 logging.info("Building Model")
 
-train_model = create_model(model_name=cfg.current_exp['model'],
-                           input_feeder=input_feeder_train,
-                           target_labels=label_types_to_model_clean,
-                           n_classes_per_label_type=n_classes_per_label_type)
+train_model, train_model_base = create_model(
+    model_name=cfg.current_exp['model'],
+    input_feeder=input_feeder_train,
+    target_labels=label_types_to_model_clean,
+    n_classes_per_label_type=n_classes_per_label_type,
+    n_gpus=cfg.cfg['general']['number_of_gpus'])
 
-val_model = create_model(model_name=cfg.current_exp['model'],
-                           input_feeder=input_feeder_val,
-                           target_labels=label_types_to_model_clean,
-                           n_classes_per_label_type=n_classes_per_label_type)
-
+val_model, val_model_base = create_model(
+    model_name=cfg.current_exp['model'],
+    input_feeder=input_feeder_val,
+    target_labels=label_types_to_model_clean,
+    n_classes_per_label_type=n_classes_per_label_type,
+    n_gpus=cfg.cfg['general']['number_of_gpus'])
 
 
 # Callbacks and Monitors
@@ -238,27 +243,21 @@ logger = CSVLogger(
                    'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
 
 
-checkpointer = ModelCheckpoint(
-        filepath=cfg.current_paths['run_data'] + 'weights.{epoch:02d}-{loss:.2f}.hdf5',
-        monitor='loss',
-        verbose=0,
-        save_best_only=False,
-        save_weights_only=False,
-        mode='auto', period=1)
+checkpointer = ModelCheckpointer(train_model_base,
+                                 cfg.current_paths['run_data'])
 
 tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           histogram_freq=0,
-                          batch_size=cfg.current_model['batch_size'], write_graph=True,
+                          batch_size=cfg.cfg['general']['batch_size'],
+                          write_graph=True,
                           write_grads=False, write_images=False)
-
-
 
 for i in range(0, 70):
     logging.info("Starting Epoch %s" % (i+1))
     train_model.fit(epochs=i+1,
                     steps_per_epoch=n_batches_per_epoch_train,
                     initial_epoch=i,
-                    callbacks=[checkpointer, tensorboard])
+                    callbacks=[checkpointer])
 
     # Copy weights from training model to validation model
     weights = train_model.get_weights()

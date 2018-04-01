@@ -86,14 +86,10 @@ class Config(object):
         """ Compile relevant information for current experiment """
         location = self.cfg['run']['location']
         exp = self.cfg['run']['experiment']
-        model = self.cfg['run']
         exp_data = self.cfg['locations'][location]['experiments'][exp]
-        model = exp_data['model']
-        model_cfg = self.cfg['models'][model]
         location_data = self.cfg['locations'][location]
         self.current_location = location_data
         self.current_exp = exp_data
-        self.current_model = model_cfg
         for k, v in self.current_location.items():
             if not k == 'experiments':
                 if k not in self.current_exp:

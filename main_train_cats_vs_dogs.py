@@ -13,8 +13,9 @@ from config.config import logging
 from config.config import cfg
 from training.configuration_data import get_label_info
 from training.utils import (
-        ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger)
-from models.model_library import create_model
+        ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger,
+        ModelCheckpointer)
+from training.model_library import create_model
 
 from data_processing.data_inventory import DatasetInventory
 from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
@@ -154,10 +155,11 @@ logging.info("Image Stdevs: %s" % image_stdevs)
 
 # Prepare Data Feeders for Training / Validation Data
 logging.info("Preparing Data Feeders")
+
 def input_feeder_train():
     return data_reader.get_iterator(
                 tfr_files=[tfr_splitter.get_split_paths()['train']],
-                batch_size=cfg.current_model['batch_size'],
+                batch_size=cfg.cfg['general']['batch_size'],
                 is_train=True,
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
@@ -167,10 +169,11 @@ def input_feeder_train():
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
+
 def input_feeder_val():
     return data_reader.get_iterator(
                 tfr_files=[tfr_splitter.get_split_paths()['validation']],
-                batch_size=cfg.current_model['batch_size'],
+                batch_size=cfg.cfg['general']['batch_size'],
                 is_train=False,
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
@@ -180,10 +183,11 @@ def input_feeder_val():
                 max_multi_label_number=None,
                 labels_are_numeric=True)
 
+
 def input_feeder_test():
     return data_reader.get_iterator(
                 tfr_files=[tfr_splitter.get_split_paths()['test']],
-                batch_size=cfg.current_model['batch_size'],
+                batch_size=cfg.cfg['general']['batch_size'],
                 is_train=False,
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
@@ -194,14 +198,18 @@ def input_feeder_test():
                 labels_are_numeric=True)
 
 logging.info("Calculating batches per epoch")
-n_batches_per_epoch_train = calc_n_batches_per_epoch(tfr_n_records['train'],
-                                                     cfg.current_model['batch_size'])
 
-n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['validation'],
-                                                   cfg.current_model['batch_size'])
+n_batches_per_epoch_train = calc_n_batches_per_epoch(
+    tfr_n_records['train'],
+    cfg.cfg['general']['batch_size'])
 
-n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['test'],
-                                                   cfg.current_model['batch_size'])
+n_batches_per_epoch_val = calc_n_batches_per_epoch(
+    tfr_n_records['validation'],
+    cfg.cfg['general']['batch_size'])
+
+n_batches_per_epoch_val = calc_n_batches_per_epoch(
+    tfr_n_records['test'],
+    cfg.cfg['general']['batch_size'])
 
 # Load Model Architecture and build output layer
 logging.info("Building Model")
@@ -227,16 +235,19 @@ if cfg.current_exp['initialize_weights']:
 model_pre = None
 
 
-train_model = create_model(model_name=cfg.current_exp['model'],
-                           input_feeder=input_feeder_train,
-                           target_labels=label_types_to_model_clean,
-                           n_classes_per_label_type=n_classes_per_label_type)
+train_model, train_model_base = create_model(
+    model_name=cfg.current_exp['model'],
+    input_feeder=input_feeder_train,
+    target_labels=label_types_to_model_clean,
+    n_classes_per_label_type=n_classes_per_label_type,
+    n_gpus=cfg.cfg['general']['number_of_gpus'])
 
-val_model = create_model(model_name=cfg.current_exp['model'],
-                           input_feeder=input_feeder_val,
-                           target_labels=label_types_to_model_clean,
-                           n_classes_per_label_type=n_classes_per_label_type)
-
+val_model, val_model_base = create_model(
+    model_name=cfg.current_exp['model'],
+    input_feeder=input_feeder_val,
+    target_labels=label_types_to_model_clean,
+    n_classes_per_label_type=n_classes_per_label_type,
+    n_gpus=cfg.cfg['general']['number_of_gpus'])
 
 
 # Callbacks and Monitors
@@ -254,17 +265,13 @@ logger = CSVLogger(
                    'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
 
 
-checkpointer = ModelCheckpoint(
-        filepath=cfg.current_paths['run_data'] + 'weights.{epoch:02d}-{loss:.2f}.hdf5',
-        monitor='loss',
-        verbose=0,
-        save_best_only=False,
-        save_weights_only=False,
-        mode='auto', period=1)
+checkpointer = ModelCheckpointer(train_model_base,
+                                 cfg.current_paths['run_data'])
 
 tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           histogram_freq=0,
-                          batch_size=cfg.current_model['batch_size'], write_graph=True,
+                          batch_size=cfg.cfg['general']['batch_size'],
+                          write_graph=True,
                           write_grads=False, write_images=False)
 
 
@@ -273,7 +280,7 @@ for i in range(0, 70):
     train_model.fit(epochs=i+1,
                     steps_per_epoch=n_batches_per_epoch_train,
                     initial_epoch=i,
-                    callbacks=[checkpointer, tensorboard])
+                    callbacks=[checkpointer])
 
     # Copy weights from training model to validation model
     weights = train_model.get_weights()

@@ -3,6 +3,7 @@ general:
   logging: debug
   logging_to_disk: False
   number_of_gpus: 1
+  batch_size: 128
 
 run:
    location: southern_africa
@@ -21,12 +22,6 @@ paths_debug:
   root: 'D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\'
   experiments: 'experiments\\'
   models: 'models\\'
-
-models:
-  ResNet18:
-    batch_size: 128
-  cats_vs_dogs:
-    batch_size: 128
 
 locations:
   southern_africa:
