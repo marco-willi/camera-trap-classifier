@@ -7,12 +7,14 @@ from tensorflow.python.keras.callbacks import (
     ModelCheckpoint, TensorBoard)
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
+from tensorflow.python.keras.utils import multi_gpu_model
+
 from models.resnet_keras_mod import ResnetBuilder
 from models.cats_vs_dogs import architecture_flat as cats_vs_dogs_arch
 
 
 def create_model(model_name, input_feeder,
-                 target_labels, n_classes_per_label_type):
+                 target_labels, n_classes_per_label_type, n_gpus=1):
     """ Returns specified model architecture """
 
     data = input_feeder()
@@ -59,16 +61,23 @@ def create_model(model_name, input_feeder,
                                         activation='softmax',
                                         name=target_name)(output_flat))
 
-    model = Model(inputs=model_input, outputs=all_target_outputs)
-
     target_tensors = {x: tf.cast(data[x], tf.float32)
                       for x in target_labels}
 
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
     # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+
+    if n_gpus > 1:
+        with tf.device('/cpu:0'):
+            base_model = Model(inputs=model_input, outputs=all_target_outputs)
+        model = multi_gpu_model(base_model, gpus=n_gpus)
+    else:
+        model = Model(inputs=model_input, outputs=all_target_outputs)
+        base_model = model
+
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
                   target_tensors=target_tensors)
 
-    return model
+    return model, base_model
