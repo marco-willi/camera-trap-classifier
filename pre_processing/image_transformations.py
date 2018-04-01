@@ -313,11 +313,12 @@ def preprocess_for_eval(image, output_height,
     return image
 
 
-def preprocess_image(image, output_height, output_width, image_means,
-                     image_stdevs,
+def preprocess_image(image, output_height, output_width,
                      is_training,
                      resize_side_min,
-                     resize_side_max):
+                     resize_side_max,
+                     image_means=[0, 0, 0],
+                     image_stdevs=[1, 1, 1]):
     """Preprocesses the given image.
     Args:
     image: A `Tensor` representing an image of arbitrary size.

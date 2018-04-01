@@ -14,7 +14,7 @@ from config.config import cfg
 from training.configuration_data import get_label_info
 from training.utils import (
         ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger)
-from models.resnet_keras_mod import ResnetBuilder
+from models.model_library import create_model
 
 from data_processing.data_inventory import DatasetInventory
 from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
@@ -205,10 +205,6 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(tfr_n_records['test'],
 
 # Load Model Architecture and build output layer
 logging.info("Building Model")
-
-from models.cats_vs_dogs import architecture_flat
-from tensorflow.python.keras._impl import keras
-from tensorflow.python.keras import layers
 from tensorflow.python.keras.models import load_model
 from training.utils import get_most_rescent_file_with_string
 
@@ -231,32 +227,16 @@ if cfg.current_exp['initialize_weights']:
 model_pre = None
 
 
-def create_model(input_feeder, target_labels, model_pre=None):
-    """ Create Keras Model """
-    data = input_feeder()
-    model_input = Input(tensor=data['images'])
-    model_flat = architecture_flat(model_input)
-    all_outputs = list()
+train_model = create_model(model_name=cfg.current_exp['model'],
+                           input_feeder=input_feeder_train,
+                           target_labels=label_types_to_model_clean,
+                           n_classes_per_label_type=n_classes_per_label_type)
 
-    for n, name in zip(n_classes_per_label_type, target_labels):
-        all_outputs.append(Dense(units=n,
-                           activation='softmax', name=name)(model_flat))
+val_model = create_model(model_name=cfg.current_exp['model'],
+                           input_feeder=input_feeder_val,
+                           target_labels=label_types_to_model_clean,
+                           n_classes_per_label_type=n_classes_per_label_type)
 
-    if model_pre is not None:
-        model = model_pre
-    else:
-        model = Model(inputs=model_input, outputs=all_outputs)
-
-    target_tensors = {x: tf.cast(data[x], tf.float32)
-                      for x in target_labels}
-
-    opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
-    # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
-    model.compile(loss='sparse_categorical_crossentropy',
-                  optimizer=opt,
-                  metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
-                  target_tensors=target_tensors)
-    return model
 
 
 # Callbacks and Monitors
@@ -286,10 +266,6 @@ tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           histogram_freq=0,
                           batch_size=cfg.current_model['batch_size'], write_graph=True,
                           write_grads=False, write_images=False)
-
-
-train_model = create_model(input_feeder_train, label_types_to_model_clean, model_pre=model_pre)
-val_model = create_model(input_feeder_val, label_types_to_model_clean, model_pre=model_pre)
 
 
 for i in range(0, 70):

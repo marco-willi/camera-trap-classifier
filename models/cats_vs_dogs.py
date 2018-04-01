@@ -52,7 +52,6 @@ def architecture_flat(inputs):
     dense1 = Dense(64, activation='relu')(flat1)
     drop1 = Dropout(0.5)(dense1)
 
-
     return drop1
 
 

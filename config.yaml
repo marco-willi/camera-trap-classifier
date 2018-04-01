@@ -23,7 +23,7 @@ paths_debug:
   models: 'models\\'
 
 models:
-  resnet18:
+  ResNet18:
     batch_size: 128
   cats_vs_dogs:
     batch_size: 128
@@ -47,7 +47,7 @@ locations:
       test: 0.05
     experiments:
       empty_vehicle_species:
-        model: resnet18
+        model: ResNet18
         labels_project: panthera
         labels_version: empty
         label_types_to_model:
@@ -55,7 +55,7 @@ locations:
         balanced_sampling_min: True
         balanced_sampling_label_type: 'species'
       species:
-        model: resnet18
+        model: ResNet18
         labels_project: panthera
         labels_version: species
         label_types_to_model:
