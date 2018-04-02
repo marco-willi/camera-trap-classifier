@@ -121,7 +121,6 @@ class ImportFromPantheraCSV(object):
                             species = row[1]
                             survey = row[2]
                             image_path = row[3]
-                            species_count_cat = self._categorize_counts(species_count)
                             new_record = {'images': [image_path],
                                           'labels': {'species': [species]}}
 
