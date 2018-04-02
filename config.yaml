@@ -9,21 +9,21 @@ general:
   # (increase if GPU utilization is below 90%)
   buffer_size: 10192
   # batch is is split to all GPUs - has to be divisible by number of GPUs
-  batch_size: 64
+  batch_size: 32
   max_number_of_epochs: 70
   save_sample_images_to_disk: False
 
 run:
   location: southern_africa
   experiment: species
-  identifier_postfix: '_resnet34'
+  identifier_postfix: '_inceptionresnetv2'
    # location: west_africa
    # experiment: species
    # add postfix to run directory: run_YYYYMMDD + postfix
    # identifier_postfix: ''
-   # location: cats_and_dogs
-   # experiment: cats_vs_dogs
-   # identifier_postfix: ''
+  # location: cats_and_dogs
+  # experiment: cats_vs_dogs
+  # identifier_postfix: ''
 
 paths:
   root: '/host/data_hdd/'
@@ -63,7 +63,7 @@ locations:
         balanced_sampling_min: True
         balanced_sampling_label_type: 'species'
       species:
-        model: ResNet34
+        model: InceptionResNetV2
         labels_project: panthera
         labels_version: species
         label_types_to_model:
