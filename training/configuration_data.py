@@ -1,7 +1,7 @@
 
 def get_label_info(location='panthera', experiment="empty"):
 
-    if dataset == 'west_africa':
+    if location == 'west_africa':
         labels_all = {
           'species': [
             "Aardvark", "Antelope_Bates_Pygmy", "Baboon_Olive", "Badger_Honey",
