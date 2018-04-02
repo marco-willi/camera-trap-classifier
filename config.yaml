@@ -14,13 +14,13 @@ general:
   save_sample_images_to_disk: False
 
 run:
-#   location: southern_africa
-#   experiment: species
+   location: west_africa
+   experiment: species
    # add postfix to run directory: run_YYYYMMDD + postfix
    identifier_postfix: ''
-   location: cats_and_dogs
-   experiment: cats_vs_dogs
-   identifier_postfix: ''
+   # location: cats_and_dogs
+   # experiment: cats_vs_dogs
+   # identifier_postfix: ''
 
 paths:
   root: '/host/data_hdd/'
@@ -34,6 +34,40 @@ paths_debug:
 
 locations:
   southern_africa:
+    experiment_id: 'ts'
+    image_save_side_max: 500
+    image_processing:
+      output_height: 224
+      output_width: 224
+      resize_side_min: 224
+      resize_side_max: 246
+      color_manipulations: True
+    paths:
+      master_tfr: 'master.tfrecord'
+      #inventory: 'D:\Studium_GD\Zooniverse\CamCatProject\data\inventory_list.csv'
+      inventory: 'inventory_list.csv'
+    training_splits:
+      train: 0.9
+      validation: 0.05
+      test: 0.05
+    experiments:
+      empty_vehicle_species:
+        model: ResNet18
+        labels_project: panthera
+        labels_version: empty
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: True
+        balanced_sampling_label_type: 'species'
+      species:
+        model: ResNet18
+        labels_project: panthera
+        labels_version: species
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: False
+        balanced_sampling_label_type: 'species'
+  west_africa:
     experiment_id: 'ts'
     image_save_side_max: 500
     image_processing:
