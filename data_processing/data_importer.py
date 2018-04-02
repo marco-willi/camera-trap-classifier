@@ -81,32 +81,49 @@ class ImportFromPantheraCSV(object):
                 for i, row in enumerate(csv_reader):
                     # check header
                     if i == 0:
-                        assert row == ['image', 'species',
-                                       'count', 'survey', 'dir'], \
-                               "Header of CSV is not as expected"
+                        if 'count' in row:
+                            assert row == ['image', 'species',
+                                           'count', 'survey', 'dir'], \
+                                   "Header of CSV is not as expected"
+                            count_in_row = True
+                        else:
+                            assert row == ['image', 'species',
+                                           'survey', 'dir'], \
+                                   "Header of CSV is not as expected"
+                            count_in_row = False
                     else:
-                        # extract fields from csv
-                        _id = row[0]
-                        species = row[1]
-                        try:
-                            species_count = int(row[2])
-                        except:
-                            if row[2] == 'NA':
-                                species_count = -1
-                            elif row[2] == '11-50':
-                                species_count = 11
-                            elif row[2] == '51+':
-                                species_count = 51
-                            else:
-                                species_count = -1
-                                logging.info("Record: %s has invalid count: observed %s - saved: %s" %
-                                             (_id, row[2], species_count))
-                        survey = row[3]
-                        image_path = row[4]
-                        species_count_cat = self._categorize_counts(species_count)
-                        new_record = {'images': [image_path],
-                                      'labels': {'species': [species],
-                                                 'count_category': [species_count_cat]}}
+                        if count_in_row:
+                            # extract fields from csv
+                            _id = row[0]
+                            species = row[1]
+                            try:
+                                species_count = int(row[2])
+                            except:
+                                if row[2] == 'NA':
+                                    species_count = -1
+                                elif row[2] == '11-50':
+                                    species_count = 11
+                                elif row[2] == '51+':
+                                    species_count = 51
+                                else:
+                                    species_count = -1
+                                    logging.info("Record: %s has invalid count: observed %s - saved: %s" %
+                                                 (_id, row[2], species_count))
+                            survey = row[3]
+                            image_path = row[4]
+                            species_count_cat = self._categorize_counts(species_count)
+                            new_record = {'images': [image_path],
+                                          'labels': {'species': [species],
+                                                     'count_category': [species_count_cat]}}
+                        else:
+                            # extract fields from csv
+                            _id = row[0]
+                            species = row[1]
+                            survey = row[2]
+                            image_path = row[3]
+                            species_count_cat = self._categorize_counts(species_count)
+                            new_record = {'images': [image_path],
+                                          'labels': {'species': [species]}}
 
                         if species == 'NA':
                             continue
