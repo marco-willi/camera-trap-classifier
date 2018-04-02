@@ -263,7 +263,8 @@ def preprocess_for_train(image,
                          image_means,
                          image_stdevs,
                          resize_side_min,
-                         resize_side_max):
+                         resize_side_max,
+                         color_manipulations):
     """Preprocesses the given image for training.
     Note that the actual resizing scale is sampled from
     [`resize_size_min`, `resize_size_max`].
@@ -278,6 +279,13 @@ def preprocess_for_train(image,
     Returns:
     A preprocessed image.
     """
+
+    if color_manipulations:
+        image = tf.image.random_brightness(image, max_delta=0.2)
+        image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
+        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+
     resize_side = tf.random_uniform(
       [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
 
@@ -318,7 +326,8 @@ def preprocess_image(image, output_height, output_width,
                      resize_side_min,
                      resize_side_max,
                      image_means=[0, 0, 0],
-                     image_stdevs=[1, 1, 1]):
+                     image_stdevs=[1, 1, 1],
+                     color_manipulations=False):
     """Preprocesses the given image.
     Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -340,7 +349,8 @@ def preprocess_image(image, output_height, output_width,
     if is_training:
         return preprocess_for_train(image, output_height, output_width,
                                     image_means, image_stdevs,
-                                    resize_side_min, resize_side_max)
+                                    resize_side_min, resize_side_max,
+                                    color_manipulations)
     else:
         return preprocess_for_eval(image, output_height, output_width,
                                    image_means, image_stdevs,

@@ -10,7 +10,7 @@ class DatasetReader(object):
 
     def get_iterator(self, tfr_files, batch_size, is_train, n_repeats,
                      output_labels, max_multi_label_number=None,
-                     buffer_size=10192, **kwargs):
+                     buffer_size=10192, num_parallel_calls=4, **kwargs):
         """ Create Iterator from TFRecord """
 
         assert type(output_labels) is list, "label_list must be of " + \
@@ -31,7 +31,7 @@ class DatasetReader(object):
         dataset = dataset.map(lambda x: self.tfr_decoder(
                 serialized_example=x,
                 output_labels=labels,
-                **kwargs), num_parallel_calls=4
+                **kwargs), num_parallel_calls=num_parallel_calls
                 )
 
         if max_multi_label_number is not None:
