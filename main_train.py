@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import TensorBoard
 from tensorflow.python.keras import backend as K
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from config.config import logging
 from config.config import cfg
@@ -36,7 +36,7 @@ dataset_inventory.create_from_panthera_csv(cfg.current_paths['inventory'])
 dataset_inventory.label_handler.remove_multi_label_records()
 dataset_inventory.log_stats()
 
-
+# Convert label types to tfrecord compatible names (clean)
 if cfg.current_exp['balanced_sampling_label_type'] is not None:
     cfg.current_exp['balanced_sampling_label_type'] = \
         'labels/' + cfg.current_exp['balanced_sampling_label_type']
@@ -47,7 +47,6 @@ label_types_to_model_clean = ['labels/' + x for x in
 # Create TFRecod Encoder / Decoder
 logging.info("Creating TFRecord Data")
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
-
 
 # Write TFRecord file from Data Inventory
 tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
@@ -93,9 +92,10 @@ num_to_label_mapper = {
 
 tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.all_labels
-n_classes_per_label_type = [len(tfr_splitter.all_labels[x]) for x in \
+n_classes_per_label_type = [len(tfr_splitter.all_labels[x]) for x in
                             label_types_to_model_clean]
 
+# Log Label occurrence
 for label_type, labels in tfr_splitter.all_labels.items():
     for label, no_recs in labels.items():
         label_char = num_to_label_mapper[label_type][label]
@@ -118,6 +118,8 @@ batch_data = data_reader.get_iterator(
         image_pre_processing_args={**cfg.current_exp['image_processing'],
                                    'is_training': False},
         max_multi_label_number=None,
+        buffer_size=cfg.cfg['general']['buffer_size'],
+        num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
         labels_are_numeric=True)
 
 logging.info("Calculating image means and stdevs")
@@ -133,27 +135,22 @@ cfg.current_exp['image_processing']['image_stdevs'] = image_stdevs
 logging.info("Image Means: %s" % image_means)
 logging.info("Image Stdevs: %s" % image_stdevs)
 
-## plot some images and their labels to check
-#for i in range(0, 30):
-#    img = data['images'][i,:,:,:]
-#    lbl = data['labels/primary'][i]
-#    print("Label: %s" % num_to_label_mapper[int(lbl)])
-#    plt.imshow(img)
-#    plt.show()
-#
-# plot some images and their labels to check
-# import matplotlib.pyplot as plt
-# for i in range(0, 100):
-#     img = data['images'][i,:,:,:]
-#     lbl = data['labels/species'][i]
-#     lbl_c = num_to_label_mapper['labels/species'][int(lbl)]
-#     print("Label: %s" % num_to_label_mapper['labels/species'][int(lbl)])
-#     save_path = cfg.current_paths['exp_data'] +\
-#                 'sample_image_' + str(i) +'_' + lbl_c + '.jpeg'
-#     plt.imsave(save_path, img)
 
-# Prepare Data Feeders for Training / Validation Data
+if cfg.cfg['general']['save_sample_images_to_disk']:
+    logging.info("Saving some sample images to %s" %
+                 cfg.current_paths['exp_data'])
+    label_type_to_annotate = label_types_to_model_clean[0]
+    for i in range(0, 50):
+        img = data['images'][i, :, :, :]
+        lbl = data[label_type_to_annotate][i]
+        lbl_c = num_to_label_mapper[label_type_to_annotate][int(lbl)]
+        save_path = cfg.current_paths['exp_data'] +\
+                    'sample_image_' + str(i) + '_' + lbl_c + '.jpeg'
+        plt.imsave(save_path, img)
+
+# Prepare Data Feeders for Training / Validation / Testing Data
 logging.info("Preparing Data Feeders")
+
 
 def input_feeder_train():
     return data_reader.get_iterator(
@@ -166,6 +163,8 @@ def input_feeder_train():
                 image_pre_processing_args={**cfg.current_exp['image_processing'],
                                            'is_training': True},
                 max_multi_label_number=None,
+                buffer_size=cfg.cfg['general']['buffer_size'],
+                num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
                 labels_are_numeric=True)
 
 
@@ -180,6 +179,8 @@ def input_feeder_val():
                 image_pre_processing_args={**cfg.current_exp['image_processing'],
                                            'is_training': False},
                 max_multi_label_number=None,
+                buffer_size=cfg.cfg['general']['buffer_size'],
+                num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
                 labels_are_numeric=True)
 
 
@@ -194,7 +195,10 @@ def input_feeder_test():
                 image_pre_processing_args={**cfg.current_exp['image_processing'],
                                            'is_training': False},
                 max_multi_label_number=None,
+                buffer_size=cfg.cfg['general']['buffer_size'],
+                num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
                 labels_are_numeric=True)
+
 
 logging.info("Calculating batches per epoch")
 
@@ -210,8 +214,8 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(
     tfr_n_records['test'],
     cfg.cfg['general']['batch_size'])
 
-# Load Model Architecture and build output layer
-logging.info("Building Model")
+
+logging.info("Building Train and Validation Models")
 
 train_model, train_model_base = create_model(
     model_name=cfg.current_exp['model'],
@@ -227,8 +231,15 @@ val_model, val_model_base = create_model(
     n_classes_per_label_type=n_classes_per_label_type,
     n_gpus=cfg.cfg['general']['number_of_gpus'])
 
+logging.info("Final Model Architecture")
+for layer, i in zip(train_model_base.layers,
+                    range(0, len(train_model_base.layers))):
+    logging.info("Layer %s: Name: %s Input: %s Output: %s" %
+                 (i, layer.name, layer.input_shape,
+                  layer.output_shape))
 
-# Callbacks and Monitors
+logging.info("Preparing Callbacks and Monitors")
+
 early_stopping = EarlyStopping(stop_after_n_rounds=7, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         reduce_after_n_rounds=3,
@@ -242,7 +253,6 @@ logger = CSVLogger(
     metrics_names=['val_loss', 'val_acc',
                    'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
 
-
 checkpointer = ModelCheckpointer(train_model_base,
                                  cfg.current_paths['run_data'])
 
@@ -252,30 +262,30 @@ tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           write_graph=True,
                           write_grads=False, write_images=False)
 
-for i in range(0, 70):
-    logging.info("Starting Epoch %s" % (i+1))
+logging.info("Start Model Training")
+
+max_number_of_epochs = cfg.cfg['general']['max_number_of_epochs']
+for i in range(0, max_number_of_epochs):
+    logging.info("Starting Epoch %s/%s" % (i+1, max_number_of_epochs))
     train_model.fit(epochs=i+1,
                     steps_per_epoch=n_batches_per_epoch_train,
                     initial_epoch=i,
                     callbacks=[checkpointer])
 
     # Copy weights from training model to validation model
-    weights = train_model.get_weights()
-    val_model.set_weights(weights)
+    training_weights = train_model.get_weights()
+    val_model.set_weights(training_weights)
 
     # Run evaluation model
-    results = val_model.evaluate(steps=n_batches_per_epoch_val)
-
-    val_loss = results[val_model.metrics_names == 'loss']
-
+    validation_results = val_model.evaluate(steps=n_batches_per_epoch_val)
+    val_loss = validation_results[val_model.metrics_names == 'loss']
     vals_to_log = list()
 
-    for metric, value in zip(val_model.metrics_names, results):
-
+    # log validation results
+    for metric, value in zip(val_model.metrics_names, validation_results):
         logging.info("Eval - %s: %s" % (metric, value))
         vals_to_log.append(value)
 
-    # Log Results on Validation Set
     vals_to_log.append(K.eval(train_model.optimizer.lr))
 
     logger.addResults(i+1, vals_to_log)
