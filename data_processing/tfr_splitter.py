@@ -108,7 +108,7 @@ class TFRecordSplitter(object):
         iterator = dataset_reader.get_iterator(
              self.files_to_split, batch_size=2048, is_train=False, n_repeats=1,
              output_labels=output_labels,
-             buffer_size=2048,
+             buffer_size=10192,
              decode_images=False,
              labels_are_numeric=False,
              max_multi_label_number=None,
