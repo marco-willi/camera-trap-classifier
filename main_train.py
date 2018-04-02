@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import TensorBoard
 from tensorflow.python.keras import backend as K
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 from config.config import logging
 from config.config import cfg
@@ -135,17 +135,17 @@ logging.info("Image Means: %s" % image_means)
 logging.info("Image Stdevs: %s" % image_stdevs)
 
 
-if cfg.cfg['general']['save_sample_images_to_disk']:
-    logging.info("Saving some sample images to %s" %
-                 cfg.current_paths['exp_data'])
-    label_type_to_annotate = label_types_to_model_clean[0]
-    for i in range(0, 50):
-        img = data['images'][i, :, :, :]
-        lbl = data[label_type_to_annotate][i]
-        lbl_c = num_to_label_mapper[label_type_to_annotate][int(lbl)]
-        save_path = cfg.current_paths['exp_data'] +\
-                    'sample_image_' + str(i) + '_' + lbl_c + '.jpeg'
-        plt.imsave(save_path, img)
+# if cfg.cfg['general']['save_sample_images_to_disk']:
+#     logging.info("Saving some sample images to %s" %
+#                  cfg.current_paths['exp_data'])
+#     label_type_to_annotate = label_types_to_model_clean[0]
+#     for i in range(0, 50):
+#         img = data['images'][i, :, :, :]
+#         lbl = data[label_type_to_annotate][i]
+#         lbl_c = num_to_label_mapper[label_type_to_annotate][int(lbl)]
+#         save_path = cfg.current_paths['exp_data'] +\
+#                     'sample_image_' + str(i) + '_' + lbl_c + '.jpeg'
+#         plt.imsave(save_path, img)
 
 # Prepare Data Feeders for Training / Validation / Testing Data
 logging.info("Preparing Data Feeders")
