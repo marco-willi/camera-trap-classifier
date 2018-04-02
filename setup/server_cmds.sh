@@ -17,6 +17,8 @@ sudo mount /dev/xvdf ~/data_hdd
 # Local Nvidia docker
 sudo nvidia-docker run -it -v ~/:/host root/tensorflow:latest-devel-gpu-py3 bash
 
+# Detach from docker with CTRL+P+Q
+
 # Monitor GPU utilization
 # nvidia-smi -l 1
 

@@ -27,7 +27,7 @@ class DatasetReader(object):
         if is_train:
             dataset = dataset.shuffle(buffer_size=buffer_size)
 
-        dataset = dataset.prefetch(buffer_size=batch_size)
+        dataset = dataset.prefetch(buffer_size=batch_size*10)
 
         dataset = dataset.map(lambda x: self.tfr_decoder(
                 serialized_example=x,

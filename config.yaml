@@ -1,7 +1,7 @@
 general:
   debug: False
   logging: debug
-  logging_to_disk: False
+  logging_to_disk: True
   number_of_gpus: 1
   # number of cpus used for image pre-processing (use all if possible)
   number_of_cpus: 4
@@ -9,15 +9,18 @@ general:
   # (increase if GPU utilization is below 90%)
   buffer_size: 10192
   # batch is is split to all GPUs - has to be divisible by number of GPUs
-  batch_size: 128
+  batch_size: 64
   max_number_of_epochs: 70
   save_sample_images_to_disk: False
 
 run:
-   location: west_africa
-   experiment: species
+  location: southern_africa
+  experiment: species
+  identifier_postfix: '_resnet34'
+   # location: west_africa
+   # experiment: species
    # add postfix to run directory: run_YYYYMMDD + postfix
-   identifier_postfix: ''
+   # identifier_postfix: ''
    # location: cats_and_dogs
    # experiment: cats_vs_dogs
    # identifier_postfix: ''
@@ -60,7 +63,7 @@ locations:
         balanced_sampling_min: True
         balanced_sampling_label_type: 'species'
       species:
-        model: ResNet18
+        model: ResNet34
         labels_project: panthera
         labels_version: species
         label_types_to_model:
