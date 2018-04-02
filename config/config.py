@@ -68,7 +68,9 @@ class Config(object):
         model_path = location_path + models + self.cfg['run']['experiment'] + os.path.sep
 
         exp_data = exp_path + 'data' + os.path.sep
-        run_dir = exp_path + self.run_id + os.path.sep
+
+        id_postfix = self.cfg['general']['identifier_postfix']
+        run_dir = exp_path + self.run_id + id_postfix + os.path.sep
 
         # check and create path if not exist
         for path in [run_dir]:

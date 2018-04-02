@@ -12,7 +12,8 @@ general:
 run:
    location: southern_africa
    experiment: species
-   identifier: timestamp
+   # add postfix to run directory: run_YYYYMMDD + postfix
+   identifier_postfix: ''
 #  location: cats_and_dogs
 #  experiment: cats_vs_dogs
 #  identifier: timestamp
