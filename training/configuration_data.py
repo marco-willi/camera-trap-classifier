@@ -63,7 +63,7 @@ def get_label_info(location='panthera', experiment="empty"):
         else:
             raise NotImplementedError("experiment: %s not implemented" % experiment)
 
-    if location == 'southern_africa':
+    elif location == 'southern_africa':
         labels_all = {
           'species': [
             "Aardvark", "Aardwolf", "Baboon_Chacma", "Badger_Honey", "Bat",
