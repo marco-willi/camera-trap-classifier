@@ -69,7 +69,7 @@ class Config(object):
 
         exp_data = exp_path + 'data' + os.path.sep
 
-        id_postfix = self.cfg['general']['identifier_postfix']
+        id_postfix = self.cfg['run']['identifier_postfix']
         run_dir = exp_path + self.run_id + id_postfix + os.path.sep
 
         # check and create path if not exist
