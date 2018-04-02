@@ -118,7 +118,7 @@ batch_data = data_reader.get_iterator(
                                    'is_training': False},
         max_multi_label_number=None,
         buffer_size=cfg.cfg['general']['buffer_size'],
-        num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
+        num_parallel_calls=cfg.cfg['general']['number_of_cpus'],
         labels_are_numeric=True)
 
 logging.info("Calculating image means and stdevs")
@@ -163,7 +163,7 @@ def input_feeder_train():
                                            'is_training': True},
                 max_multi_label_number=None,
                 buffer_size=cfg.cfg['general']['buffer_size'],
-                num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
+                num_parallel_calls=cfg.cfg['general']['number_of_cpus'],
                 labels_are_numeric=True)
 
 
@@ -179,7 +179,7 @@ def input_feeder_val():
                                            'is_training': False},
                 max_multi_label_number=None,
                 buffer_size=cfg.cfg['general']['buffer_size'],
-                num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
+                num_parallel_calls=cfg.cfg['general']['number_of_cpus'],
                 labels_are_numeric=True)
 
 
@@ -195,7 +195,7 @@ def input_feeder_test():
                                            'is_training': False},
                 max_multi_label_number=None,
                 buffer_size=cfg.cfg['general']['buffer_size'],
-                num_parallel_calls=cfg.cfg['general']['num_parallel_calls'],
+                num_parallel_calls=cfg.cfg['general']['number_of_cpus'],
                 labels_are_numeric=True)
 
 
