@@ -16,7 +16,7 @@ general:
 run:
   location: southern_africa
   experiment: species
-  identifier_postfix: '_resnet18_v2'
+  identifier_postfix: '_resnet34'
    # location: west_africa
    # experiment: species
    # add postfix to run directory: run_YYYYMMDD + postfix
@@ -63,7 +63,7 @@ locations:
         balanced_sampling_min: True
         balanced_sampling_label_type: 'species'
       species:
-        model: ResNet18
+        model: ResNet34
         labels_project: panthera
         labels_version: species
         label_types_to_model:
