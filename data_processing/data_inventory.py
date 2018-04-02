@@ -1,5 +1,6 @@
 """ Class To Create Dataset Inventory """
 import random
+import json
 
 from config.config import logging
 from data_processing.data_importer import (
@@ -75,6 +76,18 @@ class DatasetInventory(object):
 
         self.label_handler = LabelHandler(self.data_inventory)
         self.label_handler.remove_not_all_label_types_present()
+
+    def export_to_json(self, json_path):
+        """ Export Inventory to Json File """
+
+        if self.data_inventory is not None:
+            with open(json_path, 'w') as fp:
+                json.dump(self.data_inventory, fp)
+
+            logging.info("Data Inventory saved to %s" % json_path)
+        else:
+            logging.warning("Cant export data inventory to json - no\
+                            inventory created yet")
 
     def log_stats(self):
         """ Logs Statistics about Data Inventory """
