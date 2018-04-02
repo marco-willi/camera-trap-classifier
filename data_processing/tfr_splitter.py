@@ -106,12 +106,13 @@ class TFRecordSplitter(object):
         dataset_reader = DatasetReader(self.tfr_decoder)
 
         iterator = dataset_reader.get_iterator(
-             self.files_to_split, batch_size=128, is_train=False, n_repeats=1,
+             self.files_to_split, batch_size=2048, is_train=False, n_repeats=1,
              output_labels=output_labels,
-             buffer_size=64,
+             buffer_size=2048,
              decode_images=False,
              labels_are_numeric=False,
-             max_multi_label_number=None)
+             max_multi_label_number=None,
+             drop_batch_remainder=False)
 
         id_label_dict = OrderedDict()
         with tf.Session() as sess:
