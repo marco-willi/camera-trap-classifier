@@ -56,9 +56,12 @@ class TFRecordSplitter(object):
 
         # Rename class label types
         if self.class_mapping is not None:
-            for label_type in self.class_mapping.keys():
-                self.class_mapping['labels/' + label_type] = \
-                    self.class_mapping.pop(label_type)
+            new_class_mapping = dict()
+            for label_type, labels in self.class_mapping.items():
+                new_class_mapping['labels/' + label_type] = labels
+            self.class_mapping = new_class_mapping
+                # self.class_mapping['labels/' + label_type] = \
+                #     self.class_mapping.pop(label_type)
 
         # Clean output labels
         self.output_labels_clean = ['labels/' + x for x in self.output_labels]
@@ -323,6 +326,13 @@ class TFRecordSplitter(object):
             # Randomly Shuffle Ids
             all_record_ids = list(id_label_dict.keys())
             shuffle(all_record_ids)
+
+            logging.info("Balanced Sampling")
+            for lbl, count in label_stats.items():
+                logging.info("For Label %s - %s records found" % (lbl, count))
+
+            logging.info("Least Frequent label: %s occurs: %s" %
+                         (min_label, min_value))
 
             for record_id in all_record_ids:
                 label_types = id_label_dict[record_id]

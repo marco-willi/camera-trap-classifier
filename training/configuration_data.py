@@ -178,7 +178,7 @@ def get_label_info(location='panthera', experiment="empty"):
 
         label_mapping = None
 
-        if experiment == 'empty':
+        if experiment == 'empty_vehicle_species':
             label_mapping = {'primary': {x: 'species' for x in
                 keep_labels['primary'] if x not in ['vehicle', 'blank']}}
             label_mapping['primary']['vehicle'] = 'vehicle'
