@@ -32,3 +32,5 @@ sudo nvidia-modprobe -u -c=0
 # transfer files from aws to aws
 chmod 400  ~/keys/Machine_Learning.pem
 scp -i ~/keys/Machine_Learning.pem /home/ubuntu/data_hdd/southern_africa/data/master.tfrecord ubuntu@ec2-34-242-200-104.eu-west-1.compute.amazonaws.com:/home/ubuntu/data_hdd/southern_africa/
+
+scp -i ~/keys/Machine_Learning.pem /home/ubuntu/data_hdd/southern_africa/experiments/species/data/* ubuntu@ec2-34-242-200-104.eu-west-1.compute.amazonaws.com:/home/ubuntu/data_hdd/southern_africa/experiments/species/data/
