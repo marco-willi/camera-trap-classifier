@@ -23,11 +23,11 @@ class DatasetReader(object):
 
         dataset = tf.data.TFRecordDataset(tfr_files)
 
+        dataset = dataset.prefetch(buffer_size=buffer_size*10)
+
         # shuffle records only for training
         if is_train:
             dataset = dataset.shuffle(buffer_size=buffer_size)
-
-        dataset = dataset.prefetch(buffer_size=batch_size*10)
 
         dataset = dataset.map(lambda x: self.tfr_decoder(
                 serialized_example=x,
@@ -51,7 +51,7 @@ class DatasetReader(object):
 
         dataset = dataset.repeat(n_repeats)
 
-        dataset = dataset.prefetch(4)
+        dataset = dataset.prefetch(1)
 
         iterator = dataset.make_one_shot_iterator()
 
