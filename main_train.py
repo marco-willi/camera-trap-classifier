@@ -59,7 +59,7 @@ tfr_writer.encode_inventory_to_tfr(
         prefix_to_labels='labels/')
 
 # Split TFrecord into Train/Val/Test
-logging.debug("Creating TFRecordSplitter")
+logging.info("Creating TFRecordSplitter")
 tfr_splitter = TFRecordSplitter(
         files_to_split=cfg.current_paths['tfr_master'],
         tfr_encoder=tfr_encoder_decoder.encode_record,
@@ -68,7 +68,7 @@ tfr_splitter = TFRecordSplitter(
 split_names = [x for x in cfg.current_exp['training_splits']]
 split_props = [cfg.current_exp['training_splits'][x] for x in split_names]
 
-logging.debug("Splitting TFR File")
+logging.info("Splitting TFR File")
 tfr_splitter.split_tfr_file(
     output_path_main=cfg.current_paths['exp_data'],
     output_prefix="split",

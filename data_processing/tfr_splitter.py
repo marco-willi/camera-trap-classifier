@@ -103,12 +103,13 @@ class TFRecordSplitter(object):
         self.split_files = output_file_names
 
         # get all ids and their labels from the input file
+        logging.info("Starting to Read: %s" % self.files_to_split)
         dataset_reader = DatasetReader(self.tfr_decoder)
 
         iterator = dataset_reader.get_iterator(
-             self.files_to_split, batch_size=2048, is_train=False, n_repeats=1,
+             self.files_to_split, batch_size=16384, is_train=False, n_repeats=1,
              output_labels=output_labels,
-             buffer_size=10192,
+             buffer_size=16384*10,
              decode_images=False,
              labels_are_numeric=False,
              max_multi_label_number=None,
@@ -116,6 +117,8 @@ class TFRecordSplitter(object):
 
         id_label_dict = OrderedDict()
         with tf.Session() as sess:
+            coord = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(coord=coord)
             while True:
                 try:
                     batch_data = sess.run(iterator)
@@ -124,6 +127,10 @@ class TFRecordSplitter(object):
                                             self.output_labels_clean)
                 except tf.errors.OutOfRangeError:
                     break
+            coord.request_stop()
+            coord.join(threads)
+
+        logging.info("Finished reading: %s" % self.files_to_split)
 
         # convert label dict to inventory
         logging.debug("Converting label dictionary to data inventory")
@@ -175,13 +182,14 @@ class TFRecordSplitter(object):
         for i, split in enumerate(self.split_names):
             logging.debug("Reading base file to write: %s" % split)
             iterator = dataset_reader.get_iterator(
-                 self.files_to_split, batch_size=128,
+                 self.files_to_split, batch_size=16384,
                  is_train=False, n_repeats=1,
                  output_labels=output_labels,
-                 buffer_size=64,
+                 buffer_size=16384*10,
                  decode_images=False,
                  labels_are_numeric=False,
-                 max_multi_label_number=None)
+                 max_multi_label_number=None,
+                 drop_batch_remainder=False)
 
             # Write Split File
             logging.info("Start writing file %s" % output_file_names[i])
