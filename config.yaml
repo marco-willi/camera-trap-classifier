@@ -2,23 +2,23 @@ general:
   debug: False
   logging: debug
   logging_to_disk: True
-  number_of_gpus: 1
+  number_of_gpus: 4
   # number of cpus used for image pre-processing (use all if possible)
-  # number_of_cpus: 32
-  number_of_cpus: 4
+  number_of_cpus: 30
+  #number_of_cpus: 4
   # number of images buffered in image pre-processing
   # (increase if GPU utilization is below 90%)
   buffer_size: 10192
   # batch is is split to all GPUs - has to be divisible by number of GPUs
   # batch_size: 256
-  batch_size: 128
+  batch_size: 256
   max_number_of_epochs: 70
   save_sample_images_to_disk: False
 
 run:
   location: southern_africa
   experiment: species
-  identifier_postfix: ''
+  identifier_postfix: '_incresv2'
    # location: west_africa
    # experiment: species
    # add postfix to run directory: run_YYYYMMDD + postfix
@@ -65,8 +65,8 @@ locations:
         balanced_sampling_min: True
         balanced_sampling_label_type: 'species'
       species:
-        #model: InceptionResNetV2
-        model: ResNet18
+        model: InceptionResNetV2
+        #model: ResNet18
         labels_project: panthera
         labels_version: species
         label_types_to_model:
