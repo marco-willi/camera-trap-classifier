@@ -50,7 +50,7 @@ class DatasetReader(object):
 
         dataset = dataset.repeat(n_repeats)
 
-        dataset = dataset.prefetch(50)
+        dataset = dataset.prefetch(5)
 
         iterator = dataset.make_one_shot_iterator()
 
