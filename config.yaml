@@ -10,8 +10,8 @@ general:
   # (increase if GPU utilization is below 90%)
   buffer_size: 32768
   # batch is is split to all GPUs - has to be divisible by number of GPUs
-  # batch_size: 256
-  batch_size: 512
+  batch_size: 256
+  #batch_size: 512
   max_number_of_epochs: 70
   save_sample_images_to_disk: False
 
