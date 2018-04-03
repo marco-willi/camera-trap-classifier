@@ -79,7 +79,8 @@ tfr_splitter.split_tfr_file(
     output_labels=cfg.current_exp['label_types_to_model'],
     overwrite_existing_files=False,
     keep_only_labels=labels_data['keep_labels'],
-    class_mapping=labels_data['label_mapping'])
+    class_mapping=labels_data['label_mapping'],
+    num_parallel_calls=cfg.cfg['general']['number_of_cpus'])
 
 # Check numbers
 # tfr_splitter.log_record_numbers_per_file()

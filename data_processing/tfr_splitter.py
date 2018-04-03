@@ -84,7 +84,8 @@ class TFRecordSplitter(object):
                        overwrite_existing_files=True,
                        keep_only_labels=None,
                        remove_label_types=None,
-                       map_labels_to_numerics=True):
+                       map_labels_to_numerics=True,
+                       num_parallel_calls=4):
         """ Split a TFR file according to split proportions """
 
         self.split_names = split_names
@@ -113,7 +114,8 @@ class TFRecordSplitter(object):
              decode_images=False,
              labels_are_numeric=False,
              max_multi_label_number=None,
-             drop_batch_remainder=False)
+             drop_batch_remainder=False,
+             num_parallel_calls=num_parallel_calls)
 
         id_label_dict = OrderedDict()
         with tf.Session() as sess:
@@ -189,7 +191,8 @@ class TFRecordSplitter(object):
                  decode_images=False,
                  labels_are_numeric=False,
                  max_multi_label_number=None,
-                 drop_batch_remainder=False)
+                 drop_batch_remainder=False,
+                 num_parallel_calls=num_parallel_calls)
 
             # Write Split File
             logging.info("Start writing file %s" % output_file_names[i])
