@@ -1,17 +1,31 @@
 general:
-  debug: True
+  debug: False
   logging: debug
-  logging_to_disk: False
-  number_of_gpus: 1
-  batch_size: 128
+  logging_to_disk: True
+  number_of_gpus: 4
+  # number of cpus used for image pre-processing (use all if possible)
+  number_of_cpus: 32
+  #number_of_cpus: 4
+  # number of images buffered in image pre-processing
+  # (increase if GPU utilization is below 90%)
+  buffer_size: 32768
+  # batch is is split to all GPUs - has to be divisible by number of GPUs
+  batch_size: 256
+  #batch_size: 512
+  max_number_of_epochs: 70
+  save_sample_images_to_disk: False
 
 run:
-  location: cats_and_dogs
-  experiment: cats_vs_dogs
-  identifier: timestamp
-#  location: southern_africa
-#  experiment: species
-#  identifier: timestamp
+  location: southern_africa
+  experiment: species
+  identifier_postfix: '_incresv2'
+   # location: west_africa
+   # experiment: species
+   # add postfix to run directory: run_YYYYMMDD + postfix
+   # identifier_postfix: ''
+  # location: cats_and_dogs
+  # experiment: cats_vs_dogs
+  # identifier_postfix: ''
 
 paths:
   root: '/host/data_hdd/'
@@ -31,7 +45,8 @@ locations:
       output_height: 224
       output_width: 224
       resize_side_min: 224
-      resize_side_max: 500
+      resize_side_max: 246
+      color_manipulations: True
     paths:
       master_tfr: 'master.tfrecord'
       #inventory: 'D:\Studium_GD\Zooniverse\CamCatProject\data\inventory_list.csv'
@@ -46,17 +61,52 @@ locations:
         labels_project: panthera
         labels_version: empty
         label_types_to_model:
-          - 'primary'
+          - 'species'
         balanced_sampling_min: True
-        balanced_sampling_label_type: 'primary'
+        balanced_sampling_label_type: 'species'
+      species:
+        model: InceptionResNetV2
+        #model: ResNet18
+        labels_project: panthera
+        labels_version: species
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: False
+        balanced_sampling_label_type: 'species'
+  west_africa:
+    experiment_id: 'ts'
+    image_save_side_max: 500
+    image_processing:
+      output_height: 224
+      output_width: 224
+      resize_side_min: 224
+      resize_side_max: 246
+      color_manipulations: True
+    paths:
+      master_tfr: 'master.tfrecord'
+      #inventory: 'D:\Studium_GD\Zooniverse\CamCatProject\data\inventory_list.csv'
+      inventory: 'inventory_list.csv'
+    training_splits:
+      train: 0.9
+      validation: 0.05
+      test: 0.05
+    experiments:
+      empty_vehicle_species:
+        model: ResNet18
+        labels_project: panthera
+        labels_version: empty
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: True
+        balanced_sampling_label_type: 'species'
       species:
         model: ResNet18
         labels_project: panthera
         labels_version: species
         label_types_to_model:
-          - 'primary'
+          - 'species'
         balanced_sampling_min: False
-        balanced_sampling_label_type: 'primary'
+        balanced_sampling_label_type: 'species'
   cats_and_dogs:
     experiment_id: 'ts'
     image_save_side_max: 200
@@ -64,7 +114,8 @@ locations:
       output_height: 150
       output_width: 150
       resize_side_min: 150
-      resize_side_max: 200
+      resize_side_max: 165
+      color_manipulations: True
     paths:
       master_tfr: 'master.tfrecord'
       inventory: 'inventory_list.csv'
