@@ -280,11 +280,6 @@ def preprocess_for_train(image,
     A preprocessed image.
     """
 
-    if color_manipulations:
-        image = tf.image.random_brightness(image, max_delta=0.2)
-        image = tf.image.random_contrast(image, lower=0.9, upper=1.1)
-        image = tf.image.random_hue(image, max_delta=0.02)
-        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
 
     resize_side = tf.random_uniform(
       [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
@@ -294,8 +289,16 @@ def preprocess_for_train(image,
     image.set_shape([output_height, output_width, 3])
     image = tf.to_float(image)
     image = tf.image.random_flip_left_right(image)
+
+    if color_manipulations:
+        image = tf.image.random_brightness(image, max_delta=0.2)
+        image = tf.image.random_contrast(image, lower=0.9, upper=1)
+        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+
     image = tf.divide(image, tf.cast(255.0, tf.float32))
     image = _image_standardize(image, image_means, image_stdevs)
+
     return image
 
 
