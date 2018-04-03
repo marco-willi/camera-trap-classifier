@@ -36,6 +36,7 @@ labels_data = get_label_info(location=cfg.cfg['run']['location'],
 # Create Data Inventory
 logging.info("Building Dataset Inventory")
 dataset_inventory = DatasetInventory()
+#dataset_inventory.create_from_class_directories('D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\images\\camera_catalogue\\all')
 dataset_inventory.create_from_panthera_csv(cfg.current_paths['inventory'])
 dataset_inventory.label_handler.remove_multi_label_records()
 dataset_inventory.log_stats()
