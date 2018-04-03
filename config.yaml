@@ -17,7 +17,7 @@ general:
 
 run:
   location: southern_africa
-  experiment: empty_vehicle_species
+  experiment: species
   identifier_postfix: ''
    # location: west_africa
    # experiment: species
