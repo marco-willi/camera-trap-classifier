@@ -3,8 +3,8 @@ import os
 import json
 import csv
 import copy
+import logging
 
-from config.config import logging
 from data_processing.utils import clean_input_path
 
 

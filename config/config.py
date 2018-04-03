@@ -97,35 +97,33 @@ class Config(object):
                 if k not in self.current_exp:
                     self.current_exp[k] = v
 
-
-# Load Configuration
-cfg = Config()
-cfg.load_config()
-
-
 ##############################
 # Logging
 ##############################
 
-# logging handlers
-handlers = list()
 
-log_path = cfg.current_paths['run_data']
+def configure_logging(cfg):
+    # logging handlers
+    handlers = list()
 
-if cfg.cfg['general']['logging_to_disk']:
-    # handlers to log stuff to (file and stdout)
-    file_handler = logging.FileHandler(
-        filename=log_path + 'run.log')
-    handlers.append(file_handler)
+    log_path = cfg.current_paths['run_data']
 
-stdout_handler = logging.StreamHandler(sys.stdout)
-handlers.append(stdout_handler)
+    if cfg.cfg['general']['logging_to_disk']:
+        # handlers to log stuff to (file and stdout)
+        file_handler = logging.FileHandler(
+            filename=log_path + 'run.log')
+        handlers.append(file_handler)
 
-# logger configuration
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(funcName)s - %(levelname)s:' +
-                           '%(message)s',
-                    handlers=handlers)
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    handlers.append(stdout_handler)
 
-# log parameters / config
-logging.info("Configuration: %s" % cfg.cfg)
+    # logger configuration
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(funcName)s - %(levelname)s:' +
+                               '%(message)s',
+                        handlers=handlers)
+
+    # log parameters / config
+    logging.info("Configuration: %s" % cfg.cfg)
+
+    return logging

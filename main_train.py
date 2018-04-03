@@ -5,8 +5,8 @@ from tensorflow.python.keras.callbacks import TensorBoard
 from tensorflow.python.keras import backend as K
 #import matplotlib.pyplot as plt
 
-from config.config import logging
-from config.config import cfg
+from config.config import configure_logging
+from config.config import Config
 from training.configuration_data import get_label_info
 from training.utils import (
         ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger,
@@ -22,6 +22,11 @@ from pre_processing.image_transformations import (
         preprocess_image,
         preprocess_image_default, resize_jpeg, resize_image)
 from data_processing.utils import calc_n_batches_per_epoch
+
+# Set up configuration and logging
+cfg = Config()
+cfg.load_config()
+logging = configure_logging(cfg)
 
 # get label information
 logging.info("Getting Label Information")

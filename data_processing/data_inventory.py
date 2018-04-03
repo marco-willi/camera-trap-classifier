@@ -1,8 +1,8 @@
 """ Class To Create Dataset Inventory """
 import random
 import json
+import logging
 
-from config.config import logging
 from data_processing.data_importer import (
     ImportFromJson, ImportFromImageDirs, ImportFromPantheraCSV)
 from data_processing.label_handler import LabelHandler

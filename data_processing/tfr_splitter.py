@@ -2,10 +2,10 @@
 from random import shuffle
 import os
 from collections import OrderedDict
+import logging
 
 import tensorflow as tf
 
-from config.config import logging
 from data_processing.utils import id_to_zero_one, n_records_in_tfr
 from data_processing.data_reader import DatasetReader
 from data_processing.data_inventory import DatasetInventory

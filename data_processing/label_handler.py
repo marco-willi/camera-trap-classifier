@@ -1,5 +1,5 @@
 """ Class to Handle Labels and Classes of a Data Inventory """
-from config.config import logging
+import logging
 
 
 class LabelHandler(object):

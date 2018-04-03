@@ -46,30 +46,35 @@ class CalcTests(unittest.TestCase):
     def testNormalCase(self):
         n_total = 26
         batch_size = 5
-        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size), 6)
+        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size, drop_remainder=False), 6)
+
+    def testDropRemainderCaseNormal(self):
+        n_total = 26
+        batch_size = 5
+        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size), 5)
 
     def testEqual(self):
         n_total = 6600
         batch_size = 6600
-        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size), 1)
+        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size, drop_remainder=False), 1)
 
     def testBatchLarger(self):
         n_total = 450
         batch_size = 660
-        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size), 1)
+        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size, drop_remainder=False), 1)
 
     def testBoundary(self):
         n_total = 450
         batch_size = 451
-        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size), 1)
+        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size, drop_remainder=False), 1)
 
         n_total = 450
         batch_size = 449
-        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size), 2)
+        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size, drop_remainder=False), 2)
 
         n_total = 0
         batch_size = 10
-        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size), 0)
+        self.assertEqual(calc_n_batches_per_epoch(n_total, batch_size, drop_remainder=False), 0)
 
 
 class PathCleaningTests(unittest.TestCase):

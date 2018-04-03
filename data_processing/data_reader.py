@@ -1,7 +1,6 @@
 """ Class To Read TFRecord Files """
 import tensorflow as tf
-
-from config.config import logging
+import logging
 
 
 class DatasetReader(object):

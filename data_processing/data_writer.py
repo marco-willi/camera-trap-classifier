@@ -1,10 +1,10 @@
 """ Write Data Inventory to Disk """
 import random
 import os
+import logging
 
 import tensorflow as tf
 
-from config.config import logging
 from pre_processing.image_transformations import read_jpeg
 from data_processing.data_inventory import DatasetInventory
 
