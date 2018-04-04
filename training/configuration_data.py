@@ -191,6 +191,12 @@ def get_label_info(location='panthera', experiment="empty"):
         else:
             raise NotImplementedError("experiment: %s not implemented" % experiment)
 
+
+    elif location == 'cats_and_dogs':
+        labels_all = {'primary': ["cat", "dog"]}
+        keep_labels = labels_all
+        label_mapping = None
+
     else:
         raise NotImplementedError("location: %s not implemented" % location)
 
