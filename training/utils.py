@@ -92,12 +92,49 @@ class EarlyStopping(object):
 
 class ModelCheckpointer(Callback):
     """ Save model after each epoch """
-    def __init__(self, model, path):
+    def __init__(self, model, path, save_model=True, save_weights=True):
         self.model_to_save = model
         self.path = path
+        self.save_model = save_model
+        self.save_weights = save_weights
 
     def on_epoch_end(self, epoch, logs=None):
-        self.model_to_save.save('%smodel_epoch_%d.hdf5' % (self.path, epoch))
+        if self.save_model:
+            self.model_to_save.save('%smodel_epoch_%d.hdf5' %
+                                    (self.path, epoch))
+        if self.save_weights:
+            self.model_to_save.save_weights('%smodel_weights_epoch_%d.hdf5' %
+                                            (self.path, epoch))
+
+
+def find_the_best_id_in_log(log_file_path, metric, id='epoch'):
+    """ Returns the path of the best model """
+    if not os.path.exists(log_file_path):
+        raise FileExistsError("File %s does not exist" % log_file_path)
+
+    epoch_results = dict()
+    with open(log_file_path, newline='') as logfile:
+        reader = csv.reader(logfile, delimiter=',')
+        for i, row in enumerate(reader):
+            if i == 0:
+                metric_col = row.index(metric)
+                id_col = row.index(id)
+            else:
+                epoch_results[row[id_col]] = float(row[metric_col])
+
+    best_model_id = min(epoch_results, key=epoch_results.get)
+    return best_model_id
+
+
+def find_model_based_on_epoch(model_path, epoch):
+    """ Returns path to the best model """
+    files = [file_dir for file_dir in os.listdir(model_path)
+             if os.path.isfile(os.path.join(model_path, file_dir))]
+    all_model_files = [x for x in files if x.endswith('.hdf5')]
+    search_string = 'epoch_' + epoch
+    models_to_find = [x for x in all_model_files if search_string in x]
+    path_to_models_to_find = [model_path + x for x in models_to_find]
+    return path_to_models_to_find
 
 
 class ReduceLearningRateOnPlateau(object):
@@ -203,13 +240,3 @@ class ReduceLearningRateOnPlateau(object):
 
             current_min_res = np.min(result_history)
         return change_lr
-
-
-def get_most_rescent_file_with_string(dirpath, in_str='', excl_str='!'):
-    """ get most recent file from directory, that includes string """
-    a = [s for s in os.listdir(dirpath)
-         if os.path.isfile(os.path.join(dirpath, s))]
-    a.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)))
-    b = [x for x in a if (in_str in x) and not (excl_str in x)]
-    latest = b[-1]
-    return dirpath + os.path.sep + latest
