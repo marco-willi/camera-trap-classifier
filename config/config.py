@@ -81,8 +81,15 @@ class Config(object):
                           id_postfix + '.hdf5'
 
         # check and create path if not exist
-        for path in [run_dir]:
+        for path in [run_dir, model_path]:
             create_path(path, create_path=True)
+
+        # check path existence
+        for path in [location_path, exp_data, exp_path, model_path, run_dir]:
+            if not os.path.exists(path):
+                raise FileNotFoundError("Path %s not found - create\
+                                        prior to running code" % (path))
+                                        
         paths = {'tfr_master': tfr_master_path,
                  'inventory': inventory_path,
                  'exp_data': exp_data,
