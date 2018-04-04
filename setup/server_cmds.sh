@@ -28,6 +28,12 @@ python3 -m unittest discover test/
 # fix multi gpu driver on host
 sudo nvidia-modprobe -u -c=0
 
+# install python virtual environment
+conda create -n ct3 python=3.5
+conda list -e > requirements.txt
+conda install --yes --file requirements.txt
+
+
 
 # transfer files from aws to aws
 chmod 400  ~/keys/Machine_Learning.pem
