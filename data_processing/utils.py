@@ -2,6 +2,7 @@
 import sys
 import os
 import json
+from shutil import copyfile
 
 import tensorflow as tf
 from hashlib import md5
@@ -196,6 +197,9 @@ def get_most_rescent_file_with_string(dirpath, in_str='', excl_str='!'):
     latest = b[-1]
     return dirpath + os.path.sep + latest
 
+
+def copy_file(file, to):
+    copyfile(file, to)
 
 # # TODO: Improve
 # def create_default_class_mapper(all_labels, class_mapping=None):

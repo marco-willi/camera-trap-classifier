@@ -7,6 +7,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.keras.callbacks import Callback
 
+from data_processing.utils import copy_file
+
 
 class CSVLogger(object):
     """ Log stats to a csv """
@@ -107,7 +109,7 @@ class ModelCheckpointer(Callback):
                                             (self.path, epoch))
 
 
-def find_the_best_id_in_log(log_file_path, metric, id='epoch'):
+def find_the_best_id_in_log(log_file_path, metric, id='epoch', offset=-1):
     """ Returns the path of the best model """
     if not os.path.exists(log_file_path):
         raise FileExistsError("File %s does not exist" % log_file_path)
@@ -126,8 +128,9 @@ def find_the_best_id_in_log(log_file_path, metric, id='epoch'):
     return best_model_id
 
 
-def find_model_based_on_epoch(model_path, epoch):
+def find_model_based_on_epoch(model_path, epoch, offset=-1):
     """ Returns path to the best model """
+    epoch = str(int(epoch) + offset)
     files = [file_dir for file_dir in os.listdir(model_path)
              if os.path.isfile(os.path.join(model_path, file_dir))]
     all_model_files = [x for x in files if x.endswith('.hdf5')]
@@ -136,6 +139,22 @@ def find_model_based_on_epoch(model_path, epoch):
     path_to_models_to_find = [model_path + x for x in models_to_find]
     return path_to_models_to_find
 
+
+def copy_models_and_config_files(model_source, model_target,
+                                 files_path_source,
+                                 files_path_target, copy_files=".json"):
+    """ copy model from source to target and all config files """
+
+    files = [file_dir for file_dir in os.listdir(files_path_source)
+             if os.path.isfile(os.path.join(files_path_source, file_dir))]
+    files_to_copy = [x for x in files if x.endswith(copy_files)]
+
+    for file in files_to_copy:
+        file_path = os.path.join(files_path_source, file)
+        target_path = os.path.join(files_path_target, file)
+        copy_file(file_path, target_path)
+
+    copy_file(model_source, model_target)
 
 class ReduceLearningRateOnPlateau(object):
     def __init__(self, reduce_after_n_rounds,

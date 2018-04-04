@@ -10,7 +10,8 @@ from config.config import Config
 from training.configuration_data import get_label_info
 from training.utils import (
         ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger,
-        ModelCheckpointer)
+        ModelCheckpointer, find_the_best_id_in_log, find_model_based_on_epoch,
+        copy_models_and_config_files)
 from training.model_library import create_model
 
 from data_processing.data_inventory import DatasetInventory
@@ -21,7 +22,8 @@ from data_processing.tfr_splitter import TFRecordSplitter
 from pre_processing.image_transformations import (
         preprocess_image,
         resize_jpeg)
-from data_processing.utils import calc_n_batches_per_epoch, export_dict_to_json
+from data_processing.utils import (
+        calc_n_batches_per_epoch, export_dict_to_json)
 
 # Set up configuration and logging
 cfg = Config()
@@ -71,7 +73,7 @@ tfr_splitter = TFRecordSplitter(
         tfr_decoder=tfr_encoder_decoder.decode_record)
 
 split_names = sorted(cfg.current_exp['training_splits'],
-                     key=cfg.current_exp['training_splits'].get,reverse=True)
+                     key=cfg.current_exp['training_splits'].get, reverse=True)
 split_props = [cfg.current_exp['training_splits'][x] for x in split_names]
 
 logging.info("Splitting TFR File")
@@ -332,3 +334,27 @@ for i in range(0, max_number_of_epochs):
         break
 
 logging.info("Finished Model Training")
+
+
+# Finding best model run and moving models
+best_model_run = find_the_best_id_in_log(
+        log_file_path=cfg.current_paths['run_data'] + 'training.log',
+        metric='val_loss')
+
+best_model_path = find_model_based_on_epoch(
+                    model_path=cfg.current_paths['run_data'],
+                    epoch=best_model_run)
+
+
+for best_model in best_model_path:
+    if 'model_epoch' in best_model:
+        copy_models_and_config_files(
+                model_source=best_model,
+                model_target=cfg.current_paths['model_save_best'],
+                files_path_source=cfg.current_paths['run_data'],
+                files_path_target=cfg.current_paths['model_saves'],
+                copy_files=".json")
+
+logging.info("Saving Best Model in: %s" % cfg.current_paths['model_save_best'])
+
+

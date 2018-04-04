@@ -76,6 +76,10 @@ class Config(object):
         id_postfix = self.cfg['run']['identifier_postfix']
         run_dir = exp_path + self.run_id + id_postfix + os.path.sep
 
+        # best model save path
+        best_model_path = model_path + 'model_best_' + self.run_id + \
+                          id_postfix + '.hdf5'
+
         # check and create path if not exist
         for path in [run_dir]:
             create_path(path, create_path=True)
@@ -84,6 +88,7 @@ class Config(object):
                  'exp_data': exp_data,
                  'run_data': run_dir,
                  'model_saves': model_path,
+                 'model_save_best': best_model_path,
                  'root': root}
 
         self.current_paths = paths
