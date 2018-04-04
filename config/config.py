@@ -80,6 +80,10 @@ class Config(object):
         best_model_path = model_path + 'model_best_' + self.run_id + \
                           id_postfix + '.hdf5'
 
+        # prediction model save path
+        pred_model_path = model_path + 'model_prediction_' + self.run_id + \
+                          id_postfix + '.hdf5'
+
         # check and create path if not exist
         for path in [run_dir, model_path]:
             create_path(path, create_path=True)
@@ -89,13 +93,14 @@ class Config(object):
             if not os.path.exists(path):
                 raise FileNotFoundError("Path %s not found - create\
                                         prior to running code" % (path))
-                                        
+
         paths = {'tfr_master': tfr_master_path,
                  'inventory': inventory_path,
                  'exp_data': exp_data,
                  'run_data': run_dir,
                  'model_saves': model_path,
                  'model_save_best': best_model_path,
+                 'model_save_pred': pred_model_path,
                  'root': root}
 
         self.current_paths = paths

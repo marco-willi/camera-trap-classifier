@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import TensorBoard
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.models import load_model
 # import matplotlib.pyplot as plt
 
 from config.config import configure_logging
@@ -25,7 +26,10 @@ from pre_processing.image_transformations import (
 from data_processing.utils import (
         calc_n_batches_per_epoch, export_dict_to_json)
 
-# Set up configuration and logging
+###########################################
+# LOAD CFG ###########
+###########################################
+
 cfg = Config()
 cfg.load_config()
 logging = configure_logging(cfg)
@@ -35,7 +39,10 @@ logging.info("Getting Label Information")
 labels_data = get_label_info(location=cfg.cfg['run']['location'],
                              experiment=cfg.cfg['run']['experiment'])
 
-# Create Data Inventory
+###########################################
+# DATA INVENTORY ###########
+###########################################
+
 logging.info("Building Dataset Inventory")
 dataset_inventory = DatasetInventory()
 dataset_inventory.create_from_panthera_csv(cfg.current_paths['inventory'])
@@ -50,7 +57,10 @@ if cfg.current_exp['balanced_sampling_label_type'] is not None:
 label_types_to_model_clean = ['labels/' + x for x in
                               cfg.current_exp['label_types_to_model']]
 
-# Create TFRecod Encoder / Decoder
+###########################################
+# CREATE DATA ###########
+###########################################
+
 logging.info("Creating TFRecord Data")
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 
@@ -121,7 +131,10 @@ for label_type, labels in tfr_splitter.all_labels.items():
         logging.info("Label Type: %s Label: %s Records: %s" %
                      (label_type, label_char, no_recs))
 
-# Create Dataset Reader
+###########################################
+# CALC IMAGE STATS ###########
+###########################################
+
 logging.info("Create Dataset Reader")
 data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
@@ -167,7 +180,10 @@ logging.info("Image Stdevs: %s" % image_stdevs)
 #                     'sample_image_' + str(i) + '_' + lbl_c + '.jpeg'
 #         plt.imsave(save_path, img)
 
-# Prepare Data Feeders for Training / Validation / Testing Data
+###########################################
+# PREPARE DATA READER ###########
+###########################################
+
 logging.info("Preparing Data Feeders")
 
 def input_feeder_train():
@@ -239,6 +255,9 @@ n_batches_per_epoch_val = calc_n_batches_per_epoch(
     tfr_n_records['test'],
     cfg.cfg['general']['batch_size'])
 
+###########################################
+# CREATE MODELS ###########
+###########################################
 
 logging.info("Building Train and Validation Models")
 
@@ -269,6 +288,10 @@ for layer, i in zip(train_model_base.layers,
 
 logging.info("Preparing Callbacks and Monitors")
 
+###########################################
+# MONITORS ###########
+###########################################
+
 early_stopping = EarlyStopping(stop_after_n_rounds=7, minimize=True)
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         reduce_after_n_rounds=3,
@@ -290,6 +313,11 @@ tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           batch_size=cfg.cfg['general']['batch_size'],
                           write_graph=True,
                           write_grads=False, write_images=False)
+
+
+###########################################
+# MODEL TRAINING  ###########
+###########################################
 
 logging.info("Start Model Training")
 
@@ -335,6 +363,9 @@ for i in range(0, max_number_of_epochs):
 
 logging.info("Finished Model Training")
 
+###########################################
+# SAVE AND IDENTIFY BEST MODEL ###########
+###########################################
 
 # Finding best model run and moving models
 best_model_run = find_the_best_id_in_log(
@@ -345,7 +376,7 @@ best_model_path = find_model_based_on_epoch(
                     model_path=cfg.current_paths['run_data'],
                     epoch=best_model_run)
 
-
+logging.info("Saving Best Model in: %s" % cfg.current_paths['model_save_best'])
 for best_model in best_model_path:
     if 'model_epoch' in best_model:
         copy_models_and_config_files(
@@ -355,6 +386,21 @@ for best_model in best_model_path:
                 files_path_target=cfg.current_paths['model_saves'],
                 copy_files=".json")
 
-logging.info("Saving Best Model in: %s" % cfg.current_paths['model_save_best'])
+best_model = load_model(cfg.current_paths['model_save_best'])
 
+###########################################
+# SAVE PREDICTION MODEL ###########
+###########################################
 
+pred_model = create_model(
+    model_name=cfg.current_exp['model'],
+    target_labels=label_types_to_model_clean,
+    n_classes_per_label_type=n_classes_per_label_type,
+    train=False,
+    test_input_shape=best_model.input_shape[1:])
+
+pred_model.set_weights(best_model.get_weights())
+pred_model.save(cfg.current_paths['model_save_pred'])
+
+logging.info("Saved Prediction Model at %s" %
+             cfg.current_paths['model_save_pred'])
