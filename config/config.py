@@ -153,6 +153,8 @@ class Config(object):
                             os.path.sep + \
                             self.current_model_loads['model_file_to_load']
             self.current_model_loads['model_to_load'] = full_path
+        else:
+            self.current_model_loads['model_to_load'] = ''
 
     def _check_model_load_data(self):
         if all([self.current_model_loads['continue_training'],
@@ -163,7 +165,7 @@ class Config(object):
         if any([self.current_model_loads['continue_training'],
                 self.current_model_loads['transfer_learning']]):
             if not os.path.isfile(self.current_model_loads['model_to_load']):
-                 FileNotFoundError("Model file to load %s was not found" % \
+                FileNotFoundError("Model file to load %s was not found" % \
                                    self.current_model_loads['model_to_load'])
 
 
