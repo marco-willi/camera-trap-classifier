@@ -1,3 +1,4 @@
+""" Different Data Processing and Other Helper Functions """
 import sys
 import os
 import json
@@ -156,10 +157,12 @@ def assign_hash_to_zero_one(value):
 
     return zero_one
 
+
 def export_dict_to_json(dict, path):
     """ Export Label Mappings to Json File """
     with open(path, 'w') as fp:
         json.dump(dict, fp)
+
 
 def id_to_zero_one(value):
     """ Deterministically assign string to value 0-1 """

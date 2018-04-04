@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import TensorBoard
 from tensorflow.python.keras import backend as K
-#import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from config.config import configure_logging
 from config.config import Config
@@ -20,7 +20,7 @@ from data_processing.data_writer import DatasetWriter
 from data_processing.tfr_splitter import TFRecordSplitter
 from pre_processing.image_transformations import (
         preprocess_image,
-        preprocess_image_default, resize_jpeg, resize_image)
+        resize_jpeg)
 from data_processing.utils import calc_n_batches_per_epoch, export_dict_to_json
 
 # Set up configuration and logging
@@ -36,7 +36,6 @@ labels_data = get_label_info(location=cfg.cfg['run']['location'],
 # Create Data Inventory
 logging.info("Building Dataset Inventory")
 dataset_inventory = DatasetInventory()
-#dataset_inventory.create_from_class_directories('D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\images\\camera_catalogue\\all')
 dataset_inventory.create_from_panthera_csv(cfg.current_paths['inventory'])
 dataset_inventory.label_handler.remove_multi_label_records()
 dataset_inventory.log_stats()
