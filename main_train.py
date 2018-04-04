@@ -21,7 +21,7 @@ from data_processing.tfr_splitter import TFRecordSplitter
 from pre_processing.image_transformations import (
         preprocess_image,
         preprocess_image_default, resize_jpeg, resize_image)
-from data_processing.utils import calc_n_batches_per_epoch
+from data_processing.utils import calc_n_batches_per_epoch, export_dict_to_json
 
 # Set up configuration and logging
 cfg = Config()
@@ -71,7 +71,8 @@ tfr_splitter = TFRecordSplitter(
         tfr_encoder=tfr_encoder_decoder.encode_record,
         tfr_decoder=tfr_encoder_decoder.decode_record)
 
-split_names = [x for x in cfg.current_exp['training_splits']]
+split_names = sorted(cfg.current_exp['training_splits'],
+                     key=cfg.current_exp['training_splits'].get,reverse=True)
 split_props = [cfg.current_exp['training_splits'][x] for x in split_names]
 
 logging.info("Splitting TFR File")
@@ -95,6 +96,17 @@ tfr_splitter.label_to_numeric_mapper
 num_to_label_mapper = {
     k: {v2: k2 for k2, v2 in v.items()}
     for k, v in tfr_splitter.label_to_numeric_mapper.items()}
+
+
+# Log Label Mappings
+for label_type, mappings in tfr_splitter.label_to_numeric_mapper.items():
+    logging.info("Label Mappings for label type: %s" % label_type)
+    for k, v in mappings.items():
+        logging.info("Label: %s - Maps to ID: %s" % (k, v))
+
+# Export label Mappings
+export_dict_to_json(tfr_splitter.label_to_numeric_mapper,
+                    cfg.current_paths['run_data'] + 'label_mappings.json')
 
 #tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.all_labels
@@ -132,8 +144,8 @@ logging.info("Calculating image means and stdevs")
 with tf.Session() as sess:
     data = sess.run(batch_data)
 
-image_means = list(np.mean(data['images'], axis=(0, 1, 2)))
-image_stdevs = list(np.std(data['images'], axis=(0, 1, 2)))
+image_means = [round(float(x),4) for x in list(np.mean(data['images'], axis=(0, 1, 2)))]
+image_stdevs = [round(float(x), 4) for x in list(np.std(data['images'], axis=(0, 1, 2)))]
 
 cfg.current_exp['image_processing']['image_means'] = image_means
 cfg.current_exp['image_processing']['image_stdevs'] = image_stdevs
@@ -156,7 +168,6 @@ logging.info("Image Stdevs: %s" % image_stdevs)
 
 # Prepare Data Feeders for Training / Validation / Testing Data
 logging.info("Preparing Data Feeders")
-
 
 def input_feeder_train():
     return data_reader.get_iterator(
@@ -206,6 +217,13 @@ def input_feeder_test():
                 labels_are_numeric=True)
 
 
+
+# Export Image Processing Settings
+export_dict_to_json({**cfg.current_exp['image_processing'],
+                     'is_training': False},
+                    cfg.current_paths['run_data'] + 'image_processing.json')
+
+
 logging.info("Calculating batches per epoch")
 
 n_batches_per_epoch_train = calc_n_batches_per_epoch(
@@ -228,7 +246,10 @@ train_model, train_model_base = create_model(
     input_feeder=input_feeder_train,
     target_labels=label_types_to_model_clean,
     n_classes_per_label_type=n_classes_per_label_type,
-    n_gpus=cfg.cfg['general']['number_of_gpus'])
+    n_gpus=cfg.cfg['general']['number_of_gpus'],
+    continue_training=cfg.current_model_loads['continue_training'],
+    transfer_learning=cfg.current_model_loads['transfer_learning'],
+    path_of_model_to_load=cfg.current_model_loads['model_to_load'])
 
 val_model, val_model_base = create_model(
     model_name=cfg.current_exp['model'],
@@ -236,6 +257,7 @@ val_model, val_model_base = create_model(
     target_labels=label_types_to_model_clean,
     n_classes_per_label_type=n_classes_per_label_type,
     n_gpus=cfg.cfg['general']['number_of_gpus'])
+
 
 logging.info("Final Model Architecture")
 for layer, i in zip(train_model_base.layers,
