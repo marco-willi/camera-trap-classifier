@@ -1,5 +1,7 @@
 import sys
 import os
+import json
+
 import tensorflow as tf
 from hashlib import md5
 import numpy as np
@@ -154,6 +156,10 @@ def assign_hash_to_zero_one(value):
 
     return zero_one
 
+def export_dict_to_json(dict, path):
+    """ Export Label Mappings to Json File """
+    with open(path, 'w') as fp:
+        json.dump(dict, fp)
 
 def id_to_zero_one(value):
     """ Deterministically assign string to value 0-1 """
@@ -176,6 +182,17 @@ def create_path(path, create_path=True):
         os.mkdir(path)
     else:
         NameError("Path %s not Found" % path)
+
+
+def get_most_rescent_file_with_string(dirpath, in_str='', excl_str='!'):
+    """ get most recent file from directory, that includes string """
+    a = [s for s in os.listdir(dirpath)
+         if os.path.isfile(os.path.join(dirpath, s))]
+    a.sort(key=lambda s: os.path.getmtime(os.path.join(dirpath, s)))
+    b = [x for x in a if (in_str in x) and not (excl_str in x)]
+    latest = b[-1]
+    return dirpath + os.path.sep + latest
+
 
 # # TODO: Improve
 # def create_default_class_mapper(all_labels, class_mapping=None):
