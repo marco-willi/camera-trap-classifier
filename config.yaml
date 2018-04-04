@@ -1,10 +1,13 @@
+###########################################
+# GENERAL SETTINGS #####################
+###########################################
 general:
   debug: False
   logging: debug
   logging_to_disk: True
-  number_of_gpus: 4
+  number_of_gpus: 1
   # number of cpus used for image pre-processing (use all if possible)
-  number_of_cpus: 32
+  number_of_cpus: 4
   #number_of_cpus: 4
   # number of images buffered in image pre-processing
   # (increase if GPU utilization is below 90%)
@@ -15,163 +18,178 @@ general:
   max_number_of_epochs: 70
   save_sample_images_to_disk: False
 
+###########################################
+# RUN CONFIG #####################
+###########################################
 run:
   location: southern_africa
-  experiment: species
-  identifier_postfix: '_incresv2'
-   # location: west_africa
-   # experiment: species
-   # add postfix to run directory: run_YYYYMMDD + postfix
-   # identifier_postfix: ''
-  # location: cats_and_dogs
-  # experiment: cats_vs_dogs
-  # identifier_postfix: ''
+  experiment: empty_vehicle_species
+  identifier_postfix: ''
+
+###########################################
+# PATHS #####################
+###########################################
 
 paths:
   root: '/host/data_hdd/'
   experiments: 'experiments/'
   models: 'models/'
 
+# Paths used in debug mode (local machine)
 paths_debug:
   root: 'D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\'
   experiments: 'experiments\\'
   models: 'models\\'
 
-locations:
-  southern_africa:
-    experiment_id: 'ts'
-    image_save_side_max: 500
-    image_processing:
-      output_height: 299
-      output_width: 299
-      resize_side_min: 299
-      resize_side_max: 329
-      # output_height: 224
-      # output_width: 224
-      # resize_side_min: 224
-      # resize_side_max: 246
-      color_manipulations: True
-    paths:
-      master_tfr: 'master.tfrecord'
-      #inventory: 'D:\Studium_GD\Zooniverse\CamCatProject\data\inventory_list.csv'
-      inventory: 'inventory_list.csv'
-    training_splits:
-      train: 0.9
-      validation: 0.05
-      test: 0.05
-    experiments:
-      empty_vehicle_species:
-        model: ResNet18
-        labels_project: panthera
-        labels_version: empty
-        label_types_to_model:
-          - 'species'
-        balanced_sampling_min: True
-        balanced_sampling_label_type: 'species'
-      species:
-        model: InceptionResNetV2
-        #model: ResNet18
-        labels_project: panthera
-        labels_version: species
-        label_types_to_model:
-          - 'species'
-        balanced_sampling_min: False
-        balanced_sampling_label_type: 'species'
-  west_africa:
-    experiment_id: 'ts'
-    image_save_side_max: 500
+###########################################
+# AVAILABLE MODELS ########################
+###########################################
+models:
+  ResNet18:
     image_processing:
       output_height: 224
       output_width: 224
       resize_side_min: 224
       resize_side_max: 246
       color_manipulations: True
-    paths:
-      master_tfr: 'master.tfrecord'
-      #inventory: 'D:\Studium_GD\Zooniverse\CamCatProject\data\inventory_list.csv'
-      inventory: 'inventory_list.csv'
-    training_splits:
-      train: 0.9
-      validation: 0.05
-      test: 0.05
-    experiments:
-      empty_vehicle_species:
-        model: ResNet18
-        labels_project: panthera
-        labels_version: empty
-        label_types_to_model:
-          - 'species'
-        balanced_sampling_min: True
-        balanced_sampling_label_type: 'species'
-      species:
-        model: ResNet18
-        labels_project: panthera
-        labels_version: species
-        label_types_to_model:
-          - 'species'
-        balanced_sampling_min: False
-        balanced_sampling_label_type: 'species'
-  cats_and_dogs:
-    experiment_id: 'ts'
-    image_save_side_max: 200
+  ResNet34:
+    image_processing:
+      output_height: 224
+      output_width: 224
+      resize_side_min: 224
+      resize_side_max: 246
+      color_manipulations: True
+  ResNet50:
+    image_processing:
+      output_height: 224
+      output_width: 224
+      resize_side_min: 224
+      resize_side_max: 246
+      color_manipulations: True
+  ResNet101:
+    image_processing:
+      output_height: 224
+      output_width: 224
+      resize_side_min: 224
+      resize_side_max: 246
+      color_manipulations: True
+  ResNet152:
+    image_processing:
+      output_height: 224
+      output_width: 224
+      resize_side_min: 224
+      resize_side_max: 246
+      color_manipulations: True
+  InceptionResNetV2:
+    image_processing:
+      output_height: 299
+      output_width: 299
+      resize_side_min: 299
+      resize_side_max: 329
+      color_manipulations: True
+  cats_vs_dogs:
     image_processing:
       output_height: 150
       output_width: 150
       resize_side_min: 150
       resize_side_max: 165
       color_manipulations: True
+
+
+locations:
+  ###########################################
+  # DEFAULT CONFIG ########################
+  # (used if not overriden)
+  ###########################################
+  default_config:
+    image_save_side_max: 500
+    training_splits:
+      train: 0.9
+      validation: 0.05
+      test: 0.05
+    experiments:
+      default_config:
+        model: ResNet18
+        balanced_sampling_min: False
+        balanced_sampling_label_type: 'primary'
+        load_model_from_disk:
+          continue_training: False
+          transfer_learning: False
+          model_dir_to_load: ''
+          model_file_to_load: ''
+  ###########################################
+  # SOUTHERN AFRICA ########################
+  ###########################################
+  southern_africa:
+    paths:
+      master_tfr: 'master.tfrecord'
+      inventory: 'inventory_list.csv'
+    experiments:
+      empty_vehicle_species:
+        model: ResNet18
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: True
+        balanced_sampling_label_type: 'species'
+      species:
+        model: InceptionResNetV2
+        label_types_to_model:
+          - 'species'
+  ###########################################
+  # WEST AFRICA ########################
+  ###########################################
+  west_africa:
+    paths:
+      master_tfr: 'master.tfrecord'
+      inventory: 'inventory_list.csv'
+    experiments:
+      empty_vehicle_species:
+        model: ResNet18
+        label_types_to_model:
+          - 'species'
+        balanced_sampling_min: True
+        balanced_sampling_label_type: 'species'
+      species:
+        model: ResNet18
+        label_types_to_model:
+          - 'species'
+  ###########################################
+  # CATS AND DOGS (TESTING) ################
+  ###########################################
+  cats_and_dogs:
+    image_save_side_max: 200
     paths:
       master_tfr: 'master.tfrecord'
       inventory: 'inventory_list.csv'
       images: "D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all"
-    training_splits:
-      train: 0.9
-      validation: 0.05
-      test: 0.05
     experiments:
       cats_vs_dogs:
         model: cats_vs_dogs
-        labels_project: cats_vs_dogs
-        labels_version: cats_vs_dogs
+        load_model_from_disk:
+          continue_training: False
+          transfer_learning: True
+          #model_dir_to_load: 'southern_africa\\experiments\\species\\models'
+          model_dir_to_load: 'cats_and_dogs\\experiments\\cats_vs_dogs\\run_201804041504_model_loading'
+          model_file_to_load: 'latest'
         label_types_to_model:
           - 'primary'
         balanced_sampling_min: True
         balanced_sampling_label_type: 'primary'
-        initialize_weights: False
-        initialize_cfg:
-          model_dir: "cats_and_dogs\\experiments\\cats_vs_dogs\\run_201803300903\\"
-          model_name: 'latest'
-          replace_last_layer: False
-          starting_epoch_zero: False
+  ###########################################
+  # PANTHERA (TESTING) ################
+  ###########################################
   panthera:
-    experiment_id: 'ts'
-    image_save_side_max: 500
-    image_processing:
-      output_height: 299
-      output_width: 299
-      resize_side_min: 299
-      resize_side_max: 329
-      # output_height: 224
-      # output_width: 224
-      # resize_side_min: 224
-      # resize_side_max: 246
-      color_manipulations: True
     paths:
       master_tfr: 'master.tfrecord'
-      #inventory: 'D:\Studium_GD\Zooniverse\CamCatProject\data\inventory_list.csv'
       inventory: 'inventory_list.csv'
-    training_splits:
-      train: 0.9
-      validation: 0.05
-      test: 0.05
     experiments:
       empty_vehicle_species:
         model: ResNet18
-        labels_project: panthera
-        labels_version: empty
         label_types_to_model:
           - 'primary'
         balanced_sampling_min: True
         balanced_sampling_label_type: 'primary'
       species:
-        model: InceptionResNetV2
+        model: ResNet18
+        label_types_to_model:
+          - 'primary'

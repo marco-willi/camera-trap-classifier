@@ -6,7 +6,8 @@ import logging
 import sys
 from datetime import datetime
 
-from data_processing.utils import create_path
+from data_processing.utils import create_path, get_most_rescent_file_with_string
+
 
 ##############################
 # Config Class
@@ -21,8 +22,11 @@ class Config(object):
     def load_config(self):
         self._load_from_disk()
         self._clean_paths()
-        self._prepare_current_experiment()
         self._prepare_current_paths()
+        self._prepare_experiment(self.cfg['run']['location'],
+                                 self.cfg['run']['experiment'])
+        self._merge_default_model_settings()
+        self._check_model_load_data()
 
     def _load_from_disk(self):
         if os.path.exists(self.filename):
@@ -84,18 +88,79 @@ class Config(object):
 
         self.current_paths = paths
 
-    def _prepare_current_experiment(self):
+    def _merge_default_exp_settings(self):
+        """ Merge default experiment settings """
+        default_exp = self.cfg['locations']['default_config']['experiments']['default_config']
+        for k, v in default_exp.items():
+            if k not in self.current_exp:
+                self.current_exp[k] = v
+
+    def _merge_default_location_settings(self):
+        """ Merge default experiment settings """
+        default_loc = self.cfg['locations']['default_config']
+        for k, v in default_loc.items():
+            if k not in self.current_location and k is not 'experiments':
+                self.current_location[k] = v
+
+    def _merge_default_model_settings(self):
+        """ Merge settings for models with experiment data """
+        models = self.cfg['models']
+        if self.current_exp['model'] not in models:
+            raise IOError("Model %s not found in config file 'models'" %
+                          self.current_exp['model'])
+
+        model_settings = models[self.current_exp['model']]
+
+        for setting, value in model_settings.items():
+            if setting not in self.current_exp.keys():
+                self.current_exp[setting] = value
+            elif isinstance(value, dict):
+                for setting_nested, value_nested in value.items():
+                    if setting_nested not in self.current_exp[setting]:
+                        self.current_exp[setting][setting_nested] = value_nested
+
+    def _prepare_experiment(self, location, exp):
         """ Compile relevant information for current experiment """
-        location = self.cfg['run']['location']
-        exp = self.cfg['run']['experiment']
         exp_data = self.cfg['locations'][location]['experiments'][exp]
         location_data = self.cfg['locations'][location]
         self.current_location = location_data
+        self._merge_default_location_settings()
         self.current_exp = exp_data
         for k, v in self.current_location.items():
             if not k == 'experiments':
                 if k not in self.current_exp:
                     self.current_exp[k] = v
+
+        self._merge_default_exp_settings()
+
+        self.current_model_loads = exp_data['load_model_from_disk']
+        if self.current_model_loads['model_dir_to_load'] not in ('', None):
+
+            root_model_path = self.current_paths['root'] + os.path.sep + \
+                        self.current_model_loads['model_dir_to_load']
+
+            if self.current_model_loads['model_file_to_load'] == 'latest':
+                full_path = get_most_rescent_file_with_string(
+                    dirpath=root_model_path,
+                    in_str='.hdf5', excl_str='weights')
+            else:
+                full_path = root_model_path + \
+                            os.path.sep + \
+                            self.current_model_loads['model_file_to_load']
+            self.current_model_loads['model_to_load'] = full_path
+
+    def _check_model_load_data(self):
+        if all([self.current_model_loads['continue_training'],
+                self.current_model_loads['transfer_learning']]):
+            ImportError("load_model_from_disk configuration: only one of \
+                        transfer_learning and continue training can be true")
+
+        if any([self.current_model_loads['continue_training'],
+                self.current_model_loads['transfer_learning']]):
+            if not os.path.isfile(self.current_model_loads['model_to_load']):
+                 FileNotFoundError("Model file to load %s was not found" % \
+                                   self.current_model_loads['model_to_load'])
+
 
 ##############################
 # Logging
