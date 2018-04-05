@@ -5,9 +5,9 @@ general:
   debug: False
   logging: debug
   logging_to_disk: True
-  number_of_gpus: 1
+  number_of_gpus: 4
   # number of cpus used for image pre-processing (use all if possible)
-  number_of_cpus: 4
+  number_of_cpus: 32
   #number_of_cpus: 4
   # number of images buffered in image pre-processing
   # (increase if GPU utilization is below 90%)
@@ -22,8 +22,8 @@ general:
 # RUN CONFIG #####################
 ###########################################
 run:
-  location: southern_africa
-  experiment: empty_vehicle_species
+  location: west_africa
+  experiment: empty_species
   identifier_postfix: ''
 
 ###########################################
@@ -143,14 +143,14 @@ locations:
       master_tfr: 'master.tfrecord'
       inventory: 'inventory_list.csv'
     experiments:
-      empty_vehicle_species:
-        model: ResNet18
+      empty_species:
+        model: InceptionResNetV2
         label_types_to_model:
           - 'species'
         balanced_sampling_min: True
         balanced_sampling_label_type: 'species'
       species:
-        model: ResNet18
+        model: InceptionResNetV2
         label_types_to_model:
           - 'species'
   ###########################################

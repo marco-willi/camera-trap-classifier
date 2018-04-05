@@ -56,6 +56,11 @@ def get_label_info(location='panthera', experiment="empty"):
             label_mapping['species']['Vehicle'] = 'Vehicle'
             label_mapping['species']['Blank'] = 'Blank'
 
+        elif experiment == 'empty_species':
+             label_mapping = {'species': {x: 'Species' for x in
+                 keep_labels['species'] if x not in ['Blank']}}
+             label_mapping['species']['Blank'] = 'Blank'
+
         elif experiment == 'species':
             keep_labels['species'].remove('Vehicle')
             keep_labels['species'].remove('Blank')
