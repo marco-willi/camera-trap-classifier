@@ -329,8 +329,8 @@ for i in range(0, max_number_of_epochs):
                     callbacks=[checkpointer])
 
     # Copy weights from training model to validation model
-    training_weights = train_model.get_weights()
-    val_model.set_weights(training_weights)
+    training_weights = train_model_base.get_weights()
+    val_model_base.set_weights(training_weights)
 
     # Run evaluation model
     validation_results = val_model.evaluate(steps=n_batches_per_epoch_val)

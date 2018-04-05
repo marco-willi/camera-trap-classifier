@@ -1,6 +1,7 @@
 """ Predict Images using a trained Model """
 import os
 import json
+import csv
 from collections import OrderedDict
 
 import tensorflow as tf
@@ -85,11 +86,10 @@ class Predictor(object):
             top_label = ordered_classes[0]
             top_value = class_preds[top_label]
 
-            result[label_type] = OrderedDict([
+            result[label_type] = {
                 'predicted_class': top_label,
                 'prediction_value': top_value,
-                'class_predictions': class_preds
-                )
+                'class_predictions': class_preds}
         return result
 
     def _predict_images(self, images_list):
@@ -177,14 +177,16 @@ class Predictor(object):
         with open(file_path, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile, delimiter=',')
             # Write Header
-            header_row = ['file', 'predicted_class', 'prediction_value',
-                          'class_predictions']
+            header_row = ['file', 'label_type', 'predicted_class',
+                          'prediction_value', 'class_predictions']
             csvwriter.writerow(header_row)
 
             for file_name, values in self.predictions.items():
-                row_to_write = [file_name, values['predicted_class'],
-                                values['prediction_value'],
-                                values['class_predictions']]
+                for label_type, preds in values.items():
+                    row_to_write = [file_name, label_type,
+                                    preds['predicted_class'],
+                                    preds['prediction_value'],
+                                    preds['class_predictions']]
 
                 csvwriter.writerow(row_to_write)
 
