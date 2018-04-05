@@ -1,13 +1,14 @@
 """ Predict Images using a trained Model """
 import os
 import json
+from collections import OrderedDict
 
 import tensorflow as tf
-import numpy as np
 from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras import backend as K
 
 from pre_processing.image_transformations import preprocess_image
+from data_processing.utils import print_progress, export_dict_to_json
 
 
 class Predictor(object):
@@ -45,15 +46,62 @@ class Predictor(object):
         with open(self.pre_processing_json, 'r') as json_file:
             self.pre_processing = json.load(json_file)
 
+        # create numeric id to string class mapper
+        self.id_to_class_mapping = dict()
+        for label_type, label_mappings in self.class_mapping.items():
+            id_to_class = {v: k for k, v in label_mappings.items()}
+            self.id_to_class_mapping[label_type] = id_to_class
+
+        print("Read following class mappings:")
+        self._log_cfg(self.class_mapping)
+
+        print("Read following pre processing options:")
+        self._log_cfg(self.pre_processing)
+
         self.model = load_model(self.model_path)
+
+    def _log_cfg(self, cfg):
+        """ Print configuration file """
+        for k, v in cfg.items():
+            if isinstance(v, dict):
+                print("  Reading values for entry: %s" % k)
+                for kk, vv in v.items():
+                    print("    Key: %s - Value: %s" % (kk, vv))
+            else:
+                print("  Key: %s - Value: %s" % (k, v))
+
+    def _process_single_prediction(self, preds):
+        """ Process a single prediction """
+
+        result = dict()
+        for label_type, class_mappings in self.id_to_class_mapping.items():
+
+            class_preds = {class_mappings[id]: value for id, value in
+                           enumerate(list(preds))}
+
+            ordered_classes = sorted(class_preds, key=class_preds.get,
+                                     reverse=True)
+
+            top_label = ordered_classes[0]
+            top_value = class_preds[top_label]
+
+            result[label_type] = OrderedDict([
+                'class_predictions': class_preds,
+                'predicted_class': top_label,
+                'prediction_value': top_value
+                )
+        return result
 
     def _predict_images(self, images_list):
         """ Calculate Predictions """
 
-        image_files_tf = tf.constant(images_list)
-        batch= self._create_dataset_iterator(image_files_tf, self.batch_size)
+        n_total = len(images_list)
+        n_processed = 0
 
-        predictions = dict()
+        image_files_tf = tf.constant(images_list)
+        batch = self._create_dataset_iterator(image_files_tf, self.batch_size)
+
+        all_predictions = OrderedDict()
 
         with K.get_session() as sess:
             while True:
@@ -62,14 +110,21 @@ class Predictor(object):
                     images = batch_data['images']
                     file_paths = batch_data['file_path']
                     preds = self.model.predict_on_batch(images)
-                    max_id = np.argmax(preds, axis=1)
-                    max_val = list()
                     for i in range(0, preds.shape[0]):
-                        max_val.append(preds[i, max_id[i]])
-                    print("Predicted: %s with %s" % (max_id, max_val))
+                        file = file_paths[i].decode('utf-8')
+                        pred_single = \
+                            self._process_single_prediction(preds[i, :])
+                        all_predictions[file] = pred_single
+
+                    n_processed += images.shape[0]
+                    print_progress(n_processed, n_total)
+
                 except tf.errors.OutOfRangeError:
+                    print("")
                     print("Finished Predicting")
                     break
+
+        return all_predictions
 
     def predict_image_dir(self, path_to_image_dir):
         """ Args:
@@ -79,12 +134,14 @@ class Predictor(object):
         image_files = [path_to_image_dir + os.path.sep + x for
                        x in os.listdir(path_to_image_dir)]
         print("Found %s images in %s" %
-              (len(image_files), len(path_to_image_dir)))
+              (len(image_files), path_to_image_dir))
 
-        self._predict_images(image_files)
+        self.predictions = self._predict_images(image_files)
 
     def _create_dataset_iterator(self, image_paths, batch_size):
-        """ Creates an iterator over the input images """
+        """ Creates an iterator which iterates over the input images
+            and applies the image transformations
+        """
         dataset = tf.data.Dataset.from_tensor_slices(image_paths)
         dataset = dataset.map(lambda x: self._get_and_transform_image(
                                 x, self.pre_processing))
@@ -101,3 +158,23 @@ class Predictor(object):
         image_decoded = tf.image.decode_jpeg(image_raw, channels=3)
         image_processed = preprocess_image(image_decoded, **pre_proc_args)
         return image_processed, image_path
+
+    def export_predictions_json(self, file_path):
+        """ Export Predictions to Json """
+        assert self.pre_processing is not None, \
+            "Predictions not available, predict first"
+
+        export_dict_to_json(self.predictions, file_path)
+
+    def export_predictions_csv(self, file_path):
+        """ Export predictions as CSV """
+
+        with open(file_path, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, delimiter=',')
+            # Write Header
+            header_row = ['file', ''
+            csvwriter.writerow(header_row)
+            csvwriter.writerow(row_to_write)
+
+
+        for file_name, values in self.predictions.items():
