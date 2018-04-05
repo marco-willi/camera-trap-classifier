@@ -86,9 +86,9 @@ class Predictor(object):
             top_value = class_preds[top_label]
 
             result[label_type] = OrderedDict([
-                'class_predictions': class_preds,
                 'predicted_class': top_label,
-                'prediction_value': top_value
+                'prediction_value': top_value,
+                'class_predictions': class_preds
                 )
         return result
 
@@ -164,17 +164,28 @@ class Predictor(object):
         assert self.pre_processing is not None, \
             "Predictions not available, predict first"
 
+        print("Start writing file: %s" % file_path)
+
         export_dict_to_json(self.predictions, file_path)
+
+        print("Finished writing file: %s" % file_path)
 
     def export_predictions_csv(self, file_path):
         """ Export predictions as CSV """
 
+        print("Start writing file: %s" % file_path)
         with open(file_path, 'w', newline='') as csvfile:
             csvwriter = csv.writer(csvfile, delimiter=',')
             # Write Header
-            header_row = ['file', ''
+            header_row = ['file', 'predicted_class', 'prediction_value',
+                          'class_predictions']
             csvwriter.writerow(header_row)
-            csvwriter.writerow(row_to_write)
 
+            for file_name, values in self.predictions.items():
+                row_to_write = [file_name, values['predicted_class'],
+                                values['prediction_value'],
+                                values['class_predictions']]
 
-        for file_name, values in self.predictions.items():
+                csvwriter.writerow(row_to_write)
+
+        print("Finished writing file: %s" % file_path)

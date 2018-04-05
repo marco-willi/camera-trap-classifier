@@ -101,7 +101,7 @@ tfr_splitter.split_tfr_file(
     num_parallel_calls=cfg.cfg['general']['number_of_cpus'])
 
 # Check numbers (logs the class frequencies)
-tfr_splitter.log_record_numbers_per_file()
+#tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.label_to_numeric_mapper
 num_to_label_mapper = {
