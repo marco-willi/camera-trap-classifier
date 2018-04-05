@@ -228,14 +228,18 @@ def create_model(model_name,
                                         activation='softmax',
                                         name=target_name)(output_flat))
 
+    # Define model optimizer
+    opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
+    # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+
     if not train:
-        return Model(inputs=model_input, outputs=all_target_outputs)
+        model = Model(inputs=model_input, outputs=all_target_outputs)
+        model.compile(loss='sparse_categorical_crossentropy',
+                      optimizer=opt)
+        return model
 
     target_tensors = {x: tf.cast(data[x], tf.float32)
                       for x in target_labels}
-
-    opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
-    # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
 
     if n_gpus > 1:
         with tf.device('/cpu:0'):
