@@ -27,7 +27,7 @@ from data_processing.utils import (
         calc_n_batches_per_epoch, export_dict_to_json)
 
 ###########################################
-# LOAD CFG ###########
+# LOAD CONFIG FILE ###########
 ###########################################
 
 cfg = Config()
@@ -100,14 +100,13 @@ tfr_splitter.split_tfr_file(
     class_mapping=labels_data['label_mapping'],
     num_parallel_calls=cfg.cfg['general']['number_of_cpus'])
 
-# Check numbers
-# tfr_splitter.log_record_numbers_per_file()
+# Check numbers (logs the class frequencies)
+tfr_splitter.log_record_numbers_per_file()
 tfr_n_records = tfr_splitter.get_record_numbers_per_file()
 tfr_splitter.label_to_numeric_mapper
 num_to_label_mapper = {
     k: {v2: k2 for k2, v2 in v.items()}
     for k, v in tfr_splitter.label_to_numeric_mapper.items()}
-
 
 # Log Label Mappings
 for label_type, mappings in tfr_splitter.label_to_numeric_mapper.items():
