@@ -15,7 +15,7 @@ general:
   # batch is is split to all GPUs - has to be divisible by number of GPUs
   batch_size: 128
   #batch_size: 512
-  max_number_of_epochs: 70
+  max_number_of_epochs: 10
   save_sample_images_to_disk: False
 
 ###########################################
@@ -23,7 +23,7 @@ general:
 ###########################################
 run:
   location: west_africa
-  experiment: empty_species
+  experiment: species
   identifier_postfix: ''
 
 ###########################################
@@ -153,6 +153,11 @@ locations:
         model: InceptionResNetV2
         label_types_to_model:
           - 'species'
+        load_model_from_disk:
+          continue_training: False
+          transfer_learning: True
+          model_dir_to_load: 'southern_africa/experiments/species/run_201804032004_incresv2'
+          model_file_to_load: 'latest'
   ###########################################
   # CATS AND DOGS (TESTING) ################
   ###########################################
