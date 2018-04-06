@@ -2,28 +2,34 @@
 # GENERAL SETTINGS #####################
 ###########################################
 general:
+  # whether to use paths_debug or paths
   debug: False
-  logging: debug
+  # whether to write a log file to disk
   logging_to_disk: True
+  # number of gpus to use
   number_of_gpus: 4
   # number of cpus used for image pre-processing (use all if possible)
   number_of_cpus: 32
-  #number_of_cpus: 4
   # number of images buffered in image pre-processing
-  # (increase if GPU utilization is below 90%)
+  # (reduce if memory problems)
   buffer_size: 32768
+  # Batch size used in model training (number of images per update)
   # batch is is split to all GPUs - has to be divisible by number of GPUs
-  #batch_size: 128
+  # Use values in (16, 32, 64, 128, 256, 512)
   batch_size: 512
+  # max number of training epochs after which training is stopped
   max_number_of_epochs: 70
-  save_sample_images_to_disk: False
 
 ###########################################
 # RUN CONFIG #####################
 ###########################################
+
 run:
+  # choose location for current run
   location: southern_africa
+  # choose experiment for current run
   experiment: empty_vehicle_species
+  # add a postfix to the run_YYYYMMDDHH run directory
   identifier_postfix: ''
 
 ###########################################
@@ -31,8 +37,11 @@ run:
 ###########################################
 
 paths:
+  # root path of the project containing all data and directory structure
   root: '/host/data_hdd/'
+  # experiments directory (relative to root)
   experiments: 'experiments/'
+  # models directory (relative to root)
   models: 'models/'
 
 # Paths used in debug mode (local machine)
@@ -44,13 +53,18 @@ paths_debug:
 ###########################################
 # AVAILABLE MODELS ########################
 ###########################################
+
 models:
+  # Model name
   ResNet18:
     image_processing:
+      # image output size of pre-processing (input to training)
       output_height: 224
       output_width: 224
+      # resizing options for data augmentation
       resize_side_min: 224
       resize_side_max: 246
+      # whether to use color data augmentation (randomly adjust colors)
       color_manipulations: True
   ResNet34:
     image_processing:
@@ -101,21 +115,38 @@ locations:
   # DEFAULT CONFIG ########################
   # (used if not overriden)
   ###########################################
+  # location name
   default_config:
+    # max image save side when creating tfrecord files and
+    # aspect preserving resizing
+    # (must be larger than input to models, too large can degrade performance)
     image_save_side_max: 500
+    # Training split sizes - name and size
+    # train, validation and test cannot be renamed and must exist
     training_splits:
       train: 0.9
       validation: 0.05
       test: 0.05
+    # all experiments of dat location
     experiments:
+      # experiment name
       default_config:
+        # model name
         model: ResNet18
+        # whether to balance classes by sampling to frequency of Least
+        # frequent class
         balanced_sampling_min: False
+        # label type to use for balanced sampling
         balanced_sampling_label_type: 'primary'
+        # Options to load a pre-trained model from disk
         load_model_from_disk:
+          # continue training from a model on disk
           continue_training: False
+          # use transfer learning (i.e. randomly initialize last layer)
           transfer_learning: False
+          # directory of model to load (relative to root)
           model_dir_to_load: ''
+          # name of model file to load (incl. extension)
           model_file_to_load: ''
   ###########################################
   # SOUTHERN AFRICA ########################
