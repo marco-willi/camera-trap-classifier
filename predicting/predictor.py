@@ -4,6 +4,7 @@ import json
 import csv
 from collections import OrderedDict
 
+from PIL import Image
 import tensorflow as tf
 from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras import backend as K
@@ -133,12 +134,26 @@ class Predictor(object):
                 to predict
         """
         image_files = list_pictures(path_to_image_dir,  ext='jpg|jpeg')
+
+        image_files = self._check_all_images(image_files)
+
         # image_files = [path_to_image_dir + os.path.sep + x for
         #                x in os.listdir(path_to_image_dir)]
         print("Found %s images in %s" %
               (len(image_files), path_to_image_dir))
 
         self.predictions = self._predict_images(image_files)
+
+    def _check_all_images(self, image_list):
+        """ Check imags for corruption """
+        good_images = list()
+        for image in image_list:
+            try:
+                img = Image.open(image)
+                img.verify()
+                good_images.append(image)
+            except (IOError, SyntaxError) as e:
+                print('corrupt image - skipping:', image)
 
     def _create_dataset_iterator(self, image_paths, batch_size):
         """ Creates an iterator which iterates over the input images
