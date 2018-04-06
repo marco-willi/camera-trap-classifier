@@ -145,8 +145,11 @@ class Predictor(object):
             and applies the image transformations
         """
         dataset = tf.data.Dataset.from_tensor_slices(image_paths)
-        dataset = dataset.map(lambda x: self._get_and_transform_image(
-                                x, self.pre_processing))
+        try:
+            dataset = dataset.map(lambda x: self._get_and_transform_image(
+                                    x, self.pre_processing))
+        except:
+            dataset.skip(1)
         dataset = dataset.batch(batch_size)
         dataset = dataset.repeat(1)
         iterator = dataset.make_one_shot_iterator()
@@ -157,7 +160,8 @@ class Predictor(object):
     def _get_and_transform_image(self, image_path, pre_proc_args):
         """ Returns a processed image """
         image_raw = tf.read_file(image_path)
-        image_decoded = tf.image.decode_jpeg(image_raw, channels=3)
+        image_decoded = tf.image.decode_jpeg(image_raw, channels=3,
+                                             try_recover_truncated=True)
         image_processed = preprocess_image(image_decoded, **pre_proc_args)
         return image_processed, image_path
 
