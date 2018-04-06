@@ -109,23 +109,26 @@ class Predictor(object):
             while True:
                 try:
                     batch_data = sess.run(batch)
-                    images = batch_data['images']
-                    file_paths = batch_data['file_path']
-                    preds = self.model.predict_on_batch(images)
-                    for i in range(0, preds.shape[0]):
-                        file = file_paths[i].decode('utf-8')
-                        pred_single = \
-                            self._process_single_prediction(preds[i, :])
-                        all_predictions[file] = pred_single
-
-                    n_processed += images.shape[0]
-                    print_progress(n_processed, n_total)
-
                 except tf.errors.OutOfRangeError:
                     print("")
                     print("Finished Predicting")
                     break
+                except:
+                    print("Failed to process batch, contains following images:")
+                    for j in range(n_processed, n_processed+self.batch_size):
+                        print("  Image in failed batch: %s" % images_list[j])
+                    continue
+                images = batch_data['images']
+                file_paths = batch_data['file_path']
+                preds = self.model.predict_on_batch(images)
+                for i in range(0, preds.shape[0]):
+                    file = file_paths[i].decode('utf-8')
+                    pred_single = \
+                        self._process_single_prediction(preds[i, :])
+                    all_predictions[file] = pred_single
 
+                n_processed += images.shape[0]
+                print_progress(n_processed, n_total)
         return all_predictions
 
     def predict_image_dir(self, path_to_image_dir):
@@ -147,13 +150,16 @@ class Predictor(object):
     def _check_all_images(self, image_list):
         """ Check imags for corruption """
         good_images = list()
-        for image in image_list:
+        n_total = len(image_list)
+        for counter, image in enumerate(image_list):
+            print_progress(counter, n_total)
             try:
                 img = Image.open(image)
                 img.verify()
                 good_images.append(image)
             except (IOError, SyntaxError) as e:
                 print('corrupt image - skipping:', image)
+        return good_images
 
     def _create_dataset_iterator(self, image_paths, batch_size):
         """ Creates an iterator which iterates over the input images

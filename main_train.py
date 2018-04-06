@@ -1,4 +1,4 @@
-""" Train a Keras TF Model"""
+""" Main File for Training a Keras/Tensorflow Model"""
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import TensorBoard
@@ -34,7 +34,7 @@ cfg = Config()
 cfg.load_config()
 logging = configure_logging(cfg)
 
-# get label information
+# get label information like label mappings
 logging.info("Getting Label Information")
 labels_data = get_label_info(location=cfg.cfg['run']['location'],
                              experiment=cfg.cfg['run']['experiment'])
@@ -141,7 +141,7 @@ data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 logging.info("Get Dataset Reader for calculating datset stats")
 batch_data = data_reader.get_iterator(
         tfr_files=[tfr_splitter.get_split_paths()['train']],
-        batch_size=1024,
+        batch_size=4096,
         is_train=False,
         n_repeats=1,
         output_labels=cfg.current_exp['label_types_to_model'],
@@ -157,8 +157,12 @@ logging.info("Calculating image means and stdevs")
 with tf.Session() as sess:
     data = sess.run(batch_data)
 
-image_means = [round(float(x),4) for x in list(np.mean(data['images'], axis=(0, 1, 2)))]
-image_stdevs = [round(float(x), 4) for x in list(np.std(data['images'], axis=(0, 1, 2)))]
+# calculate and save image means and stdvs of each color channel
+# for pre processing purposes
+image_means = [round(float(x), 4) for x in
+               list(np.mean(data['images'], axis=(0, 1, 2)))]
+image_stdevs = [round(float(x), 4) for x in
+                list(np.std(data['images'], axis=(0, 1, 2)))]
 
 cfg.current_exp['image_processing']['image_means'] = image_means
 cfg.current_exp['image_processing']['image_stdevs'] = image_stdevs
@@ -167,23 +171,12 @@ logging.info("Image Means: %s" % image_means)
 logging.info("Image Stdevs: %s" % image_stdevs)
 
 
-# if cfg.cfg['general']['save_sample_images_to_disk']:
-#     logging.info("Saving some sample images to %s" %
-#                  cfg.current_paths['exp_data'])
-#     label_type_to_annotate = label_types_to_model_clean[0]
-#     for i in range(0, 50):
-#         img = data['images'][i, :, :, :]
-#         lbl = data[label_type_to_annotate][i]
-#         lbl_c = num_to_label_mapper[label_type_to_annotate][int(lbl)]
-#         save_path = cfg.current_paths['exp_data'] +\
-#                     'sample_image_' + str(i) + '_' + lbl_c + '.jpeg'
-#         plt.imsave(save_path, img)
-
 ###########################################
 # PREPARE DATA READER ###########
 ###########################################
 
 logging.info("Preparing Data Feeders")
+
 
 def input_feeder_train():
     return data_reader.get_iterator(
@@ -193,8 +186,9 @@ def input_feeder_train():
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
                 image_pre_processing_fun=preprocess_image,
-                image_pre_processing_args={**cfg.current_exp['image_processing'],
-                                           'is_training': True},
+                image_pre_processing_args={
+                    **cfg.current_exp['image_processing'],
+                    'is_training': True},
                 max_multi_label_number=None,
                 buffer_size=cfg.cfg['general']['buffer_size'],
                 num_parallel_calls=cfg.cfg['general']['number_of_cpus'],
@@ -209,8 +203,9 @@ def input_feeder_val():
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
                 image_pre_processing_fun=preprocess_image,
-                image_pre_processing_args={**cfg.current_exp['image_processing'],
-                                           'is_training': False},
+                image_pre_processing_args={
+                    **cfg.current_exp['image_processing'],
+                    'is_training': False},
                 max_multi_label_number=None,
                 buffer_size=cfg.cfg['general']['buffer_size'],
                 num_parallel_calls=cfg.cfg['general']['number_of_cpus'],
@@ -225,13 +220,13 @@ def input_feeder_test():
                 n_repeats=None,
                 output_labels=cfg.current_exp['label_types_to_model'],
                 image_pre_processing_fun=preprocess_image,
-                image_pre_processing_args={**cfg.current_exp['image_processing'],
-                                           'is_training': False},
+                image_pre_processing_args={
+                    **cfg.current_exp['image_processing'],
+                    'is_training': False},
                 max_multi_label_number=None,
                 buffer_size=cfg.cfg['general']['buffer_size'],
                 num_parallel_calls=cfg.cfg['general']['number_of_cpus'],
                 labels_are_numeric=True)
-
 
 
 # Export Image Processing Settings
@@ -242,6 +237,7 @@ export_dict_to_json({**cfg.current_exp['image_processing'],
 
 logging.info("Calculating batches per epoch")
 
+# calculate how many batches are required for one epoch
 n_batches_per_epoch_train = calc_n_batches_per_epoch(
     tfr_n_records['train'],
     cfg.cfg['general']['batch_size'])
@@ -291,7 +287,10 @@ logging.info("Preparing Callbacks and Monitors")
 # MONITORS ###########
 ###########################################
 
+# stop model training if it does not improve
 early_stopping = EarlyStopping(stop_after_n_rounds=7, minimize=True)
+
+# reduce learning rate if model progress plateaus
 reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         reduce_after_n_rounds=3,
         patience_after_reduction=2,
@@ -299,14 +298,17 @@ reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
         min_lr=1e-5,
         minimize=True)
 
+# log validation statistics to a csv file
 logger = CSVLogger(
     cfg.current_paths['run_data'] + 'training.log',
     metrics_names=['val_loss', 'val_acc',
                    'val_sparse_top_k_categorical_accuracy', 'learning_rate'])
 
+# create model checkpoints after each epoch
 checkpointer = ModelCheckpointer(train_model_base,
                                  cfg.current_paths['run_data'])
 
+# write graph to disk
 tensorboard = TensorBoard(log_dir=cfg.current_paths['run_data'],
                           histogram_freq=0,
                           batch_size=cfg.cfg['general']['batch_size'],
@@ -323,6 +325,7 @@ logging.info("Start Model Training")
 max_number_of_epochs = cfg.cfg['general']['max_number_of_epochs']
 for i in range(0, max_number_of_epochs):
     logging.info("Starting Epoch %s/%s" % (i+1, max_number_of_epochs))
+    # fit the training model over one epoch
     train_model.fit(epochs=i+1,
                     steps_per_epoch=n_batches_per_epoch_train,
                     initial_epoch=i,
@@ -332,12 +335,12 @@ for i in range(0, max_number_of_epochs):
     training_weights = train_model_base.get_weights()
     val_model_base.set_weights(training_weights)
 
-    # Run evaluation model
+    # Run evaluation model and get validation results
     validation_results = val_model.evaluate(steps=n_batches_per_epoch_val)
     val_loss = validation_results[val_model.metrics_names == 'loss']
     vals_to_log = list()
 
-    # log validation results
+    # log validation results to log file and list
     for metric, value in zip(val_model.metrics_names, validation_results):
         logging.info("Eval - %s: %s" % (metric, value))
         vals_to_log.append(value)
@@ -363,7 +366,7 @@ for i in range(0, max_number_of_epochs):
 logging.info("Finished Model Training")
 
 ###########################################
-# SAVE AND IDENTIFY BEST MODEL ###########
+# IDENTIFY AND SAVE BEST MODEL ###########
 ###########################################
 
 # Finding best model run and moving models
