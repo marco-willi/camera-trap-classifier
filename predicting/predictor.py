@@ -9,7 +9,8 @@ from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras import backend as K
 
 from pre_processing.image_transformations import preprocess_image
-from data_processing.utils import print_progress, export_dict_to_json
+from data_processing.utils import (
+    print_progress, export_dict_to_json, list_pictures)
 
 
 class Predictor(object):
@@ -131,8 +132,9 @@ class Predictor(object):
             - path_to_image_dir: full path to directory containing images
                 to predict
         """
-        image_files = [path_to_image_dir + os.path.sep + x for
-                       x in os.listdir(path_to_image_dir)]
+        image_files = list_pictures(path_to_image_dir,  ext='jpg|jpeg')
+        # image_files = [path_to_image_dir + os.path.sep + x for
+        #                x in os.listdir(path_to_image_dir)]
         print("Found %s images in %s" %
               (len(image_files), path_to_image_dir))
 
@@ -159,7 +161,7 @@ class Predictor(object):
         image_processed = preprocess_image(image_decoded, **pre_proc_args)
         return image_processed, image_path
 
-    def export_predictions_json(self, file_path):
+    def _export_predictions_json(self, file_path):
         """ Export Predictions to Json """
         assert self.pre_processing is not None, \
             "Predictions not available, predict first"
@@ -175,7 +177,8 @@ class Predictor(object):
 
         print("Start writing file: %s" % file_path)
         with open(file_path, 'w', newline='') as csvfile:
-            csvwriter = csv.writer(csvfile, delimiter=',')
+            csvwriter = csv.writer(csvfile, quotechar='"', delimiter=',',
+                                   quoting=csv.QUOTE_ALL)
             # Write Header
             header_row = ['file', 'label_type', 'predicted_class',
                           'prediction_value', 'class_predictions']

@@ -3,6 +3,7 @@ import sys
 import os
 import json
 from shutil import copyfile
+import re
 
 import tensorflow as tf
 from hashlib import md5
@@ -200,6 +201,18 @@ def get_most_rescent_file_with_string(dirpath, in_str='', excl_str='!'):
 
 def copy_file(file, to):
     copyfile(file, to)
+
+
+def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
+    """ List jpeg/jpg images
+    source: /tensorflow/python/keras/_impl/keras/preprocessing/image.py
+    """
+    return [
+      os.path.join(root, f)
+      for root, _, files in os.walk(directory)
+      for f in files
+      if re.match(r'([\w]+\.(?:' + ext + '))', f, re.IGNORECASE)
+    ]
 
 # # TODO: Improve
 # def create_default_class_mapper(all_labels, class_mapping=None):
