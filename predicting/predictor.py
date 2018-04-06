@@ -155,7 +155,10 @@ class Predictor(object):
             print_progress(counter, n_total)
             try:
                 img = Image.open(image)
-                img.verify()
+                img.thumbnail([self.pre_processing['output_height'],
+                               self.pre_processing['output_width']],
+                              Image.ANTIALIAS)
+                img.close()
                 good_images.append(image)
             except (IOError, SyntaxError) as e:
                 print('corrupt image - skipping:', image)
