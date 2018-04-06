@@ -203,16 +203,25 @@ def copy_file(file, to):
     copyfile(file, to)
 
 
+def get_file_name_from_path(file_path):
+    """ Extracts file name from full path """
+    return file_path.split(os.path.sep)[-1]
+
+
 def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
-    """ List jpeg/jpg images
-    source: /tensorflow/python/keras/_impl/keras/preprocessing/image.py
-    """
-    return [
-      os.path.join(root, f)
-      for root, _, files in os.walk(directory)
-      for f in files
-      if re.match(r'([\w-]+\.(?:' + ext + '))', f, re.IGNORECASE)
-    ]
+    """ List jpeg/jpg images  """
+    file_paths = [os.path.join(root, f)
+                  for root, _, files in os.walk(directory)
+                  for f in files
+                  if re.match(r'([\w-]+\.(?:' + ext + '))', f,
+                              re.IGNORECASE)]
+    return file_paths
+    # file_paths = list()
+    # file_names = list()
+    # for files in file_path_name:
+    #     file_paths.append(os.path.join(files[0], files[1]))
+    #     file_names.append(files[1])
+    # return file_paths, file_names
 
 # # TODO: Improve
 # def create_default_class_mapper(all_labels, class_mapping=None):

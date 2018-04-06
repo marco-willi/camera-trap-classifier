@@ -3,7 +3,9 @@ import os
 import json
 import csv
 from collections import OrderedDict
+import traceback
 
+import numpy as np
 from PIL import Image
 import tensorflow as tf
 from tensorflow.python.keras.models import load_model
@@ -11,7 +13,8 @@ from tensorflow.python.keras import backend as K
 
 from pre_processing.image_transformations import preprocess_image
 from data_processing.utils import (
-    print_progress, export_dict_to_json, list_pictures)
+    print_progress, export_dict_to_json, list_pictures,
+    clean_input_path, get_file_name_from_path)
 
 
 class Predictor(object):
@@ -94,14 +97,14 @@ class Predictor(object):
                 'class_predictions': class_preds}
         return result
 
-    def _predict_images(self, images_list):
-        """ Calculate Predictions """
+    def _predict_images_and_export_preds(self, image_paths, export_path):
+        """ Calculate Predictions Batch by Batch"""
 
-        n_total = len(images_list)
+        n_total = len(image_paths)
         n_processed = 0
 
-        image_files_tf = tf.constant(images_list)
-        batch = self._create_dataset_iterator(image_files_tf, self.batch_size)
+        image_paths_tf = tf.constant(image_paths)
+        batch = self._create_dataset_iterator(image_paths_tf, self.batch_size)
 
         all_predictions = OrderedDict()
 
@@ -109,45 +112,74 @@ class Predictor(object):
             while True:
                 try:
                     batch_data = sess.run(batch)
+                    batch_predictions = OrderedDict()
                 except tf.errors.OutOfRangeError:
                     print("")
                     print("Finished Predicting")
                     break
-                except:
-                    print("Failed to process batch, contains following images:")
-                    for j in range(n_processed, n_processed+self.batch_size):
-                        print("  Image in failed batch: %s" % images_list[j])
+                except Exception as error:
+                    print("Failed to process batch with images:")
+                    max_processed = np.min([n_processed+self.batch_size,
+                                            n_total])
+                    for j in range(n_processed, max_processed):
+                        print("  Image in failed batch: %s" % image_paths[j])
+                    traceback.print_exc()
                     continue
                 images = batch_data['images']
-                file_paths = batch_data['file_path']
+                file_paths = batch_data['file_paths']
                 preds = self.model.predict_on_batch(images)
                 for i in range(0, preds.shape[0]):
                     file = file_paths[i].decode('utf-8')
                     pred_single = \
                         self._process_single_prediction(preds[i, :])
                     all_predictions[file] = pred_single
+                    batch_predictions[file] = pred_single
+
+                # append batch predictions to export here
+                self._append_predictions_to_csv(batch_predictions, export_path)
 
                 n_processed += images.shape[0]
                 print_progress(n_processed, n_total)
-        return all_predictions
 
-    def predict_image_dir(self, path_to_image_dir, check_images_first=0):
+        self.predictions = all_predictions
+
+    def predict_image_dir_and_export(self, path_to_image_dir,
+                                     export_file, check_images_first=0):
         """ Args:
-            - path_to_image_dir: full path to directory containing images
-                to predict
+        - path_to_image_dir: full path to directory containing images and
+            subdirectories with images to predict
+        - export_file: path to write export file to
+        - check_images_first: whether to check each image for corruption
+            before starting to predict (this is usually not necessary)
         """
-        image_files = list_pictures(path_to_image_dir,  ext='jpg|jpeg')
+
+        path_to_image_dir = clean_input_path(path_to_image_dir)
+        image_paths = list_pictures(path_to_image_dir,  ext='jpg|jpeg')
+
+        print("Found %s images in %s" %
+              (len(image_paths), path_to_image_dir))
 
         if check_images_first == 1:
             print("Starting to check all images")
-            image_files = self._check_all_images(image_files)
+            image_paths = self._check_all_images(image_paths)
 
-        # image_files = [path_to_image_dir + os.path.sep + x for
-        #                x in os.listdir(path_to_image_dir)]
-        print("Found %s images in %s" %
-              (len(image_files), path_to_image_dir))
+        self._create_csv_file_with_header(export_file)
+        self._predict_images_and_export_preds(image_paths, export_file)
 
-        self.predictions = self._predict_images(image_files)
+    def _create_dataset_iterator(self, image_paths, batch_size):
+        """ Creates an iterator interating over the input images
+            and applying image transformations (resizing)
+        """
+        dataset = tf.data.Dataset.from_tensor_slices(image_paths)
+        dataset = dataset.map(lambda x: self._get_and_transform_image(
+                              x, self.pre_processing))
+        dataset = dataset.apply(tf.contrib.data.ignore_errors())
+        dataset = dataset.batch(batch_size)
+        dataset = dataset.repeat(1)
+        iterator = dataset.make_one_shot_iterator()
+        images, file_path = iterator.get_next()
+
+        return {'images': images, 'file_paths': file_path}
 
     def _check_all_images(self, image_list):
         """ Check imags for corruption """
@@ -165,23 +197,6 @@ class Predictor(object):
             except (IOError, SyntaxError) as e:
                 print('corrupt image - skipping:', image)
         return good_images
-
-    def _create_dataset_iterator(self, image_paths, batch_size):
-        """ Creates an iterator which iterates over the input images
-            and applies the image transformations
-        """
-        dataset = tf.data.Dataset.from_tensor_slices(image_paths)
-        try:
-            dataset = dataset.map(lambda x: self._get_and_transform_image(
-                                    x, self.pre_processing))
-        except:
-            dataset.skip(1)
-        dataset = dataset.batch(batch_size)
-        dataset = dataset.repeat(1)
-        iterator = dataset.make_one_shot_iterator()
-        images, file_path = iterator.get_next()
-
-        return {'images': images, 'file_path': file_path}
 
     def _get_and_transform_image(self, image_path, pre_proc_args):
         """ Returns a processed image """
@@ -201,6 +216,35 @@ class Predictor(object):
         export_dict_to_json(self.predictions, file_path)
 
         print("Finished writing file: %s" % file_path)
+
+    def _create_csv_file_with_header(self, file_path):
+        """ Creates a csv file with a header row """
+        print("Creating file: %s" % file_path)
+
+        with open(file_path, 'w', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, quotechar='"', delimiter=',',
+                                   quoting=csv.QUOTE_ALL)
+            # Write Header
+            header_row = ['file_path', 'file_name', 'label_type',
+                          'predicted_class',
+                          'prediction_value', 'class_predictions']
+            csvwriter.writerow(header_row)
+
+    def _append_predictions_to_csv(self, predictions, file_path):
+        """ Appends a row to an existing csv """
+        print("Writing predictions to: %s" % file_path)
+
+        with open(file_path, 'a', newline='') as csvfile:
+            csvwriter = csv.writer(csvfile, quotechar='"', delimiter=',',
+                                   quoting=csv.QUOTE_ALL)
+            for file_path, values in predictions.items():
+                for label_type, preds in values.items():
+                    file_name = get_file_name_from_path(file_path)
+                    row_to_write = [file_path, file_name, label_type,
+                                    preds['predicted_class'],
+                                    preds['prediction_value'],
+                                    preds['class_predictions']]
+                csvwriter.writerow(row_to_write)
 
     def export_predictions_csv(self, file_path):
         """ Export predictions as CSV """
