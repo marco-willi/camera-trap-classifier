@@ -131,14 +131,16 @@ class Predictor(object):
                 print_progress(n_processed, n_total)
         return all_predictions
 
-    def predict_image_dir(self, path_to_image_dir):
+    def predict_image_dir(self, path_to_image_dir, check_images_first=0):
         """ Args:
             - path_to_image_dir: full path to directory containing images
                 to predict
         """
         image_files = list_pictures(path_to_image_dir,  ext='jpg|jpeg')
 
-        image_files = self._check_all_images(image_files)
+        if check_images_first == 1:
+            print("Starting to check all images")
+            image_files = self._check_all_images(image_files)
 
         # image_files = [path_to_image_dir + os.path.sep + x for
         #                x in os.listdir(path_to_image_dir)]

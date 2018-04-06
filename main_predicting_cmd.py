@@ -13,9 +13,10 @@ if __name__ == '__main__':
     parser.add_argument("-model_path", required=True)
     parser.add_argument("-class_mapping_json", required=True)
     parser.add_argument("-pre_processing_json", required=True)
-    parser.add_argument("export_file_type", default="csv",
+    parser.add_argument("-export_file_type", default="csv", required=False,
                         help='export file type - only csv supported')
-    parser.add_argument("batch_size", default=128, type=int)
+    parser.add_argument("-batch_size", default=128, type=int, required=False)
+    parser.add_argument("-check_images", default=0, type=int, required=False)
 
     args = vars(parser.parse_args())
 
@@ -25,7 +26,9 @@ if __name__ == '__main__':
         pre_processing_json=args['pre_processing_json'],
         batch_size=args['batch_size'])
 
-    predictions = pred.predict_image_dir(args['image_dir'])
+    predictions = pred.predict_image_dir(
+        args['image_dir'],
+        check_images_first=args['check_images'])
 
     if args['export_file_type'] == 'csv':
         pred.export_predictions_csv(args['results_file'])
