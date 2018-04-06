@@ -1,6 +1,26 @@
 #! /usr/bin/env python
 """ Classify images using a trained model
 
+    Arguments:
+    -image_dir: path to root of image directory, can contain subdirectories
+        with images, the program will search for all images and predict them
+
+    - results_file: path to the file to store the predictions in
+
+    -model_path: path to the model to use (hdf5 file)
+
+    -class_mapping_json: path to 'label_mappings.json'
+
+    -pre_processing_json: path to the image_processing.json
+
+    -export_file_type (optional, default csv): currently only csv
+
+    -batch_size (optional, default 128): the number of images once at a time
+        to predict before writing results to disk
+
+    -check_images (optional, default 0): whether to check all images for
+        corruption before starting the training (most likely not necessary)
+
     Usage example:
 
     python3 main_prediction.py -image_dir /user/images/ \
