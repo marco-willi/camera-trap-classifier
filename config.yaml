@@ -167,10 +167,10 @@ locations:
         label_types_to_model:
           - 'species'
         load_model_from_disk:
-        continue_training: True
-        transfer_learning: False
-        model_dir_to_load: 'southern_africa/experiments/species/run_201804032004_incresv2'
-        model_file_to_load: 'latest'
+          continue_training: True
+          transfer_learning: False
+          model_dir_to_load: 'southern_africa/experiments/species/run_201804032004_incresv2'
+          model_file_to_load: 'latest'
   ###########################################
   # WEST AFRICA ########################
   ###########################################
