@@ -16,7 +16,7 @@ general:
   # Batch size used in model training (number of images per update)
   # batch is is split to all GPUs - has to be divisible by number of GPUs
   # Use values in (16, 32, 64, 128, 256, 512)
-  batch_size: 512
+  batch_size: 128
   # max number of training epochs after which training is stopped
   max_number_of_epochs: 70
 
@@ -28,7 +28,7 @@ run:
   # choose location for current run
   location: southern_africa
   # choose experiment for current run
-  experiment: empty_vehicle_species
+  experiment: species
   # add a postfix to the run_YYYYMMDDHH run directory
   identifier_postfix: ''
 
@@ -166,6 +166,11 @@ locations:
         model: InceptionResNetV2
         label_types_to_model:
           - 'species'
+        load_model_from_disk:
+        continue_training: True
+        transfer_learning: False
+        model_dir_to_load: 'southern_africa/experiments/species/run_201804032004_incresv2'
+        model_file_to_load: 'latest'
   ###########################################
   # WEST AFRICA ########################
   ###########################################
