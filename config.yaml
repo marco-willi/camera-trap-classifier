@@ -190,7 +190,7 @@ locations:
         label_types_to_model:
           - 'species'
         load_model_from_disk:
-          continue_training: False
+          continue_training: True
           transfer_learning: True
           model_dir_to_load: 'southern_africa/experiments/species/run_201804251604'
           model_file_to_load: 'latest'
