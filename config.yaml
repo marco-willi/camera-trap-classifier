@@ -28,7 +28,7 @@ run:
   # choose location for current run
   location: west_africa
   # choose experiment for current run
-  experiment: species
+  experiment: empty_species
   # add a postfix to the run_YYYYMMDDHH run directory
   identifier_postfix: ''
 
