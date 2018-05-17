@@ -26,7 +26,7 @@ general:
 
 run:
   # choose location for current run
-  location: southern_africa
+  location: west_africa
   # choose experiment for current run
   experiment: species
   # add a postfix to the run_YYYYMMDDHH run directory
@@ -192,7 +192,7 @@ locations:
         load_model_from_disk:
           continue_training: False
           transfer_learning: True
-          model_dir_to_load: 'southern_africa/experiments/species/run_201804032004_incresv2'
+          model_dir_to_load: 'southern_africa/experiments/species/run_201804251604'
           model_file_to_load: 'latest'
   ###########################################
   # CATS AND DOGS (TESTING) ################
