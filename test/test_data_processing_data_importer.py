@@ -1,14 +1,21 @@
 import unittest
-from data_processing.data_importer import ImportFromJson, ImportFromImageDirs, ImportFromPantheraCSV
+from data_processing.data_importer import DatasetImporter
+
+
+# test_path_csv = './test/test_files/panthera.csv'
+# importer = DatasetImporter().create('panthera_csv', test_path_csv)
+# data = importer.import_from_source()
 
 
 class ImportFromCSVPantheraTester(unittest.TestCase):
     """ Test Import from Json """
 
     def setUp(self):
-        self.csv_importer = ImportFromPantheraCSV()
-        self.test_path_csv = './test/test_files/panthera.csv'
-        self.data = self.csv_importer.read_from_csv(self.test_path_csv)
+        path = './test/test_files/panthera.csv'
+        type = 'panthera_csv'
+        self.importer = DatasetImporter()
+        self.source_importer = self.importer.create(type, path)
+        self.data = self.source_importer.import_from_source()
 
     def testNormalCase(self):
         self.assertEqual(self.data["record_bird_1"],
@@ -47,9 +54,11 @@ class ImportFromJsonTester(unittest.TestCase):
     """ Test Import from Json """
 
     def setUp(self):
-        self.json_importer = ImportFromJson()
-        self.test_path_json = './test/test_files/json_data_file.json'
-        self.data = self.json_importer.read_from_json(self.test_path_json)
+        path = './test/test_files/json_data_file.json'
+        type = 'json'
+        self.importer = DatasetImporter()
+        self.source_importer = self.importer.create(type, path)
+        self.data = self.source_importer.import_from_source()
 
     def testLabelTypeIsNotListConvertedToList(self):
         self.assertIsInstance(
@@ -85,10 +94,11 @@ class ImportFromImageDirsTester(unittest.TestCase):
     """ Test Import from Image Directories """
 
     def setUp(self):
-        self.image_dir_importer = ImportFromImageDirs()
-        self.test_path_images = './test/test_images'
-        self.data = self.image_dir_importer.read_from_image_root_dir(
-            self.test_path_images)
+        path = './test/test_images'
+        type = 'image_dir'
+        self.importer = DatasetImporter()
+        self.source_importer = self.importer.create(type, path)
+        self.data = self.source_importer.import_from_source()
         self.test_id_dog = 'dog3192'
         self.invalid_id = 'dog.3206'
 

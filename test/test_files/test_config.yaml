@@ -14,13 +14,13 @@ paths:
   path_2: /path2/
 
 general:
-  logging: debug
+  debug: True
   logging_to_disk: False
 
 run:
   location: southern_africa
   experiment: species
-  identifier: timestamp
+  identifier_postfix: _resnet
 
 paths:
   root: '/host/data_hdd/'

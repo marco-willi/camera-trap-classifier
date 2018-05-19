@@ -3,8 +3,7 @@ import random
 import json
 import logging
 
-from data_processing.data_importer import (
-    ImportFromJson, ImportFromImageDirs, ImportFromPantheraCSV)
+from data_processing.data_importer import DatasetImporter
 from data_processing.label_handler import LabelHandler
 
 
@@ -48,32 +47,10 @@ class DatasetInventory(object):
         """ Remove specific record """
         self.data_inventory.pop(id_to_remove, None)
 
-    def create_from_panthera_csv(self, path_to_csv):
-        """ Create Inventory from a csv file according to Panthera-style
-            formats
-        """
-        csv_reader = ImportFromPantheraCSV()
-        self.data_inventory = csv_reader.read_from_csv(path_to_csv)
-        self.label_handler = LabelHandler(self.data_inventory)
-        self.label_handler.remove_not_all_label_types_present()
-
-    def create_from_class_directories(self, root_path):
-        """ Create inventory from path which contains class-specific
-            directories
-        """
-        class_dir_reader = ImportFromImageDirs()
-        self.data_inventory = \
-            class_dir_reader.read_from_image_root_dir(root_path)
-
-        self.label_handler = LabelHandler(self.data_inventory)
-        self.label_handler.remove_not_all_label_types_present()
-
-    def create_from_json(self, json_path):
-        """ Create inventory from json file """
-        json_reader = ImportFromJson()
-        self.data_inventory = \
-            json_reader.read_from_json(json_path)
-
+    def create_from_source(self, type, path):
+        """ Create Dataset Inventory from a specific Source """
+        importer = DatasetImporter().create(type, path)
+        self.data_inventory = importer.import_from_source()
         self.label_handler = LabelHandler(self.data_inventory)
         self.label_handler.remove_not_all_label_types_present()
 

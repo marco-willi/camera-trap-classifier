@@ -8,12 +8,41 @@ import logging
 from data_processing.utils import clean_input_path
 
 
-class ImportFromPantheraCSV(object):
-    """ Read Data from CSV """
+class DatasetImporter(object):
+    """ Import Dataset information from specific sources """
 
-    def read_from_csv(self, path_to_csv):
+    subclasses = {}
+
+    @classmethod
+    def register_subclass(cls, source_type):
+        def decorator(subclass):
+            cls.subclasses[source_type] = subclass
+            return subclass
+
+        return decorator
+
+    @classmethod
+    def create(cls, source_type, params):
+        if source_type not in cls.subclasses:
+            raise ValueError('Bad source type {}'.format(source_type))
+
+        return cls.subclasses[source_type](params)
+
+    def import_from_source(self):
+        """ Import data from self.path and create Inventory """
+        raise NotImplementedError
+
+
+@DatasetImporter.register_subclass('panthera_csv')
+class FromPantheraCSV(DatasetImporter):
+    """ Read Data from a CSV """
+
+    def __init__(self, path):
+        self.path = path
+
+    def import_from_source(self):
         """ Read Data From CSV """
-        data_dict = self._read_csv(path_to_csv)
+        data_dict = self._read_csv(self.path)
         self._calc_and_log_stats(data_dict)
         return data_dict
 
@@ -149,12 +178,16 @@ class ImportFromPantheraCSV(object):
         return data_dict
 
 
-class ImportFromJson(object):
+@DatasetImporter.register_subclass('json')
+class FromJson(DatasetImporter):
     """ Read Data From Json """
 
-    def read_from_json(self, path_to_json):
+    def __init__(self, path):
+        self.path = path
+
+    def import_from_source(self):
         """ Read Json File """
-        data_dict = self._read_json(path_to_json)
+        data_dict = self._read_json(self.path)
         data_dict_clean = self._check_and_clean_dict(data_dict)
         return data_dict_clean
 
@@ -269,14 +302,18 @@ class ImportFromJson(object):
         return dict_cleaned
 
 
-class ImportFromImageDirs(object):
-    """ Read Data From Image Directories """
+@DatasetImporter.register_subclass('image_dir')
+class FromImageDirs(DatasetImporter):
+    """ Read Data From Json """
 
-    def read_from_image_root_dir(self, path_to_image_root):
+    def __init__(self, path):
+        self.path = path
+
+    def import_from_source(self):
         """ Create inventory from path which contains class-specific
             directories
         """
-        root_path = clean_input_path(path_to_image_root)
+        root_path = clean_input_path(self.path)
         assert os.path.exists(root_path), \
             "Path: %s does not exist" % root_path
 
