@@ -45,8 +45,9 @@ labels_data = get_label_info(location=cfg.cfg['run']['location'],
 
 logging.info("Building Dataset Inventory")
 dataset_inventory = DatasetInventory()
-dataset_inventory.create_from_source(type=cfg.current_location['inventory_type'],
-                                     path=cfg.current_paths['inventory'])
+dataset_inventory.create_from_source(
+    type=cfg.current_location['inventory_type'],
+    path=cfg.current_paths['inventory'])
 dataset_inventory.label_handler.remove_multi_label_records()
 dataset_inventory.log_stats()
 
