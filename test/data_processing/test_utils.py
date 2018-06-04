@@ -3,16 +3,56 @@ from data_processing.utils import (
     hash_string,
     assign_hash_to_zero_one,
     calc_n_batches_per_epoch,
-    clean_input_path
+    clean_input_path,
+    randomly_split_dataset
 )
 import random
 import os
 
 
+class RandomSplitterTest(unittest.TestCase):
+    """ Test Random Splitting of Datasets """
+
+    def setUp(self):
+        ids = [str(i) for i in range(0, 100)]
+        split_names = ['train', 'test', 'val']
+        split_percent = [0.5, 0.3, 0.2]
+        self.splits = randomly_split_dataset(ids, split_names, split_percent)
+
+        # Create label dictionary
+        id_to_label = {k: 'blank' for k in ids}
+        for i in range(10, 15):
+            id_to_label[i] = 'species'
+
+        self.splits_balanced = randomly_split_dataset(
+            ids, split_names, split_percent, True, id_to_label)
+
+    def checkSplitSizes(self):
+        split_list = [v for v in self.splits.values()]
+
+        n_train = len([x for x in split_list if x == 'train'])
+        n_test = len([x for x in split_list if x == 'test'])
+        n_val = len([x for x in split_list if x == 'val'])
+
+        self.assertEqual(n_train, 50)
+        self.assertEqual(n_test, 30)
+        self.assertEqual(n_val, 20)
+
+    def checkSplitSizesBalanced(self):
+        split_list = [v for v in self.splits_balanced.values()]
+
+        n_train = len([x for x in split_list if x == 'train'])
+        n_test = len([x for x in split_list if x == 'test'])
+        n_val = len([x for x in split_list if x == 'val'])
+
+        self.assertEqual(n_train, 5)
+        self.assertEqual(n_test, 3)
+        self.assertEqual(n_val, 2)
+
+
 class IdHasherTests(unittest.TestCase):
     """ Test Hash Function """
     def setUp(self):
-        print("Load CFG")
         self.random_string = str(random.randint(-1e6, 1e6))
         self.random_int = random.randint(-1e6, 1e6)
         self.test_string = "ldlaldfd_dfdfldfdf_ssdfdf"

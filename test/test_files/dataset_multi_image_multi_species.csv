@@ -1,0 +1,7 @@
+image1,image2,image3,capture_id,species,count,standing
+/path/capture_ele1.jpg,/path/capture_ele2.jpg,/path/capture_ele3.jpg,ele_1_0,Elephant,1,0
+/path/capture_ele_lion1.jpg,/path/capture_ele_lion2.jpg,/path/capture_ele_lion3.jpg,ele_lion,Elephant,1,0
+/path/capture_ele_lion1.jpg,/path/capture_ele_lion2.jpg,/path/capture_ele_lion3.jpg,ele_lion,Lion,2,1
+,,/path/capture_ele3.jpg,only_one_image,Elephant,1,0
+/path/capture_ele1.jpg,/path/capture_ele2.jpg,,only_two_images,Elephant,1,0
+,,,no_images,Elephant,1,0
