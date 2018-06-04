@@ -276,7 +276,7 @@ def create_model(model_name,
 
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
-                  metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
+                  metrics=['accuracy'],
                   target_tensors=target_tensors)
 
     return model, base_model
