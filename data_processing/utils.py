@@ -119,7 +119,24 @@ def randomly_split_dataset(
     return final_split_assignments
 
 
+def slice_generator(sequence_length, n_blocks):
+    """ Creates a generator to get start/end indexes for dividing a
+        sequence_length into n blocks
+    """
+    return ((int(round((b - 1) * sequence_length/n_blocks)),
+             int(round(b * sequence_length/n_blocks)))
+            for b in range(1, n_blocks+1))
 
+
+def estimate_remaining_time(start_time, n_total, n_current):
+    """ Estimate remaining time """
+    time_elapsed = time.time() - start_time
+    n_remaining = n_total - (n_current - 1)
+    avg_time_per_record = time_elapsed / (n_current + 1)
+    estimated_time = n_remaining * avg_time_per_record
+    return time.strftime("%H:%M:%S", time.gmtime(estimated_time))
+
+    
 def print_progress(count, total):
     """ Print Progress to stdout """
     pct_complete = float(count) / total

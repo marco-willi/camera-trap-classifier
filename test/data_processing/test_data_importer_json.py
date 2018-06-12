@@ -15,7 +15,7 @@ class ImportFromJsonTester(unittest.TestCase):
     def testSingleSpeciesStandard(self):
         self.assertEqual(
             self.data["single_species_standard"],
-            {"labels": [{"class": ["cat"], "color": ["brown"], "counts": ["1"]}],
+            {"labels": [{"class": "cat", "color_brown": "1", "color_white": "0", "counts": "1"}],
              "meta_data": {"meta_1": "meta_data_1",
                            "meta_2": "meta_data_2"},
              "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
@@ -28,8 +28,10 @@ class ImportFromJsonTester(unittest.TestCase):
             self.data["multi_species_standard"],
             {
            "labels": [
-                        {"class": ["cat"], "color": ["brown"], "counts": ["1"]},
-                        {"class": ["dog"], "color": ["brown"], "counts": ["2"]}
+                      {"class": "cat", "color_brown": "1",
+                       "color_white": "0", "counts": "1"},
+                      {"class": "dog", "color_brown": "1",
+                       "color_white": "0", "counts": "2"}
                       ],
             "meta_data": {"meta_1": "meta_data_1",
                           "meta_2": "meta_data_2"},
@@ -45,7 +47,8 @@ class ImportFromJsonTester(unittest.TestCase):
             self.data["empty_image"],
             {
            "labels": [
-                        {"class": ["empty"]}
+                        {"class": "empty", "color_brown": "0",
+                         "color_white": "0", "counts": "0"}
                       ],
             "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
                        "\\images\\4715\\all\\cat\\10296726_0.jpeg",
@@ -60,8 +63,8 @@ class ImportFromJsonTester(unittest.TestCase):
             self.data["single_species_multi_color"],
             {
            "labels": [
-                        {"class": ["cat"], "color": ["brown", "white", "black"],
-                         "counts": ["1"]}
+                        {"class": "cat", "color_brown": "1", "color_white": "1",
+                         "counts": "1"}
                       ],
             "meta_data": {"meta_1": "meta_data_1",
                           "meta_2": "meta_data_2"},
@@ -81,8 +84,8 @@ class ImportFromJsonTester(unittest.TestCase):
             self.data["multi_species_no_other_attr"],
             {
            "labels": [
-                        {"class": ["cat"]},
-                        {"class": ["dog"]}
+                        {"class": "cat"},
+                        {"class": "dog"}
                       ],
             "meta_data": {"meta_1": "meta_data_1",
                           "meta_2": "meta_data_2"},
@@ -104,7 +107,7 @@ class ImportFromJsonTester(unittest.TestCase):
             self.data["no_meta_data"],
             {
             "labels": [
-                        {"class": ["cat"], "color": ["brown"], "counts": ["10-50"]}
+                        {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "10-50"}
                        ],
             "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
                        "\\images\\4715\\all\\cat\\10296726_0.jpeg",

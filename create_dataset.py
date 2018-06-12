@@ -5,7 +5,7 @@ import logging
 from config.config_logging import setup_logging
 from data_processing.data_inventory import DatasetInventoryMaster
 from data_processing.data_writer import DatasetWriter
-from data_processing.tfr_encoder_decoder import SingleObsTFRecordEncoderDecoder
+from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from pre_processing.image_transformations import resize_jpeg
 
 # Configure Logging
@@ -38,15 +38,12 @@ if __name__ == '__main__':
                         help="sample labels balanced to the least frequent")
     parser.add_argument("-balanced_sampling_label", type=str,
                         help='label used for balanced sampling',
-                        default="",
                         required=False)
     parser.add_argument("-remove_label_name", type=str,
                         help='remove records with label name',
-                        default="",
                         required=False)
     parser.add_argument("-remove_label_value", type=str,
                         help='remove records with label value',
-                        default="",
                         required=False)
     parser.add_argument("-image_save_side_max", type=int,
                         default=500,
@@ -56,6 +53,13 @@ if __name__ == '__main__':
     parser.add_argument("-overwrite", default=False,
                         action='store_true', required=False,
                         help="whether to overwrite existing tfr files")
+    parser.add_argument("-max_records_per_file", type=int,
+                        default=500000,
+                        required=False,
+                        help="The max number of records per TFRecord file.\
+                             Multiple files are generated if the size of\
+                             the dataset exceeds this value. It is recommended\
+                             to use large values")
 
     args = vars(parser.parse_args())
 
@@ -102,26 +106,27 @@ if __name__ == '__main__':
                 split_names=args['split_names'],
                 split_percent=args['split_percent'])
 
-    # Create TFRecord format
-    tfr = {k: v.create_tfrecord_dict() for k, v in splitted.items()}
-    tfr_encoder_decoder = SingleObsTFRecordEncoderDecoder()
-
     # Write Label Mappings
     out_label_mapping = args['output_dir'] + 'label_mapping.json'
     dinv.export_label_mapping(out_label_mapping)
 
     # Write TFrecord files
-    writer = DatasetWriter(tfr_encoder_decoder.encode_record)
+    tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
+    tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
 
-    for split_name, split_data in tfr.items():
+    for split_name, split_data in splitted.items():
         out_name = args['output_dir'] + split_name + '.tfrecord'
-        writer.encode_to_tfr(
-            split_data,
-            out_name,
+        split_data.export_to_tfrecord(
+            tfr_writer,
+            args['output_dir'],
+            file_prefix=split_name,
             image_pre_processing_fun=resize_jpeg,
             image_pre_processing_args={"max_side": args['image_save_side_max']},
             random_shuffle_before_save=True,
-            overwrite_existing_file=args['overwrite'])
+            overwrite_existing_files=args['overwrite'],
+            max_records_per_file=args['max_records_per_file']
+            )
+
 
 # python create_dataset.py -inventory ./test/test_files/cat_dog_dinv_test.json \
 # -output_dir ./test/test_files/ \

@@ -25,8 +25,8 @@ class DatasetImporter(object):
 
      "single_species_standard":{
        "labels": [
-                    {"class": ["cat"], "color": ["brown", "white"],
-                     "counts": ["1"]}
+                    {"class": "cat", "color_brown": "1", "color_white": "0",
+                     "counts": "1"}
                 ],
        "meta_data": {"meta_1": "meta_data_1",
                      "meta_2": "meta_data_2"},
@@ -64,7 +64,7 @@ class DatasetImporter(object):
             Expected Format:
             --------------
            "labels": [
-                        {"class": ["cat"], "color": ["brown"], "counts": ["1"]}
+                        {"class": "cat", "color_brown": "1", "counts": "1"}
                     ]
           """
         if not isinstance(labels_list, list):
@@ -81,16 +81,12 @@ class DatasetImporter(object):
             # check every entry and clean
             for attr_name, attr_val in label.items():
 
-                # every label attribute must be a list
-                if not isinstance(attr_val, list):
-                    return False
-
-                # check if all label attribute entries are strings
-                if not all([isinstance(x, str) for x in attr_val]):
+                # every label attribute must be a string
+                if not isinstance(attr_val, str):
                     return False
 
                 # check if there are no empty strings
-                if any([x == "" for x in attr_val]):
+                if attr_val == "":
                     return False
 
         return True
@@ -149,32 +145,32 @@ class DatasetImporter(object):
         for record_id, record_values in data_dict.items():
             # Remove if any record entry is not a dictionary
             if not isinstance(record_values, dict):
-                logger.info("Record %s has invalid data and is removed" %
+                logger.debug("Record %s has invalid data and is removed" %
                              record_id)
                 continue
             # check existence of required entrys
             if not all([x in record_values for x in required_record_entrys]):
-                logger.info("Record %s has not all required record entrys' \
+                logger.debug("Record %s has not all required record entrys' \
                              and is removed" % record_id)
                 continue
 
             # check labels
             if not self._is_labels_ok(record_values['labels']):
-                logger.info("Record %s has invalid labels entry\
-                              and is removed" % record_id)
+                logger.debug("Record %s has invalid labels entry\
+                             and is removed" % record_id)
                 continue
 
             # check images
             if not self._is_images_ok(record_values['images']):
-                logger.info("Record %s has invalid images entry \
-                              and is removed" % record_id)
+                logger.debug("Record %s has invalid images entry \
+                             and is removed" % record_id)
                 continue
 
             # check meta_data entry
             if 'meta_data' in record_values:
                 if not self._is_ok_metadata(record_values['meta_data']):
-                    logger.info("Record %s has invalid meta_data entry \
-                                  and is removed" % record_id)
+                    logger.debug("Record %s has invalid meta_data entry \
+                                 and is removed" % record_id)
                     continue
 
             # add valid entries
@@ -265,7 +261,7 @@ class FromCSV(DatasetImporter):
                         new_record = {}
 
                         # get labels
-                        labels = {k: [v] for k, v in attrs.items() if k in
+                        labels = {k: str(v) for k, v in attrs.items() if k in
                                   set(self.attributes_col_list)}
 
                         new_record['labels'] = [labels]
@@ -375,7 +371,7 @@ class FromPantheraCSV(DatasetImporter):
                                  col_mapper.items()}
 
                         # build a record
-                        labels = {k: [v] for k, v in attrs.items() if k in
+                        labels = {k: str(v) for k, v in attrs.items() if k in
                                   set(self.attributes_col_list)}
 
                         images = [attrs[im] for im in self.image_path_col_list]
@@ -383,8 +379,8 @@ class FromPantheraCSV(DatasetImporter):
                         # handle count categories
                         if count_in_header:
                             new_count_attr = \
-                                self._categorize_counts(labels['count'][0])
-                            labels['count'] = [new_count_attr]
+                                self._categorize_counts(labels['count'])
+                            labels['count'] = new_count_attr
 
                         new_record = {'images': images,
                                       'labels': [labels]
@@ -404,11 +400,11 @@ class FromPantheraCSV(DatasetImporter):
                                 logger.info(" OLD Record:")
                                 for k, v in data_dict[capture_id].items():
                                     logger.info("  Attr: %s - Value: %s"
-                                                 % (k, v))
+                                                % (k, v))
                                 logger.info(" Consolidated Record:")
                                 for k, v in new_record.items():
                                     logger.info("  Attr: %s - Value: %s"
-                                                 % (k, v))
+                                                % (k, v))
                             elif duplicate_count == 30:
                                 logger.info("More IDs already exist - \
                                               consolidating all...")
@@ -551,7 +547,7 @@ class FromImageDirs(DatasetImporter):
                 image_data = {
                     'images': [root_path + class_dir +
                                os.path.sep + image_name],
-                    'labels': [{'class': [class_dir]}]}
+                    'labels': [{'class': class_dir}]}
                 all_images_data[unique_image_id] = image_data
 
         logger.info("Found %s images" % len(all_images_data.keys()))

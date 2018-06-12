@@ -99,7 +99,7 @@ def get_label_info(location='panthera', experiment="empty"):
             "Springhare", "Squirrel_Ground", "Squirrel_Tree", "Steenbok",
             "Suni", "Tsessebe", "Vehicle", "Warthog", "Waterbuck", "Wild_Dog",
             "Wildcat_African", "Wildebeest_Blue", "Zebra", "Zorilla"],
-          'count_category': [
+          'count': [
               "-1", "1", "2", "3", "4", "5", "6", "7",
               "8", "9", "10", "11-50", "51+"
             ]}
@@ -133,7 +133,7 @@ def get_label_info(location='panthera', experiment="empty"):
             "Springhare", "Squirrel_Ground", "Squirrel_Tree", "Steenbok",
             "Suni", "Tsessebe", "Vehicle", "Warthog", "Waterbuck", "Wild_Dog",
             "Wildcat_African", "Wildebeest_Blue", "Zebra", "Zorilla"],
-          'count_category': [
+          'count': [
               "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
               "11-50", "51+"
             ]}

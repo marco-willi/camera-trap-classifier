@@ -10,3 +10,4 @@ __pycache__/*
 documentation/*.docx
 test_big/*
 *.log
+*/old/*

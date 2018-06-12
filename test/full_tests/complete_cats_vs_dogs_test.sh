@@ -6,15 +6,20 @@ python create_dataset_inventory.py dir -path D:\\Studium_GD\\Zooniverse\\Data\\t
 
 # Create TFRecord Files
 python create_dataset.py -inventory ./test_big/cat_dog_dir_test.json \
--output_dir ./test_big/cats_vs_dogs/ \
+-output_dir ./test_big/cats_vs_dogs/tfr_files/ \
+-image_save_side_max 200 \
+-split_percent 0.7 0.15 0.15 \
 -overwrite
 
 # Train a Model
 python main_train_new.py \
--train_tfr ./test_big/cats_vs_dogs/train.tfrecord \
--val_tfr ./test_big/cats_vs_dogs/val.tfrecord \
--test_tfr ./test_big/cats_vs_dogs/test.tfrecord \
--class_mapping_json ./test_big/cats_vs_dogs/label_mapping.json \
+-train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
+-train_tfr_prefix train \
+-val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
+-val_tfr_prefix val \
+-test_tfr_path ./test_big/cats_vs_dogs/tfr_files \
+-test_tfr_prefix test \
+-class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
 -model cats_vs_dogs \
@@ -22,6 +27,6 @@ python main_train_new.py \
 -batch_size 128 \
 -n_cpus 2 \
 -n_gpus 1 \
--buffer_size 2048 \
+-buffer_size 512 \
 -max_epochs 70 \
 -starting_epoch 0

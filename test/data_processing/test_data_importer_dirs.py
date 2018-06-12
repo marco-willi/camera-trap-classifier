@@ -22,7 +22,7 @@ class ImportFromImageDirsTester(unittest.TestCase):
 
     def testInstanceHasCorrectClass(self):
         self.assertEqual(
-            ['Dogs'],
+            'Dogs',
             self.data[self.test_id_dog]['labels'][0]['class'])
 
 

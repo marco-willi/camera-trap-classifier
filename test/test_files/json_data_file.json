@@ -1,7 +1,7 @@
 {
   "single_species_standard":{
    "labels": [
-                {"class": ["cat"], "color": ["brown"], "counts": ["1"]}
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "1"}
             ],
    "meta_data": {"meta_1": "meta_data_1",
                  "meta_2": "meta_data_2"},
@@ -12,8 +12,8 @@
   },
   "multi_species_standard":{
    "labels": [
-                {"class": ["cat"], "color": ["brown"], "counts": ["1"]},
-                {"class": ["dog"], "color": ["brown"], "counts": ["2"]}
+              {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "1"},
+              {"class": "dog", "color_brown": "1", "color_white": "0", "counts": "2"}
               ],
     "meta_data": {"meta_1": "meta_data_1",
                   "meta_2": "meta_data_2"},
@@ -25,18 +25,16 @@
   },
   "empty_image":{
    "labels": [
-                {"class": ["empty"]}
+                {"class": "empty", "color_brown": "0", "color_white": "0", "counts": "0"}
               ],
     "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
                "\\images\\4715\\all\\cat\\10296726_0.jpeg",
                "\\images\\4715\\all\\cat\\10296727_0.jpeg"
               ]
-
   },
   "single_species_multi_color":{
    "labels": [
-                {"class": ["cat"], "color": ["brown", "white", "black"],
-                 "counts": ["1"]}
+                {"class": "cat", "color_brown": "1", "color_white": "1", "counts": "1"}
               ],
     "meta_data": {"meta_1": "meta_data_1",
                   "meta_2": "meta_data_2"},
@@ -48,7 +46,7 @@
   },
   "single_species_no_other_attr":{
    "labels": [
-                {"class": ["cat"]}
+                {"class": "cat"}
               ],
     "meta_data": {"meta_1": "meta_data_1",
                   "meta_2": "meta_data_2"},
@@ -60,7 +58,7 @@
   },
   "empty_images_list":{
    "labels": [
-              {"class": ["dog"], "color": ["brown"], "counts": ["2"]}
+              {"class": "dog", "color_brown": "1", "color_white": "0", "counts": "2"}
               ],
     "meta_data": {"meta_1": "meta_data_1",
                   "meta_2": "meta_data_2"},
@@ -69,8 +67,8 @@
   },
   "multi_species_no_other_attr":{
    "labels": [
-                {"class": ["cat"]},
-                {"class": ["dog"]}
+                {"class": "cat"},
+                {"class": "dog"}
               ],
     "meta_data": {"meta_1": "meta_data_1",
                   "meta_2": "meta_data_2"},
@@ -81,7 +79,7 @@
   },
   "non_string_label":{
     "labels": [
-                {"class": ["dog"], "color": ["brown"], "counts": [12]}
+                {"class": "dog", "color_brown": "1", "color_white": "0", "counts": 12}
                ],
     "meta_data": {"meta_1": "meta_data_1",
                   "meta_2": "meta_data_2"},
@@ -92,7 +90,7 @@
 
   "meta_data_invalid":{
     "labels": [
-                {"class": ["cat"], "color": ["brown"], "counts": ["1"]}
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "1"}
                ],
     "meta_data": "string_meta_data",
     "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
@@ -102,7 +100,7 @@
   },
   "not_all_labels":{
     "labels": [
-                {"class": ["cat"], "counts": ["1"]}
+                {"class": "cat", "color_brown": "1", "counts": "1"}
                ],
     "meta_data": {"meta_1": "meta_data_1",
                   "meta_2": "meta_data_2"},
@@ -113,7 +111,7 @@
   },
   "no_meta_data":{
     "labels": [
-                {"class": ["cat"], "color": ["brown"], "counts": ["10-50"]}
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "10-50"}
                ],
     "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
                "\\images\\4715\\all\\cat\\10296726_0.jpeg",
@@ -122,15 +120,15 @@
   },
   "only_empty_images_string":{
     "labels": [
-                {"class": ["cat"], "color": ["brown"], "counts": ["5"]}
+              {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "5"}
                ],
     "meta_data": {"meta_1": "meta_data_1"},
     "images": [""]
 
   },
-  "color_is_black":{
+  "color_is_white":{
     "labels": [
-                {"class": ["cat"], "color": ["black"], "counts": ["1"]}
+                {"class": "cat", "color_brown": "0", "color_white": "1", "counts": "2"}
                ],
     "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
                "\\images\\4715\\all\\cat\\10296726_0.jpeg",
@@ -140,7 +138,7 @@
   },
   "counts_is_12":{
     "labels": [
-                {"class": ["cat"], "color": ["brown"], "counts": ["12"]}
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "12"}
                ],
     "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
                "\\images\\4715\\all\\cat\\10296726_0.jpeg",
@@ -150,7 +148,7 @@
   },
   "is_elephant":{
     "labels": [
-                {"class": ["elephant"], "color": ["gray"], "counts": ["3"]}
+                {"class": "elephant", "color_brown": "0", "color_white": "0", "counts": "3"}
                ],
     "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
 

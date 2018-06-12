@@ -230,7 +230,7 @@ def create_model(model_name,
 
     # Define model optimizer
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
-    # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+    # opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
 
     if not train:
         model = Model(inputs=model_input, outputs=all_target_outputs)
@@ -276,7 +276,7 @@ def create_model(model_name,
 
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
-                  metrics=['accuracy'],
+                  metrics=['accuracy', 'top_k_categorical_accuracy'],
                   target_tensors=target_tensors)
 
     return model, base_model

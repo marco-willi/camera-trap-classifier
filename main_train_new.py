@@ -1,6 +1,7 @@
 """ Main File for Training a Keras/Tensorflow Model"""
 import argparse
 import logging
+import os
 
 import tensorflow as tf
 import numpy as np
@@ -17,7 +18,7 @@ from training.utils import (
         copy_models_and_config_files)
 from training.model_library import create_model
 
-from data_processing.tfr_encoder_decoder import SingleObsTFRecordEncoderDecoder
+from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from data_processing.data_reader import DatasetReader
 from pre_processing.image_transformations import (
         preprocess_image)
@@ -35,10 +36,19 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-train_tfr", nargs='+', type=str, required=True)
-    parser.add_argument("-val_tfr", nargs='+', type=str, required=True)
-    parser.add_argument("-test_tfr", nargs='+', type=str, default=[],
+    parser.add_argument("-train_tfr_path", type=str, required=True)
+    parser.add_argument("-train_tfr_prefix", default="train", type=str,
+                        required=True)
+    parser.add_argument("-val_tfr_path", type=str, required=True)
+    parser.add_argument("-val_tfr_prefix", default="val", type=str,
+                        required=True)
+    parser.add_argument("-test_tfr_path", type=str, required=False)
+    parser.add_argument("-test_tfr_prefix", default="test", type=str,
                         required=False)
+    # parser.add_argument("-train_tfr", nargs='+', type=str, required=True)
+    # parser.add_argument("-val_tfr", nargs='+', type=str, required=True)
+    # parser.add_argument("-test_tfr", nargs='+', type=str, default=[],
+    #                     required=False)
     parser.add_argument("-class_mapping_json", type=str, required=True)
     parser.add_argument("-run_outputs_dir", type=str, required=True)
     parser.add_argument("-model_save_dir", type=str, required=True)
@@ -64,11 +74,6 @@ if __name__ == '__main__':
     for k, v in args.items():
         print("Arg: %s, Value:%s" % (k, v))
 
-    # train_file = './test/test_files/train.tfrecord'
-    # test_file = './test/test_files/test.tfrecord'
-    # val_file = './test/test_files/val.tfrecord'
-    # class_mapping_file = './test/test_files/label_mapping.json'
-
     ###########################################
     # Process Input ###########
     ###########################################
@@ -83,7 +88,7 @@ if __name__ == '__main__':
 
     # Prepare labels to model
     output_labels = args['labels']
-    output_labels_clean = ['label/0/' + x for x in output_labels]
+    output_labels_clean = ['label/' + x for x in output_labels]
 
     # Class to numeric mappings and number of classes per label
     class_mapping = read_json(args['class_mapping_json'])
@@ -92,8 +97,23 @@ if __name__ == '__main__':
     n_classes_per_label = [n_classes_per_label_dict[x]
                            for x in output_labels_clean]
 
-    if len(args['test_tfr']) > 0:
+    # TFR files
+    def _find_tfr_files(path, prefix):
+        """ Find all TFR files """
+        files = os.listdir(path)
+        tfr_files = [x for x in files if x.endswith('.tfrecord') and
+                     prefix in x]
+        tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
+        return tfr_paths
+
+    tfr_train = _find_tfr_files(args['train_tfr_path'],
+                                args['train_tfr_prefix'])
+    tfr_val = _find_tfr_files(args['val_tfr_path'], args['val_tfr_prefix'])
+
+    if len(args['test_tfr_path']) > 0:
         TEST_SET = True
+        tfr_test = _find_tfr_files(args['test_tfr_path'],
+                                   args['test_tfr_prefix'])
     else:
         TEST_SET = False
 
@@ -107,7 +127,7 @@ if __name__ == '__main__':
     # CALC IMAGE STATS ###########
     ###########################################
 
-    tfr_encoder_decoder = SingleObsTFRecordEncoderDecoder()
+    tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 
     data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
@@ -117,11 +137,11 @@ if __name__ == '__main__':
     # Calculate Dataset Image Means and Stdevs for a dummy batch
     logger.info("Get Dataset Reader for calculating datset stats")
     batch_data = data_reader.get_iterator(
-            tfr_files=args['train_tfr'],
+            tfr_files=tfr_train,
             batch_size=4096,
             is_train=False,
             n_repeats=1,
-            output_labels=output_labels_clean,
+            output_labels=output_labels,
             image_pre_processing_fun=preprocess_image,
             image_pre_processing_args={**image_processing,
                                        'is_training': False},
@@ -136,9 +156,9 @@ if __name__ == '__main__':
     # calculate and save image means and stdvs of each color channel
     # for pre processing purposes
     image_means = [round(float(x), 4) for x in
-                   list(np.mean(data['images'], axis=(0, 1, 2)))]
+                   list(np.mean(data['images'], axis=(0, 1, 2), dtype=np.float64))]
     image_stdevs = [round(float(x), 4) for x in
-                    list(np.std(data['images'], axis=(0, 1, 2)))]
+                    list(np.std(data['images'], axis=(0, 1, 2), dtype=np.float64))]
 
     image_processing['image_means'] = image_means
     image_processing['image_stdevs'] = image_stdevs
@@ -155,11 +175,11 @@ if __name__ == '__main__':
 
     def input_feeder_train():
         return data_reader.get_iterator(
-                    tfr_files=args['train_tfr'],
+                    tfr_files=tfr_train,
                     batch_size=args['batch_size'],
                     is_train=True,
                     n_repeats=None,
-                    output_labels=output_labels_clean,
+                    output_labels=output_labels,
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
@@ -170,11 +190,11 @@ if __name__ == '__main__':
 
     def input_feeder_val():
         return data_reader.get_iterator(
-                    tfr_files=args['val_tfr'],
+                    tfr_files=tfr_val,
                     batch_size=args['batch_size'],
                     is_train=False,
                     n_repeats=None,
-                    output_labels=output_labels_clean,
+                    output_labels=output_labels,
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
@@ -186,11 +206,11 @@ if __name__ == '__main__':
     if TEST_SET:
         def input_feeder_test():
             return data_reader.get_iterator(
-                        tfr_files=args['test_tfr'],
+                        tfr_files=tfr_test,
                         batch_size=args['batch_size'],
                         is_train=False,
                         n_repeats=None,
-                        output_labels=output_labels_clean,
+                        output_labels=output_labels,
                         image_pre_processing_fun=preprocess_image,
                         image_pre_processing_args={
                             **image_processing,
@@ -206,16 +226,16 @@ if __name__ == '__main__':
                         args['run_outputs_dir'] + 'image_processing.json')
 
     logger.info("Calculating batches per epoch")
-    n_records_train = n_records_in_tfr(args['train_tfr'])
+    n_records_train = n_records_in_tfr(tfr_train)
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
         n_records_train, args['batch_size'])
 
-    n_records_val = n_records_in_tfr(args['val_tfr'])
+    n_records_val = n_records_in_tfr(tfr_val)
     n_batches_per_epoch_val = calc_n_batches_per_epoch(
         n_records_val, args['batch_size'])
 
     if TEST_SET:
-        n_records_test = n_records_in_tfr(args['test_tfr'])
+        n_records_test = n_records_in_tfr(tfr_test)
         n_batches_per_epoch_test = calc_n_batches_per_epoch(
             n_records_test, args['batch_size'])
 
@@ -241,7 +261,6 @@ if __name__ == '__main__':
         target_labels=output_labels_clean,
         n_classes_per_label_type=n_classes_per_label,
         n_gpus=args['n_gpus'])
-
 
     logger.debug("Final Model Architecture")
     for layer, i in zip(train_model_base.layers,
@@ -269,6 +288,7 @@ if __name__ == '__main__':
             minimize=True)
 
     # log validation statistics to a csv file
+    # TODO: Adjust automatic reading of metrics names
     csv_logger = CSVLogger(
         args['run_outputs_dir'] + 'training.log',
         metrics_names=['val_loss', 'val_acc', 'learning_rate'])

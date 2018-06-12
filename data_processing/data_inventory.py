@@ -44,11 +44,10 @@ class DatasetInventory(object):
         for k, v in self.data_inventory.items():
             for label_entry in v['labels']:
                 # For each record get and count label types and labels
-                for label_type, label_list in label_entry.items():
-                    if label_type not in all_labels:
-                        all_labels[label_type] = set()
-                    for label in label_list:
-                        all_labels[label_type].add(label)
+                for label_name, label_value in label_entry.items():
+                    if label_name not in all_labels:
+                        all_labels[label_name] = set()
+                    all_labels[label_name] .add(label_value)
         return all_labels
 
     def _calc_label_stats(self):
@@ -58,28 +57,20 @@ class DatasetInventory(object):
         """
         # Calculate and log statistics about labels
         label_stats = dict()
-        label_type_stats = dict()
-        for k, v in self.data_inventory.items():
+        for _id, data in self.data_inventory.items():
             # For each record get and count label types and labels
-            for label_entry in v['labels']:
-                for label_type, label_list in label_entry.items():
-                    if label_type not in label_stats:
-                        label_stats[label_type] = dict()
-                        label_type_stats[label_type] = 0
-
-                    # Count if multiple labels
-                    if len(label_list) > 1:
-                        label_type_stats[label_type] += 1
-
-                    for label in label_list:
-                        if label not in label_stats[label_type]:
-                            label_stats[label_type][label] = 0
-                        label_stats[label_type][label] += 1
-        return label_stats, label_type_stats
+            for label_entry in data['labels']:
+                for label_name, label_val in label_entry.items():
+                    if label_name not in label_stats:
+                        label_stats[label_name] = dict()
+                    if label_val not in label_stats[label_name]:
+                        label_stats[label_name][label_val] = 0
+                    label_stats[label_name][label_val] += 1
+        return label_stats
 
     def log_stats(self):
         """ Logs Statistics about Data Inventory """
-        label_stats, label_type_stats = self._calc_label_stats()
+        label_stats = self._calc_label_stats()
         # Log Stats
         for label_type, labels in label_stats.items():
             label_list = list()
@@ -97,11 +88,6 @@ class DatasetInventory(object):
                      total_counts,
                      round(100 * (count_list[idx]/total_counts), 4)))
 
-        # Multiple Labels per Label Type
-        for k, v in label_type_stats.items():
-            logger.info("Label Type %s has %s records with multiple labels" %
-                         (k, v))
-
     def export_to_json(self, json_path):
         """ Export Inventory to Json File """
 
@@ -114,28 +100,60 @@ class DatasetInventory(object):
             logger.warning("Cant export data inventory to json - no\
                             inventory created yet")
 
-    def create_tfrecord_dict(self):
-        """ Create TFRecord format based on available labels """
+    def export_to_tfrecord(self, tfr_writer, tfr_path, **kwargs):
+        """ Export Dataset to TFRecod """
 
+        # create tfrecord dictionary
         tfrecord_dict = dict()
+        for _id, record_values in self.data_inventory.items():
+            tfr_record = self._convert_record_to_tfr_format(_id, record_values)
+            tfrecord_dict[_id] = tfr_record
 
-        # Create Label dictionary for TFrecord
-        for record_id, record_values in self.data_inventory.items():
-            label_dict = {}
-            for i, label_entry in enumerate(record_values['labels']):
-                for label_type, label_vals in label_entry.items():
-                    # map to numeric
-                    key = 'label/' + str(i) + '/' + label_type
-                    val = self.labels_numeric_map[label_type][label_vals[0]]
-                    label_dict[key] = val
+        # Write to disk
+        tfr_writer.encode_to_tfr(tfrecord_dict, tfr_path, **kwargs)
 
-            tfrecord = {'id': record_id,
-                        'images': record_values['images'],
-                        **label_dict
-                        }
-            tfrecord_dict[record_id] = tfrecord
+    def _convert_record_to_tfr_format(self, id, record):
+        """ Convert a record to a tfr format """
 
-        return tfrecord_dict
+        # Extract and convert meta data information
+        if 'meta_data' in record.keys():
+            if isinstance(record['meta_data'], str):
+                meta_data = record['meta_data']
+            elif isinstance(record['meta_data'], dict):
+                meta_data = json.dumps(record['meta_data'])
+            else:
+                meta_data = ''
+        else:
+            meta_data = ''
+
+        # Generate concatenated labels text
+        label_text = list()
+        for label in record['labels']:
+            for label_name, label_value in label.items():
+                label_text += ['#' + label_name + ':' + label_value]
+        label_text = ''.join(label_text)
+
+        # generate labels dict
+        labels_dict = dict()
+        for label in record['labels']:
+            for label_name, label_value in label.items():
+                label_id = 'label/' + label_name
+                if label_name not in labels_dict:
+                    labels_dict[label_id] = []
+                num_value = self.labels_numeric_map[label_name][label_value]
+                labels_dict[label_id].append(num_value)
+
+        tfr_data = {
+            "id": str(id),
+            "n_images": len(record['images']),
+            "n_labels": len(record['labels']),
+            "image_paths": record['images'],
+            "meta_data": meta_data,
+            "labelstext": label_text,
+            **labels_dict
+        }
+
+        return tfr_data
 
     def export_label_mapping(self, path):
         """ Export Label Mapping to Json file """
@@ -176,6 +194,10 @@ class DatasetInventoryMaster(DatasetInventory):
 
         self.labels_numeric_map = labels_numeric_map
 
+        # create numeric to text labels as well
+        self.label_mapping_from_num = \
+            {k: {kk: vv for vv, kk in v.items()}
+             for k, v in labels_numeric_map.items()}
 
     def create_from_source(self, type, params):
         """ Create Dataset Inventory from a specific Source """
@@ -369,11 +391,3 @@ class DatasetInventoryMaster(DatasetInventory):
     #                    'labels/text': labels_text,
     #                    'labels/numeric':}
     #     return flat_record
-
-
-
-
-
-    def export_to_tfrecord(self, tfr_writer, tfr_encoder, tfr_path):
-        """ Export Dataset to TFRecod """
-        pass

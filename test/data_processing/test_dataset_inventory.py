@@ -1,5 +1,6 @@
 import unittest
-from data_processing.data_inventory import DatasetInventory
+from data_processing.data_inventory import (
+    DatasetInventory, DatasetInventoryMaster)
 
 
  # path = './test/test_files/json_data_file.json'
@@ -46,16 +47,14 @@ class DataInventoryTests(unittest.TestCase):
         path = './test/test_files/json_data_file.json'
         source_type = 'json'
         params = {'path': path}
-        self.dinv = DatasetInventory()
+        self.dinv = DatasetInventoryMaster()
         self.dinv.create_from_source(source_type, params)
         self.inventory = self.dinv.data_inventory
 
     def testRemoveRecord(self):
-        self.dinv.remove_record("10300652")
-        self.assertNotIn("10300652",  self.inventory)
+        self.dinv.remove_record("single_species_standard")
+        self.assertNotIn("single_species_standard",  self.inventory)
 
-    def testRemoveNotAllLabelTypes(self):
-        self.assertNotIn("not_all_labels", self.inventory)
 
 #    def testTFRecordFormat(self):
 #         self.dinv._get_tfr_record_format('single_species_standard')

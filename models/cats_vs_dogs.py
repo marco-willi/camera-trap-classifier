@@ -55,8 +55,6 @@ def architecture_flat(inputs):
     return drop1
 
 
-
-
 def architecture_estimator(inputs, num_classes, output_names):
     """ Architecture of model """
 
