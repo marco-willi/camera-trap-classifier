@@ -156,6 +156,14 @@ pip install --upgrade tensorflow
 conda install jupyter yaml nb_conda pillow h5py
 ```
 
+### Using a GPU
+
+To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules,
+nvidia drivers have to be installed on the computer to make use of the GPU (see https://developer.nvidia.com/cuda-downloads and https://developer.nvidia.com/cudnn). An easy option is
+to use an image that contains all required installations and use that to set up a GPU instance of a cloud provider.
+Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
+
+
 ### Tensorflow GPU Docker installation on AWS
 We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
 Tensorflow can be found at https://www.tensorflow.org/install/.
