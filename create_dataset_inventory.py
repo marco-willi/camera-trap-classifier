@@ -74,7 +74,9 @@ if __name__ == '__main__':
     parser_json.set_defaults(func=json)
 
     # create parser for json input
-    parser_class_dirs = subparsers.add_parser('dir', help='if input is a directory with class directories')
+    parser_class_dirs = subparsers.add_parser(
+        'dir',
+        help='if input is a directory with class directories')
     parser_class_dirs.add_argument("-path", type=str, required=True)
     parser_class_dirs.add_argument("-export_path", type=str, required=True)
     parser_class_dirs.set_defaults(func=class_dir)
@@ -98,11 +100,3 @@ if __name__ == '__main__':
     dinv.log_stats()
 
     dinv.export_to_json(json_path=args['export_path'])
-
-
-# python create_dataset_inventory.py panthera -source_path lala -export_path bebe
-# python create_dataset_inventory.py csv -path ./test/test_files/Cats_dogs.csv \
-# -export_path ./test/cat_dog_dinv_test.json \
-# -capture_id_field id \
-# -image_fields image \
-# -label_fields species count standing
