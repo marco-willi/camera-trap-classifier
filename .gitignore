@@ -11,3 +11,4 @@ documentation/*.docx
 test_big/*
 *.log
 */old/*
+experiments/*
