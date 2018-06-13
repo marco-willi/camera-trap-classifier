@@ -125,3 +125,7 @@ This code is based on work conducted in following study:
 Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, in preparation
 
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
+
+
+The ResNet models are based on the implementation provided here:
+https://github.com/raghakot/keras-resnet
