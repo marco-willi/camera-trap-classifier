@@ -93,7 +93,7 @@ class Predictor(object):
 
             result[label_type] = {
                 'predicted_class': top_label,
-                'prediction_value': top_value,
+                'predicted_value': top_value,
                 'class_predictions': class_preds}
         return result
 
@@ -103,6 +103,9 @@ class Predictor(object):
         n_total = len(image_paths)
         n_processed = 0
 
+        output_names = self.model.output_names
+        id_to_class_mapping_clean = {'label/' + k: v for k, v in
+                                     self.id_to_class_mapping.items()}
         image_paths_tf = tf.constant(image_paths)
         batch = self._create_dataset_iterator(image_paths_tf, self.batch_size)
 
@@ -126,14 +129,32 @@ class Predictor(object):
                     traceback.print_exc()
                     continue
                 images = batch_data['images']
-                file_paths = batch_data['file_paths']
-                preds = self.model.predict_on_batch(images)
-                for i in range(0, preds.shape[0]):
-                    file = file_paths[i].decode('utf-8')
-                    pred_single = \
-                        self._process_single_prediction(preds[i, :])
-                    all_predictions[file] = pred_single
-                    batch_predictions[file] = pred_single
+                preds_list = self.model.predict_on_batch(images)
+                if not isinstance(preds_list, list):
+                    preds_list = [preds_list]
+                ids = [x.decode('utf-8') for x in batch_data['file_paths']]
+
+                for i, _id in enumerate(ids):
+                    id_preds = [x[i, :] for x in preds_list]
+                    result = dict()
+                    for o, output in enumerate(output_names):
+                        id_output_preds = id_preds[o]
+                        class_preds = {id_to_class_mapping_clean[output][ii]: y
+                                       for ii, y in enumerate(id_output_preds)}
+
+                        ordered_classes = sorted(class_preds,
+                                                 key=class_preds.get,
+                                                 reverse=True)
+
+                        top_label = ordered_classes[0]
+                        top_value = class_preds[top_label]
+                        result[output] = {
+                           'predicted_class': top_label,
+                           'predicted_value': top_value,
+                           'class_predictions': class_preds}
+
+                    all_predictions[_id] = result
+                    batch_predictions[_id] = result
 
                 # append batch predictions to export here
                 self._append_predictions_to_csv(batch_predictions, export_path)
@@ -165,6 +186,14 @@ class Predictor(object):
 
         self._create_csv_file_with_header(export_file)
         self._predict_images_and_export_preds(image_paths, export_file)
+
+    def predict_from_iterator_and_export(self, iterator, export_file):
+        """ Args:
+        - iterator: iterator object
+        - export_file: path to write export file to
+        """
+        self._create_csv_file_with_header(export_file)
+        self._predict_from_iterator_and_export_to_csv(iterator, export_file)
 
     def _create_dataset_iterator(self, image_paths, batch_size):
         """ Creates an iterator interating over the input images
@@ -225,7 +254,7 @@ class Predictor(object):
             csvwriter = csv.writer(csvfile, quotechar='"', delimiter=',',
                                    quoting=csv.QUOTE_ALL)
             # Write Header
-            header_row = ['file_path', 'file_name', 'label_type',
+            header_row = ['id', 'label',
                           'predicted_class',
                           'prediction_value', 'class_predictions']
             csvwriter.writerow(header_row)
@@ -237,12 +266,11 @@ class Predictor(object):
         with open(file_path, 'a', newline='') as csvfile:
             csvwriter = csv.writer(csvfile, quotechar='"', delimiter=',',
                                    quoting=csv.QUOTE_ALL)
-            for file_path, values in predictions.items():
+            for _id, values in predictions.items():
                 for label_type, preds in values.items():
-                    file_name = get_file_name_from_path(file_path)
-                    row_to_write = [file_path, file_name, label_type,
+                    row_to_write = [_id, label_type,
                                     preds['predicted_class'],
-                                    preds['prediction_value'],
+                                    preds['predicted_value'],
                                     preds['class_predictions']]
                 csvwriter.writerow(row_to_write)
 
@@ -254,17 +282,100 @@ class Predictor(object):
             csvwriter = csv.writer(csvfile, quotechar='"', delimiter=',',
                                    quoting=csv.QUOTE_ALL)
             # Write Header
-            header_row = ['file', 'label_type', 'predicted_class',
-                          'prediction_value', 'class_predictions']
+            header_row = ['id', 'label', 'predicted_class',
+                          'predicted_value', 'class_predictions']
             csvwriter.writerow(header_row)
 
             for file_name, values in self.predictions.items():
                 for label_type, preds in values.items():
                     row_to_write = [file_name, label_type,
                                     preds['predicted_class'],
-                                    preds['prediction_value'],
+                                    preds['predicted_value'],
                                     preds['class_predictions']]
 
                 csvwriter.writerow(row_to_write)
 
         print("Finished writing file: %s" % file_path)
+
+    def _predict_from_iterator_and_export_to_csv(self, iterator, export_path):
+        """ Generate Predictions from Dataset Iterator """
+
+        all_predictions = OrderedDict()
+        output_names = self.model.output_names
+        id_to_class_mapping_clean = {'label/' + k: v for k, v in
+                                     self.id_to_class_mapping.items()}
+        with K.get_session() as sess:
+            while True:
+                try:
+                    batch_data = sess.run(iterator)
+                    batch_predictions = OrderedDict()
+                except tf.errors.OutOfRangeError:
+                    print("")
+                    print("Finished Predicting")
+                    break
+                except Exception as error:
+                    traceback.print_exc()
+                    continue
+                images = batch_data['images']
+                ids = [x.decode('utf-8') for x in batch_data['id']]
+                preds_list = self.model.predict_on_batch(images)
+                if not isinstance(preds_list, list):
+                    preds_list = [preds_list]
+
+                for i, _id in enumerate(ids):
+                    id_preds = [x[i, :] for x in preds_list]
+                    result = dict()
+                    for o, output in enumerate(output_names):
+                        id_output_preds = id_preds[o]
+                        class_preds = {id_to_class_mapping_clean[output][ii]: y
+                                       for ii, y in enumerate(id_output_preds)}
+
+                        ordered_classes = sorted(class_preds,
+                                                 key=class_preds.get,
+                                                 reverse=True)
+
+                        top_label = ordered_classes[0]
+                        top_value = class_preds[top_label]
+                        result[output] = {
+                           'predicted_class': top_label,
+                           'predicted_value': top_value,
+                           'class_predictions': class_preds}
+                    all_predictions[_id] = result
+                    batch_predictions[_id] = result
+
+                # append batch predictions to export here
+                self._append_predictions_to_csv(batch_predictions, export_path)
+
+        self.predictions = all_predictions
+
+
+        # self.id_to_class_mapping
+        #
+        # pred_results =
+        #
+        # with tf.Session() as sess:
+        #     batch = sess.run(iterator)
+        #     images = batch['images']
+        #     ids = batch['id']
+        #     image_paths = batch['image_paths']
+        #     preds = self.model.predict_on_batch(images)
+        #     batch_results = {k: dict() for k in ids}
+        #
+        #     for i, output in enumerate(self.model.output_names):
+        #         pred_output = preds[i]
+        #
+        #         pred_confidence = np.max(pred_output, axis=1)
+        #         pred_index = np.argmax(pred_output, axis=1)
+        #         pred_mapped = [self.id_to_class_mapping[output][i]
+        #                        for i in pred_index]
+        #
+        #         true_index = batch[output]
+        #         true_mapped = [self.id_to_class_mapping[output][i[0]]
+        #                        for i in true_index]
+        #
+        #         for jj, _id in enumerate(ids):
+        #             output_res = {'true': true_mapped[jj],
+        #                           'pred': pred_mapped[jj],
+        #                           'conf': pred_confidence[jj]}
+        #
+        #             batch_results[_id][output] = output_res
