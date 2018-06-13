@@ -16,8 +16,6 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-
-
 path = './test/test_images'
 source_type = 'image_dir'
 params = {'path': path}
@@ -27,19 +25,13 @@ dinv.create_from_source(source_type, params)
 dinv._calc_label_stats()
 dinv.log_stats()
 
-#dinv.export_to_json('./test/dummy.json')
-
 splitted = dinv.split_inventory_by_random_splits_with_balanced_sample(
         split_label_min='class',
         split_names=['train', 'val', 'test'],
         split_percent=[0.6, 0.2, 0.2])
 
-
-
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
-
-
 
 tfr = {k: v.export_to_tfrecord(
         tfr_writer,
@@ -56,11 +48,12 @@ tfr_writer.files
 
 reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
-image_processing = {'output_height': 224,
-      'output_width': 224,
-      'resize_side_min': 224,
-      'resize_side_max': 246,
-      'color_manipulations': True}
+image_processing = {
+    'output_height': 224,
+    'output_width': 224,
+    'resize_side_min': 224,
+    'resize_side_max': 246,
+    'color_manipulations': True}
 
 batch_data = reader.get_iterator(tfr_files=tfr_writer.files['train'],
                     batch_size=20,
@@ -77,8 +70,7 @@ batch_data = reader.get_iterator(tfr_files=tfr_writer.files['train'],
 
 with tf.Session() as sess:
     data = sess.run(batch_data)
-    data2 = sess.run(batch_data)
-    data3 = sess.run(batch_data)
+
 
 #
 #
