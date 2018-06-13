@@ -66,7 +66,7 @@ python create_dataset_inventory.py csv -path /my_data/dataset_info.csv \
 -label_fields species count
 ```
 
-The following snippet shows how to create a dataset inventory from class directories:
+The following code snippet shows how to create a dataset inventory from class directories:
 ```
 python create_dataset_inventory.py dir -path /my_images/all_classes/ \
 -export_path /my_data/dataset_inventory.json
@@ -125,13 +125,13 @@ python main_prediction.py -image_dir /my_images/new_images/ \
 
 The code and the models are based on TensorFlow (https://www.tensorflow.org) a graph-computing software, commonly
 used to implement machine learning models. The installation is reltively easy but can be tricky if an installation with
-GPU support on a serve is required.
+GPU support on a server is required.
 
 We have used python 3.5 and Tensorflow 1.6 (newer/older version may work as well).
 
 ### Tensorflow GPU Docker installation on AWS
 The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version.
-Alternatively, https://www.tensorflow.org/install/ provides guidelines on how to install Tensorflow (GPU) version.
+Alternatively, https://www.tensorflow.org/install/ provides guidelines on how to install Tensorflow (GPU version).
 
 ### Windows users with Anaconda
 
