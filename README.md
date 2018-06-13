@@ -88,7 +88,7 @@ python create_dataset.py -inventory /my_data/dataset_inventory.json \
 In the next step we train our model. The following code snippet shows an example:
 
 ```
-python main_train_new.py \
+python train_model.py \
 -train_tfr_path /my_data/tfr_files/ \
 -val_tfr_path /my_data/tfr_files/ \
 -test_tfr_path /my_data/tfr_files/ \

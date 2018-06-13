@@ -17,7 +17,7 @@ from training.utils import (
         ModelCheckpointer, find_the_best_id_in_log, find_model_based_on_epoch,
         copy_models_and_config_files)
 from training.model_library import create_model
-
+from predicting.predictor import Predictor
 from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from data_processing.data_reader import DatasetReader
 from pre_processing.image_transformations import (
@@ -97,6 +97,10 @@ if __name__ == '__main__':
     n_classes_per_label = [n_classes_per_label_dict[x]
                            for x in output_labels_clean]
 
+    # save class mapping file to current run puth
+    export_dict_to_json(class_mapping,
+                        args['run_outputs_dir'] + 'label_mappings.json')
+
     # TFR files
     def _find_tfr_files(path, prefix):
         """ Find all TFR files """
@@ -114,11 +118,12 @@ if __name__ == '__main__':
         TEST_SET = True
         tfr_test = _find_tfr_files(args['test_tfr_path'],
                                    args['test_tfr_prefix'])
+        pred_output_csv = args['run_outputs_dir'] + 'test_preds.csv'
     else:
         TEST_SET = False
 
     # Create best model output name
-    best_model_path = args['model_save_dir'] + 'best_model.hdf5'
+    best_model_save_path = args['model_save_dir'] + 'best_model.hdf5'
 
     # Create prediction model output name
     pred_model_path = args['model_save_dir'] + 'prediction_model.hdf5'
@@ -166,7 +171,6 @@ if __name__ == '__main__':
     logger.info("Image Means: %s" % image_means)
     logger.info("Image Stdevs: %s" % image_stdevs)
 
-
     ###########################################
     # PREPARE DATA READER ###########
     ###########################################
@@ -209,7 +213,7 @@ if __name__ == '__main__':
                         tfr_files=tfr_test,
                         batch_size=args['batch_size'],
                         is_train=False,
-                        n_repeats=None,
+                        n_repeats=1,
                         output_labels=output_labels,
                         image_pre_processing_fun=preprocess_image,
                         image_pre_processing_args={
@@ -218,7 +222,6 @@ if __name__ == '__main__':
                         max_multi_label_number=None,
                         buffer_size=args['buffer_size'],
                         num_parallel_calls=args['n_cpus'])
-
 
     # Export Image Processing Settings
     export_dict_to_json({**image_processing,
@@ -288,10 +291,9 @@ if __name__ == '__main__':
             minimize=True)
 
     # log validation statistics to a csv file
-    # TODO: Adjust automatic reading of metrics names
     csv_logger = CSVLogger(
         args['run_outputs_dir'] + 'training.log',
-        metrics_names=['val_loss', 'val_acc', 'learning_rate'])
+        metrics_names=val_model.metrics_names + ['learning_rate'])
 
     # create model checkpoints after each epoch
     checkpointer = ModelCheckpointer(train_model_base,
@@ -359,23 +361,23 @@ if __name__ == '__main__':
     # Finding best model run and moving models
     best_model_run = find_the_best_id_in_log(
             log_file_path=args['run_outputs_dir'] + 'training.log',
-            metric='val_loss')
+            metric='loss')
 
     best_model_path = find_model_based_on_epoch(
                         model_path=args['run_outputs_dir'],
                         epoch=best_model_run)
 
-    logger.info("Saving Best Model to: %s" % best_model_path)
+    logger.info("Saving Best Model to: %s" % best_model_save_path)
     for best_model in best_model_path:
         if 'model_epoch' in best_model:
             copy_models_and_config_files(
                     model_source=best_model,
-                    model_target=best_model_path,
+                    model_target=best_model_save_path,
                     files_path_source=args['run_outputs_dir'],
                     files_path_target=args['model_save_dir'],
                     copy_files=".json")
 
-    best_model = load_model(best_model_path)
+    best_model = load_model(best_model_save_path)
 
     ###########################################
     # SAVE PREDICTION MODEL ###########
@@ -392,3 +394,23 @@ if __name__ == '__main__':
     pred_model.save(pred_model_path)
 
     logger.info("Saved Prediction Model to %s" % pred_model_path)
+
+    ###########################################
+    # PREDICT ON TEST DATA ###########
+    ###########################################
+
+    if TEST_SET:
+        logger.info("Starting to predict on test data")
+        pred = Predictor(
+                model_path=pred_model_path,
+                class_mapping_json=args['class_mapping_json'],
+                pre_processing_json=args['run_outputs_dir'] + \
+                                    'image_processing.json',
+                batch_size=args['batch_size'])
+
+        pred.predict_from_iterator_and_export(
+            input_feeder_test(),
+            pred_output_csv)
+
+        logger.info("Finished predicting on test data, saved to: %s" %
+                    pred_output_csv)
