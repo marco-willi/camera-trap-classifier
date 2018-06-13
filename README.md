@@ -3,6 +3,12 @@ Automatically identify animals in camera trap images by training and applying a 
 
 <img src="https://s3-eu-west-1.amazonaws.com/pantherabucketleopard1/27_2016/2016-11-14_09-05-21-CAM51271.jpg"  width="150" height="125" style="float: right" />
 
+<object data="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.pdf" type="application/pdf" width="700px" height="250px">
+    <embed src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.pdf">
+        This browser does not support PDFs. Please download the PDF to view it: <a href="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.pdf">Download PDF</a>.</p>
+    </embed>
+</object>
+
 ## Overview
 
 This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps.
