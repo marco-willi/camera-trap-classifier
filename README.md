@@ -123,20 +123,30 @@ python main_prediction.py -image_dir /my_images/new_images/ \
 
 ## Installation
 
-The code and the models are based on TensorFlow (https://www.tensorflow.org) a graph-computing software, commonly
-used to implement machine learning models. The installation is reltively easy but can be tricky if an installation with
+The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly
+used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with
 GPU support on a server is required.
 
 We have used python 3.5 and Tensorflow 1.6 (newer/older version may work as well).
 
-### Tensorflow GPU Docker installation on AWS
-The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version.
-Alternatively, https://www.tensorflow.org/install/ provides guidelines on how to install Tensorflow (GPU version).
+
+### Installing from Requirements
+
+The most common way to install all required packages is to create a virtual environment and to use a
+requirements.txt file as provided in setup/.
+
+```
+cd setup/
+python3 -m virtualenv ctc
+source ctc/bin/activate
+pip install -r requirements.txt
+```
 
 ### Windows users with Anaconda
 
-For testing and to use a model for predictions a local Windows installation can be sufficient. The following
-commands allow for a full installation using Anaconda:
+For testing and to use a model for predictions, a local Windows installation can be sufficient. The following
+commands allow for a full installation using Anaconda (https://conda.io/docs/user-guide/install/windows.html).
+The commands can be executed using, for example, Git BASH (https://gitforwindows.org).
 
 ```
 # create a new conda environment
@@ -145,6 +155,10 @@ source activate ctc
 pip install --upgrade tensorflow
 conda install jupyter yaml nb_conda pillow h5py
 ```
+
+### Tensorflow GPU Docker installation on AWS
+We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
+Tensorflow can be found at https://www.tensorflow.org/install/.
 
 ## Testing the Code
 
