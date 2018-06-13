@@ -2,6 +2,7 @@
 Automatically identify animals in camera trap images by training and applying a deep neural network.
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.png"/>
+
 *This figure shows examples of correctly predicted camera trap images.*
 
 ## Overview
