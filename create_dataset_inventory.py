@@ -1,4 +1,16 @@
-""" Create a Dataset Inventory """
+""" Create a Dataset Inventory
+
+The following sources can be used:
+- dir: a directory that contains subdirectories with class specific images
+- csv: a csv file that contains links and labels to images
+- json: a native dataset inventory file
+- panthera: a specific importer for Panthera style csvs
+
+Example Usage:
+--------------
+python create_dataset_inventory.py dir -path /my_images/ \
+-export_path /my_data/dataset_inventory.json
+"""
 import argparse
 import logging
 
@@ -55,22 +67,38 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(help='sub-command help')
 
     # create parser for csv input
-    parser_csv = subparsers.add_parser('csv', help='if input is a csv file')
-    parser_csv.add_argument("-path", type=str, required=True)
-    parser_csv.add_argument("-export_path", type=str, required=True)
-    parser_csv.add_argument("-capture_id_field", type=str, required=True)
+    parser_csv = subparsers.add_parser('csv',
+                                       help='specifcy if input is a csv file')
+    parser_csv.add_argument("-path", type=str, required=True,
+                            help="the full path of the csv file")
+    parser_csv.add_argument("-export_path", type=str, required=True,
+                            help="the full path to a json file which will contain\
+                                  the dataset inventory \
+                                  (e.g. /my_data/dataset_inventory.json)")
+    parser_csv.add_argument("-capture_id_field", type=str, required=True,
+                            help="the name of the csv column with the \
+                                  capture id")
     parser_csv.add_argument('-image_fields', nargs='+', type=str,
-                            help='image attributes', required=True)
+                            help='the name of the csv columns with paths to \
+                                  the images (more than one possible)',
+                            required=True)
     parser_csv.add_argument('-label_fields', nargs='+', type=str,
-                            help='label attributes', required=True)
+                            help='the name of the csv columns with paths to \
+                                  label attributes (more than one possible)',
+                            required=True)
     parser_csv.add_argument('-meta_data_fields', nargs='+', type=str,
-                            help='meta data attributes', required=False)
+                            help='the name of the csv columns with paths to \
+                                  meta data attributes (more than one poss.)',
+                            required=False)
     parser_csv.set_defaults(func=csv)
 
     # create parser for json input
     parser_json = subparsers.add_parser('json', help='if input is a json file')
     parser_json.add_argument("-path", type=str, required=True)
-    parser_json.add_argument("-export_path", type=str, required=True)
+    parser_json.add_argument("-export_path", type=str, required=True,
+                             help="the full path to a json file which will contain\
+                                   the dataset inventory \
+                                   (e.g. /my_data/dataset_inventory.json)")
     parser_json.set_defaults(func=json)
 
     # create parser for json input
@@ -78,7 +106,11 @@ if __name__ == '__main__':
         'dir',
         help='if input is a directory with class directories')
     parser_class_dirs.add_argument("-path", type=str, required=True)
-    parser_class_dirs.add_argument("-export_path", type=str, required=True)
+    parser_class_dirs.add_argument(
+        "-export_path", type=str, required=True,
+        help="the full path to a json file which will contain\
+             the dataset inventory \
+             (e.g. /my_data/dataset_inventory.json)")
     parser_class_dirs.set_defaults(func=class_dir)
 
     # create parser for panthera input
@@ -86,7 +118,11 @@ if __name__ == '__main__':
         'panthera',
         help='if input is a panthera csv file')
     parser_panthera.add_argument("-path", type=str, required=True)
-    parser_panthera.add_argument("-export_path", type=str, required=True)
+    parser_panthera.add_argument(
+            "-export_path", type=str, required=True,
+            help="the full path to a json file which will contain\
+                 the dataset inventory \
+                 (e.g. /my_data/dataset_inventory.json)")
     parser_panthera.set_defaults(func=panthera)
 
     args = vars(parser.parse_args())

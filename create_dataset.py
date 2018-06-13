@@ -1,4 +1,16 @@
-""" Create Dataset From Dataset Inventory """
+""" Create Dataset From Dataset Inventory
+
+This creates TFRecord files from a dataset inventory.
+
+Exmple Usage:
+--------------
+python create_dataset.py -inventory ./test_big/cat_dog_dir_test.json \
+-output_dir ./test_big/cats_vs_dogs/tfr_files/ \
+-image_save_side_max 200 \
+-split_percent 0.7 0.15 0.15 \
+-overwrite
+
+"""
 import argparse
 import logging
 
@@ -20,7 +32,7 @@ if __name__ == '__main__':
     parser.add_argument("-inventory", type=str, required=True,
                         help="path to inventory json file")
     parser.add_argument("-output_dir", type=str, required=True,
-                        help="Path to which TFRecord files are written")
+                        help="Directory to which TFRecord files are written")
     parser.add_argument("-split_names", nargs='+', type=str,
                         help='split dataset into these named splits',
                         default=['train', 'val', 'test'],
@@ -49,7 +61,7 @@ if __name__ == '__main__':
                         default=500,
                         required=False,
                         help="resize image to larger side having that\
-                              many pixels")
+                              many pixels, typically at least 330")
     parser.add_argument("-overwrite", default=False,
                         action='store_true', required=False,
                         help="whether to overwrite existing tfr files")
@@ -59,7 +71,7 @@ if __name__ == '__main__':
                         help="The max number of records per TFRecord file.\
                              Multiple files are generated if the size of\
                              the dataset exceeds this value. It is recommended\
-                             to use large values")
+                             to use large values (default 500e3)")
 
     args = vars(parser.parse_args())
 
@@ -121,32 +133,9 @@ if __name__ == '__main__':
             args['output_dir'],
             file_prefix=split_name,
             image_pre_processing_fun=resize_jpeg,
-            image_pre_processing_args={"max_side": args['image_save_side_max']},
+            image_pre_processing_args={"max_side":
+                                       args['image_save_side_max']},
             random_shuffle_before_save=True,
             overwrite_existing_files=args['overwrite'],
             max_records_per_file=args['max_records_per_file']
             )
-
-
-# python create_dataset.py -inventory ./test/test_files/cat_dog_dinv_test.json \
-# -output_dir ./test/test_files/ \
-# -overwrite 1
-
-# python create_dataset.py -inventory ./test/test_files/cat_dog_dinv_test.json \
-# -output_dir ./test/test_files/ \
-# -remove_label_name species \
-# -remove_label_value dog \
-# -overwrite 1
-
-#
-# python create_dataset.py -inventory ./test/test_files/cat_dog_dinv_test.json \
-# -output_dir ./test/test_files/ \
-# -split_names train test \
-# -split_percent 0.6 0.4 \
-# -overwrite 1
-#
-# python create_dataset.py -inventory ./test/test_files/cat_dog_dinv_test.json \
-# -output_dir ./test/test_files/ \
-# -balanced_sampling_min 1 \
-# -balanced_sampling_label species \
-# -overwrite 1

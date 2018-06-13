@@ -36,7 +36,8 @@ class DatasetReader(object):
                 )
 
         if max_multi_label_number is not None:
-            label_pad_dict = {x: [max_multi_label_number] for x in output_labels}
+            label_pad_dict = {x: [max_multi_label_number]
+                              for x in output_labels}
             dataset = dataset.padded_batch(
                 batch_size,
                 padded_shapes=({'images': [None, None, None],

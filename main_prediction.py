@@ -38,16 +38,36 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-image_dir", type=str, required=True)
-    parser.add_argument("-results_file", type=str, required=True)
-    parser.add_argument("-model_path", type=str, required=True)
-    parser.add_argument("-class_mapping_json", type=str, required=True)
-    parser.add_argument("-pre_processing_json", type=str, required=True)
-    parser.add_argument("-export_file_type", type=str, default="csv",
-                        required=False,
-                        help='export file type - only csv supported')
-    parser.add_argument("-batch_size", default=128, type=int, required=False)
-    parser.add_argument("-check_images", default=0, type=int, required=False)
+    parser.add_argument(
+        "-image_dir", type=str, required=True,
+        help='path to root of image directory, can contain subdirectories \
+              with images, the program will search for all images and \
+              predict them')
+    parser.add_argument(
+        "-results_file", type=str, required=True,
+        help='path to the file to store the predictions in')
+    parser.add_argument(
+        "-model_path", type=str, required=True,
+        help='path to the model to use (hdf5 file)')
+    parser.add_argument(
+        "-class_mapping_json", type=str, required=True,
+        help="path to label_mappings.json")
+    parser.add_argument(
+        "-pre_processing_json", type=str, required=True,
+        help="path to the image_processing.json")
+    parser.add_argument(
+        "-export_file_type", type=str, default="csv",
+        required=False,
+        help='export file type - only csv supported currently')
+    parser.add_argument(
+        "-batch_size", default=128, type=int, required=False,
+        help="the number of images once at a time \
+              to predict before writing results to disk (default 128)")
+    parser.add_argument(
+        "-check_images", default=0, type=int, required=False,
+        help="whether to check all images for \
+            corruption before starting the training\
+            (most likely not necessary)")
 
     args = vars(parser.parse_args())
 
@@ -65,12 +85,3 @@ if __name__ == '__main__':
                 path_to_image_dir=args['image_dir'],
                 export_file=args['results_file'],
                 check_images_first=args['check_images'])
-
-
-# Test command
-#python main_prediction.py -image_dir D:\\Studium_GD\\Zooniverse\\CamCatProject\\data\\sample_images_raw\\ \
-#-results_file D:\\Studium_GD\\Zooniverse\\CamCatProject\\data\\sample_images_raw\\preds.csv \
-#-model_path D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\southern_africa\\models\\species\\model_prediction_run_201804060404_incept_res_species.hdf5 \
-#-class_mapping_json D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\southern_africa\\models\\species\\label_mappings.json \
-#-pre_processing_json D:\\Studium_GD\\Zooniverse\\Data\\camtrap_trainer\\data\\southern_africa\\models\\species\\image_processing.json \
-#-batch_size 1

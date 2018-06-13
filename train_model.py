@@ -1,4 +1,28 @@
-""" Main File for Training a Keras/Tensorflow Model"""
+""" Main File for Training a Model
+
+Allows for detailed configurations.
+
+Example Usage:
+---------------
+python train_model.py \
+-train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
+-train_tfr_prefix train \
+-val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
+-val_tfr_prefix val \
+-test_tfr_path ./test_big/cats_vs_dogs/tfr_files \
+-test_tfr_prefix test \
+-class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
+-run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
+-model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
+-model cats_vs_dogs \
+-labels class \
+-batch_size 128 \
+-n_cpus 2 \
+-n_gpus 1 \
+-buffer_size 512 \
+-max_epochs 10 \
+-starting_epoch 0
+"""
 import argparse
 import logging
 import os
@@ -36,37 +60,81 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("-train_tfr_path", type=str, required=True)
-    parser.add_argument("-train_tfr_prefix", default="train", type=str,
-                        required=True)
-    parser.add_argument("-val_tfr_path", type=str, required=True)
-    parser.add_argument("-val_tfr_prefix", default="val", type=str,
-                        required=True)
-    parser.add_argument("-test_tfr_path", type=str, required=False)
-    parser.add_argument("-test_tfr_prefix", default="test", type=str,
-                        required=False)
-    # parser.add_argument("-train_tfr", nargs='+', type=str, required=True)
-    # parser.add_argument("-val_tfr", nargs='+', type=str, required=True)
-    # parser.add_argument("-test_tfr", nargs='+', type=str, default=[],
-    #                     required=False)
-    parser.add_argument("-class_mapping_json", type=str, required=True)
-    parser.add_argument("-run_outputs_dir", type=str, required=True)
-    parser.add_argument("-model_save_dir", type=str, required=True)
-    parser.add_argument("-model", type=str, required=True)
-    parser.add_argument("-labels", nargs='+', type=str, required=True)
-    parser.add_argument("-batch_size", type=int, default=128)
-    parser.add_argument("-n_cpus", type=int, default=4)
-    parser.add_argument("-n_gpus", type=int, default=1)
-    parser.add_argument("-buffer_size", type=int, default=32768)
-    parser.add_argument("-max_epochs", type=int, default=70)
-    parser.add_argument("-starting_epoch", type=int, default=0)
-    parser.add_argument("-transfer_learning", default=False,
-                        action='store_true', required=False)
-    parser.add_argument("-continue_training", default=False,
-                        action='store_true', required=False)
-    parser.add_argument("-model_to_load", type=str, required=False)
-    parser.add_argument("-pre_processing", type=str, default="standard",
-                        required=False)
+    parser.add_argument(
+        "-train_tfr_path", type=str, required=True,
+        help="Path to directory that contains the training TFR files"
+    )
+    parser.add_argument(
+        "-train_tfr_prefix", default="train", type=str,
+        required=True,
+        help="The prefix of the training TFR files (default train)")
+    parser.add_argument(
+        "-val_tfr_path", type=str, required=True,
+        help="Path to directory that contains the validation TFR files")
+    parser.add_argument(
+        "-val_tfr_prefix", default="val", type=str,
+        required=True,
+        help="The prefix of the validation TFR files (default val)")
+    parser.add_argument(
+        "-test_tfr_path", type=str, required=False,
+        help="Path to directory that contains the test TFR files (optional)")
+    parser.add_argument(
+        "-test_tfr_prefix", default="test", type=str,
+        required=False,
+        help="The prefix of the test TFR files (default test, optional)")
+    parser.add_argument(
+        "-class_mapping_json", type=str, required=True,
+        help='Path to the json file containing the class mappings')
+    parser.add_argument(
+        "-run_outputs_dir", type=str, required=True,
+        help="Path to a directory to store data during the training")
+    parser.add_argument(
+        "-model_save_dir", type=str, required=True,
+        help='Path to a directory to store final model files')
+    parser.add_argument(
+        "-model", type=str, required=True,
+        help="The model architecture to use for training\
+             (see config/models.yaml)")
+    parser.add_argument(
+        "-labels", nargs='+', type=str, required=True,
+        help='The labels to model')
+    parser.add_argument(
+        "-batch_size", type=int, default=128,
+        help="The batch size for model training, if too large the model may\
+              crash with an OOM error. Use values between 64 and 256")
+    parser.add_argument(
+        "-n_cpus", type=int, default=4,
+        help="The number of cpus to use. Use all available if possible.")
+    parser.add_argument(
+        "-n_gpus", type=int, default=1,
+        help='The number of GPUs to use (defualt 1)')
+    parser.add_argument(
+        "-buffer_size", type=int, default=32768,
+        help='The buffer size to use for shuffling training records. Use \
+              smaller values if memory is limited.')
+    parser.add_argument(
+        "-max_epochs", type=int, default=70,
+        help="The max number of epochs to train the model")
+    parser.add_argument(
+        "-starting_epoch", type=int, default=0,
+        help="The starting epoch number.")
+    parser.add_argument(
+        "-transfer_learning", default=False,
+        action='store_true', required=False,
+        help="Flag to specify that transfer learning should be used")
+    parser.add_argument(
+        "-continue_training", default=False,
+        action='store_true', required=False,
+        help="Flag that training should be continued from a saved model.")
+    parser.add_argument(
+        "-model_to_load", type=str, required=False,
+        help='Path to a model when either continue_training or \
+             transfer_learning are specified')
+    parser.add_argument(
+        "-pre_processing", type=str, default="standard",
+        required=False,
+        help="Has currently no effect, standard image pre-processing \
+             is applied")
 
     args = vars(parser.parse_args())
 

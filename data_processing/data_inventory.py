@@ -356,38 +356,3 @@ class DatasetInventoryMaster(DatasetInventory):
                                 new_inventory[record_id]['labels'][i][label_name][j][new_label]
 
         self.data_inventory = new_inventory
-
-
-
-
-    # def get_tfr_record_format(self, record_id):
-    #     """ Get Flat Record Data for Storage """
-    #     images = self.data_inventory[record_id]['images']
-    #     label_list = self.data_inventory[record_id]['labels']
-    #
-    #     record = {'id': record_id,
-    #               'images': [],
-    #               'labels/text': ['class#elephant#counts*1#behavior*standing*eating']}
-    #               'labels/numeric': [1, 2, 3, 4, 5, 12]}
-    #
-    #     labels = dict()
-    #     labels_text_list = []
-    #     labels_numeric_list = []
-    #
-    #     for i, label in enumerate(label_list):
-    #         label_to_string = ''
-    #         for k, v in label.items():
-    #             label_to_string += '#' + k
-    #             if isinstance(v, list):
-    #                 for vv in v:
-    #                     label_to_string += '*' + vv
-    #             else:
-    #                 label_to_string += '*' + v
-    #         labels_text_list.append(label_to_string)
-    #
-    #     flat_record = {'id': record_id,
-    #                    'images': images,
-    #                    'n_labels': len(label_list),
-    #                    'labels/text': labels_text,
-    #                    'labels/numeric':}
-    #     return flat_record

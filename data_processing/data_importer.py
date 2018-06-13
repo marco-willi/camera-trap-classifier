@@ -540,8 +540,8 @@ class FromImageDirs(DatasetImporter):
                 splitted_file_name = image_name.split(".")
                 if len(splitted_file_name) > 2:
                     logger.info("File %s has more than one . \
-                                  in filename, which is not allowed"
-                                 % str(image_name))
+                                 in filename, which is not allowed"
+                                % str(image_name))
                     continue
                 unique_image_id = splitted_file_name[0]
                 image_data = {

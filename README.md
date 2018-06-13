@@ -55,7 +55,7 @@ The advantage of using a csv file is that more than one label can be provided. I
 In this step a common data structure is created regardless of how the data preparation was done. The following code snippet shows how to create a dataset inventory based on a csv file.
 
 ```
-python create_dataset_inventory.py csv -path ./test/test_files/cats_vs_dogs_multi.csv \
+python create_dataset_inventory.py csv -path /my_data/dataset_info.csv \
 -export_path /my_data/dataset_inventory.json \
 -capture_id_field id \
 -image_fields image \
@@ -117,12 +117,45 @@ python main_prediction.py -image_dir /my_images/new_images/ \
   -pre_processing_json /my_model/save1/image_processing.json
 ```
 
+## Installation
+
+The code and the models are based on TensorFlow (https://www.tensorflow.org) a graph-computing software, commonly
+used to implement machine learning models. The installation is reltively easy but can be tricky if an installation with
+GPU support on a serve is required.
+
+We have used python 3.5 and Tensorflow 1.6 (newer/older version may work as well).
+
+### Tensorflow GPU Docker installation on AWS
+The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version.
+Alternatively, https://www.tensorflow.org/install/ provides guidelines on how to install Tensorflow (GPU) version.
+
+### Windows users with Anaconda
+
+For testing and to use a model for predictions a local Windows installation can be sufficient. The following
+commands allow for a full installation using Anaconda:
+
+```
+# create a new conda environment
+conda create --no-default-packages -n ctc python=3.5
+source activate ctc
+pip install --upgrade tensorflow
+conda install jupyter yaml nb_conda pillow h5py
+```
+
+## Testing the Code
+
+Following commands should run without error:
+
+```
+python -m unittest discover test/data_processing
+python -m unittest discover test/training
+```
 
 ## Acknowledgements
 
 This code is based on work conducted in following study:
 
-Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, in preparation
+*Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, in preparation*
 
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 

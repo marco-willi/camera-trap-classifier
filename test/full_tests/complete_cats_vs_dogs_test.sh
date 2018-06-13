@@ -12,7 +12,7 @@ python create_dataset.py -inventory ./test_big/cat_dog_dir_test.json \
 -overwrite
 
 # Train a Model
-python main_train_new.py \
+python train_model.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
 -train_tfr_prefix train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
@@ -24,16 +24,16 @@ python main_train_new.py \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
 -model cats_vs_dogs \
 -labels class \
--batch_size 128 \
+-batch_size 64 \
 -n_cpus 2 \
 -n_gpus 1 \
--buffer_size 512 \
+-buffer_size 128 \
 -max_epochs 10 \
 -starting_epoch 0
 
 
 
-python main_train_new.py \
+python train_model.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
 -train_tfr_prefix train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
