@@ -1,7 +1,6 @@
+<img src="https://s3-eu-west-1.amazonaws.com/pantherabucketleopard1/27_2016/2016-11-14_09-05-21-CAM51271.jpg"  width="150" height="125" style="float: right" />
 # Camera Trap Image Classifier
 Automatically identify animals in camera trap images by training and applying a deep neural network.
-
-<img src="https://s3-eu-west-1.amazonaws.com/pantherabucketleopard1/27_2016/2016-11-14_09-05-21-CAM51271.jpg"  width="150" height="125">
 
 ## Overview
 
