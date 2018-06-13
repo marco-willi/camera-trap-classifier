@@ -2,12 +2,11 @@
 Automatically identify animals in camera trap images by training and applying a deep neural network.
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.png"/>
-
-
+*This figure shows examples of correctly predicted camera trap images.*
 
 ## Overview
 
-This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps.
+This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
 
 ## Pre-Requisites
 
@@ -27,7 +26,7 @@ The following steps are required to train a model:
 4. Train a model.
 5. Apply a model on new data.
 
-### Data Preparation
+### 1) Data Preparation
 
 The first thing is to organize the image and label data. There are several options:
 
@@ -54,7 +53,7 @@ id,image,species,count
 The advantage of using a csv file is that more than one label can be provided. In this example species and count.
 
 
-### Creating a Dataset Inventory
+### 2) Creating a Dataset Inventory
 
 In this step a common data structure is created regardless of how the data preparation was done. The following code snippet shows how to create a dataset inventory based on a csv file.
 
@@ -74,7 +73,7 @@ python create_dataset_inventory.py dir -path /my_images/all_classes/ \
 
 Note that a json file '/my_data/dataset_inventory.json' is created containing all information.
 
-### Creating the Dataset - TFRecord files
+### 3) Creating the Dataset - TFRecord files
 
 In this step we save all images into large binary '.tfrecord' files which makes it easier to train our models.
 The following code snippet shows how that works:
@@ -87,7 +86,7 @@ python create_dataset.py -inventory /my_data/dataset_inventory.json \
 -overwrite
 ```
 
-### Model Training
+### 4) Model Training
 
 In the next step we train our model. The following code snippet shows an example:
 
@@ -108,7 +107,7 @@ python train_model.py \
 -max_epochs 70
 ```
 
-### Model Use
+### 5) Model Use
 
 Finally, we can apply our model on new data. In the following code snippet the program looks for all images
 stored in /my_images/new_images/, including subdirectories.
@@ -159,7 +158,7 @@ python -m unittest discover test/training
 
 This code is based on work conducted in following study:
 
-*Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, in preparation*
+*Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, submitted*
 
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 
