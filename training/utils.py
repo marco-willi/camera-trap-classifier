@@ -156,6 +156,7 @@ def copy_models_and_config_files(model_source, model_target,
 
     copy_file(model_source, model_target)
 
+
 class ReduceLearningRateOnPlateau(object):
     def __init__(self, reduce_after_n_rounds,
                  patience_after_reduction, reduction_abs=None,

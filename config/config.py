@@ -13,6 +13,24 @@ from data_processing.utils import create_path, get_most_rescent_file_with_string
 # Config Class
 ##############################
 
+class ConfigLoader(object):
+    def __init__(self, filename='config.yaml'):
+        self.filename = filename
+        self._load_from_disk()
+
+    def _load_from_disk(self):
+        if os.path.exists(self.filename):
+            with open(self.filename, 'r') as fp:
+                self.cfg = yaml.load(fp)
+        else:
+            raise FileNotFoundError(
+                errno.ENOENT,
+                os.strerror(errno.ENOENT), self.filename)
+
+##############################
+# Config Class
+##############################
+
 class Config(object):
     def __init__(self, filename='config.yaml'):
         self.filename = filename

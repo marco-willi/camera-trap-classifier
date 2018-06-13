@@ -1,89 +1,156 @@
 {
-  "10296725":{
-   "labels": {"primary": ["cat"],
-               "color": ["brown", "white", "black"]
-             },
-   "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
-              "\\images\\4715\\all\\cat\\10296726_0.jpeg",
-              "\\images\\4715\\all\\cat\\10296727_0.jpeg"
-             ]
+  "single_species_standard":{
+   "labels": [
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "1"}
+            ],
+   "meta_data": {"meta_1": "meta_data_1",
+                 "meta_2": "meta_data_2"},
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
   },
-  "10296741":{
-   "labels": {"primary": ["cat"],
-               "color": ["black"]},
-   "images": ["\\images\\4715\\all\\cat\\10296741_0.jpeg",
-              "\\images\\4715\\all\\cat\\10296742_0.jpeg"
-             ]
+  "multi_species_standard":{
+   "labels": [
+              {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "1"},
+              {"class": "dog", "color_brown": "1", "color_white": "0", "counts": "2"}
+              ],
+    "meta_data": {"meta_1": "meta_data_1",
+                  "meta_2": "meta_data_2"},
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+
   },
-  "no_list_label_type_primary":{
-   "labels": {"primary": "dog",
-               "color": ["white"]},
-   "images": ["\\images\\4715\\all\\dog\\10300561_0.jpeg"
-             ]
+  "empty_image":{
+   "labels": [
+                {"class": "empty", "color_brown": "0", "color_white": "0", "counts": "0"}
+              ],
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
   },
- "10300569":{
-   "labels": {"primary": ["dog"],
-               "color": ["brown"]},
-   "images": ["\\images\\4715\\all\\dog\\1030056df1_0.jpeg"
-             ]
+  "single_species_multi_color":{
+   "labels": [
+                {"class": "cat", "color_brown": "1", "color_white": "1", "counts": "1"}
+              ],
+    "meta_data": {"meta_1": "meta_data_1",
+                  "meta_2": "meta_data_2"},
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+
   },
-  "10300652":{
-   "labels": {"primary": ["dog"],
-               "color": ["brown"]},
-   "images": ["\\images\\4715\\all\\dog\\10300652_0.jpeg"]
+  "single_species_no_other_attr":{
+   "labels": [
+                {"class": "cat"}
+              ],
+    "meta_data": {"meta_1": "meta_data_1",
+                  "meta_2": "meta_data_2"},
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+
   },
   "empty_images_list":{
-   "labels": {"primary": ["dog"],
-               "color": ["brown"]},
-   "images": []
- },
- "multi_labels":{
-  "labels": {"primary": ["dog", "human"],
-              "color": ["brown"]
-            },
-  "images": ["\\images\\4715\\all\\dog\\10300728_0.jpeg",
-             "\\images\\4715\\all\\dog\\10300742_0.jpeg"
-            ]
- },
- "non_string_label":{
-  "labels": {"primary": ["dog", "human"],
-              "color": [12]
-            },
-  "images": ["\\images\\4715\\all\\dog\\10300728_0.jpeg",
-             "\\images\\4715\\all\\dog\\10300742_0.jpeg"
-            ]
- },
- "10300788":{
-    "labels": {"primary": ["dog"],
-                "color": ["black"]
-              },
-    "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
+   "labels": [
+              {"class": "dog", "color_brown": "1", "color_white": "0", "counts": "2"}
+              ],
+    "meta_data": {"meta_1": "meta_data_1",
+                  "meta_2": "meta_data_2"},
+    "images": []
+
+  },
+  "multi_species_no_other_attr":{
+   "labels": [
+                {"class": "cat"},
+                {"class": "dog"}
+              ],
+    "meta_data": {"meta_1": "meta_data_1",
+                  "meta_2": "meta_data_2"},
+    "images": ["\\images\\4715\\all\\dog\\10300728_0.jpeg",
+               "\\images\\4715\\all\\dog\\10300742_0.jpeg"
+              ]
+
+  },
+  "non_string_label":{
+    "labels": [
+                {"class": "dog", "color_brown": "1", "color_white": "0", "counts": 12}
+               ],
+    "meta_data": {"meta_1": "meta_data_1",
+                  "meta_2": "meta_data_2"},
+    "images": ["\\images\\4715\\all\\dog\\10300728_0.jpeg",
+               "\\images\\4715\\all\\dog\\10300742_0.jpeg"
+              ]
+  },
+
+  "meta_data_invalid":{
+    "labels": [
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "1"}
+               ],
+    "meta_data": "string_meta_data",
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+  },
+  "not_all_labels":{
+    "labels": [
+                {"class": "cat", "color_brown": "1", "counts": "1"}
+               ],
+    "meta_data": {"meta_1": "meta_data_1",
+                  "meta_2": "meta_data_2"},
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+  },
+  "no_meta_data":{
+    "labels": [
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "10-50"}
+               ],
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+  },
+  "only_empty_images_string":{
+    "labels": [
+              {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "5"}
+               ],
+    "meta_data": {"meta_1": "meta_data_1"},
+    "images": [""]
+
+  },
+  "color_is_white":{
+    "labels": [
+                {"class": "cat", "color_brown": "0", "color_white": "1", "counts": "2"}
+               ],
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+
+  },
+  "counts_is_12":{
+    "labels": [
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "12"}
+               ],
+    "images": ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296726_0.jpeg",
+               "\\images\\4715\\all\\cat\\10296727_0.jpeg"
+              ]
+
+  },
+  "is_elephant":{
+    "labels": [
+                {"class": "elephant", "color_brown": "0", "color_white": "0", "counts": "3"}
+               ],
     "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
-   },
-"not_all_labels":{
-      "labels": {"primary": ["dog"]
-                },
-      "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
-      "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
-  },
-"only_empty_images_string":{
-       "labels": {"primary": ["dog"]
-                 },
-       "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
-       "images": [""]
-    },
-"color_is_black":{
-       "labels": {"primary": ["dog"],
-                   "color": ["black"]
-                 },
-       "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
-       "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
-  },
-"is_elephant":{
-         "labels": {"primary": ["elephant"],
-                     "color": ["black"]
-                   },
-         "meta_data": {"category": "super  nice image", "time": "2017-03-01"},
-         "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
+
   }
 }

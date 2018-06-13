@@ -4,12 +4,139 @@ import os
 import json
 from shutil import copyfile
 import re
+from collections import Counter, OrderedDict
+import random
 
 import tensorflow as tf
 from hashlib import md5
 import numpy as np
 
 
+def map_label_list_to_numeric_dict(label_list):
+    """ Map a list of labels to numeric values alphabetically
+        Input: ['b', 'c', 'd', 'a']
+        Output: {'a': 0, 'b': 1, 'c': 2, 'd': 3}
+    """
+
+    numeric_map = dict()
+    label_list.sort()
+    for i, sorted_label in enumerate(label_list):
+        numeric_map[sorted_label] = i
+
+    return numeric_map
+
+
+def order_dict_by_values(d, reversed=True):
+    ordered = OrderedDict()
+    for w in sorted(d, key=d.get, reverse=reversed):
+        ordered[w] = d[w]
+    return ordered
+
+
+def _balanced_sampling(id_to_label):
+    """ Balanced sampling for label """
+
+    labels_all = [v for v in id_to_label.values()]
+    label_stats = order_dict_by_values(Counter(labels_all), reversed=False)
+    min_label = list(label_stats.keys())[0]
+    min_value = label_stats[min_label]
+
+    # assign each id to one unique class
+    class_assignment = {x: list() for x in label_stats.keys()}
+    remaining_record_ids = set()
+
+    # Randomly Shuffle Ids
+    all_ids = list(id_to_label.keys())
+    random.shuffle(all_ids)
+
+    for record_id in all_ids:
+        label = id_to_label[record_id]
+        # Add record to class assignment if label occurrence
+        # is below min_value of least frequent class
+        if len(class_assignment[label]) < min_value:
+            class_assignment[label].append(record_id)
+            remaining_record_ids.add(record_id)
+
+    return remaining_record_ids
+
+
+def randomly_split_dataset(
+        split_ids,
+        split_names,
+        split_percent,
+        balanced_sampling_min=False,
+        balanced_sampling_id_to_label=None):
+    """ Randomly split 'split_ids' into 'split_names' by preserving
+        'split_percent' and optional balanced_sampling to min. label
+        Returns dict: {'id1': 'test', 'id2': 'train'}
+    """
+
+    # Check inputs
+    assert isinstance(split_names, list), "split_names must be a list"
+    assert isinstance(split_percent, list), "split_percent must be a list"
+    assert sum(split_percent) == 1, "split_percent must sum to 1"
+    assert len(split_names) == len(split_percent), \
+        "Split names must be of same length as split_percent"
+    assert isinstance(balanced_sampling_min, bool), \
+        "balanced_sampling_min must be a boolean"
+
+    if balanced_sampling_min:
+        assert isinstance(balanced_sampling_id_to_label, dict),\
+            "balanced_sampling_id_to_label must be a dict if \
+             balanced_sampling_min is specified"
+
+    # assign each record id a split value between 0 and 1
+    # derived from a hash function to ensure consistency
+    # based on the capture_id
+    split_vals = {x: id_to_zero_one(x) for x in split_ids}
+
+    # assign each id into different splits based on split value
+    split_assignments = list()
+
+    split_props_cum = [sum(split_percent[0:(i+1)]) for i in
+                       range(0, len(split_percent))]
+
+    for record_id in split_ids:
+        for sn, sp in zip(split_names, split_props_cum):
+            split_val = split_vals[record_id]
+            if split_val <= sp:
+                split_assignments.append(sn)
+                break
+
+    # Balanced sampling to the minority class
+    if balanced_sampling_min:
+        remaining_record_ids = _balanced_sampling(balanced_sampling_id_to_label)
+    else:
+        remaining_record_ids = split_ids
+
+    # create final dictionary with split assignment per record id
+    final_split_assignments = dict()
+
+    for record_id, sp in zip(split_ids, split_assignments):
+        if record_id in remaining_record_ids:
+            final_split_assignments[record_id] = sp
+
+    return final_split_assignments
+
+
+def slice_generator(sequence_length, n_blocks):
+    """ Creates a generator to get start/end indexes for dividing a
+        sequence_length into n blocks
+    """
+    return ((int(round((b - 1) * sequence_length/n_blocks)),
+             int(round(b * sequence_length/n_blocks)))
+            for b in range(1, n_blocks+1))
+
+
+def estimate_remaining_time(start_time, n_total, n_current):
+    """ Estimate remaining time """
+    time_elapsed = time.time() - start_time
+    n_remaining = n_total - (n_current - 1)
+    avg_time_per_record = time_elapsed / (n_current + 1)
+    estimated_time = n_remaining * avg_time_per_record
+    return time.strftime("%H:%M:%S", time.gmtime(estimated_time))
+
+    
 def print_progress(count, total):
     """ Print Progress to stdout """
     pct_complete = float(count) / total
@@ -126,7 +253,12 @@ def rename_files_cats_dogs(path):
 
 
 def n_records_in_tfr(tfr_path):
-    return sum(1 for _ in tf.python_io.tf_record_iterator(tfr_path))
+    if not isinstance(tfr_path, list):
+        tfr_path = [tfr_path]
+    total = 0
+    for path in tfr_path:
+        total += sum(1 for _ in tf.python_io.tf_record_iterator(path))
+    return total
 
 
 def check_tfrecord_contents(path_to_tfr):
@@ -164,6 +296,20 @@ def export_dict_to_json(dict, path):
     """ Export Label Mappings to Json File """
     with open(path, 'w') as fp:
         json.dump(dict, fp)
+
+
+def read_json(path_to_json):
+    """ Read File """
+    assert os.path.exists(path_to_json), \
+        "Path: %s does not exist" % path_to_json
+
+    try:
+        with open(path_to_json, 'r') as f:
+            data_dict = json.load(f)
+    except Exception as e:
+        raise ImportError('Failed to read Json:\n' + str(e))
+
+    return data_dict
 
 
 def id_to_zero_one(value):

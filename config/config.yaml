@@ -152,6 +152,7 @@ locations:
   # SOUTHERN AFRICA ########################
   ###########################################
   southern_africa:
+    inventory_type: 'panthera_csv'
     paths:
       master_tfr: 'master.tfrecord'
       inventory: 'inventory_list.csv'
@@ -175,6 +176,7 @@ locations:
   # WEST AFRICA ########################
   ###########################################
   west_africa:
+    inventory_type: 'panthera_csv'
     paths:
       master_tfr: 'master.tfrecord'
       inventory: 'inventory_list.csv'
@@ -199,6 +201,7 @@ locations:
   ###########################################
   cats_and_dogs:
     image_save_side_max: 200
+    inventory_type: 'image_dir'
     paths:
       master_tfr: 'master.tfrecord'
       inventory: 'inventory_list.csv'
@@ -220,6 +223,7 @@ locations:
   # PANTHERA (TESTING) ################
   ###########################################
   panthera:
+    inventory_type: 'panthera_csv'
     paths:
       master_tfr: 'master.tfrecord'
       inventory: 'inventory_list.csv'

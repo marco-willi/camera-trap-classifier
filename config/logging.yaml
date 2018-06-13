@@ -1,0 +1,31 @@
+version: 1
+disable_existing_loggers: False
+formatters:
+    detail:
+        format: '%(asctime)s - %(funcName)s - %(levelname)s: %(message)s'
+    simple:
+        format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+handlers:
+    console:
+        class: logging.StreamHandler
+        level: INFO
+        formatter: detail
+        stream: ext://sys.stdout
+
+    debug_file_handler:
+        () : config.config_logging.logmaker
+        logname: run_debug.log
+        level: DEBUG
+        formatter: detail
+        encoding: utf8
+
+    info_file_handler:
+        () : config.config_logging.logmaker
+        logname: run_info.log
+        level: INFO
+        formatter: simple
+        encoding: utf8
+root:
+    level: DEBUG
+    handlers: [console, info_file_handler, debug_file_handler]

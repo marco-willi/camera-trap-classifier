@@ -4,15 +4,13 @@ import logging
 import tensorflow as tf
 from tensorflow.python.keras.models import Model, Sequential, load_model
 from tensorflow.python.keras.layers import Input, Dense
-from tensorflow.python.keras.optimizers import SGD, Adagrad, RMSprop
-from tensorflow.python.keras.callbacks import (
-    ModelCheckpoint, TensorBoard)
+from tensorflow.python.keras.optimizers import SGD
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
 from tensorflow.python.keras.utils import multi_gpu_model
 
 from models.resnet_keras_mod import ResnetBuilder
-from models.cats_vs_dogs import architecture_flat as cats_vs_dogs_arch
+from models.cats_vs_dogs import architecture as cats_vs_dogs_arch
 
 
 def load_model_from_disk(path_to_model_on_disk):
@@ -22,18 +20,30 @@ def load_model_from_disk(path_to_model_on_disk):
     return loaded_model
 
 
+def get_non_output_layer_ids(model, label_indicator='label/'):
+    """ get non-output layers of a model """
+    layer_ids = [i for i, x in enumerate(model.layers)
+                 if label_indicator not in x.name]
+    return layer_ids
+
+
 def copy_model_weights(from_model, to_model, incl_last=True):
     """ copy the model weights of one model to the other """
     if incl_last:
         to_model.set_weights(from_model.get_weights())
     else:
-        layers_to_copy_from = from_model.layers[0:-1]
-        layers_to_copy_to = to_model.layers[0:-1]
+        # exclude output layers
+        layer_ids_from = get_non_output_layer_ids(from_model)
+        layer_ids_to = get_non_output_layer_ids(to_model)
+
+        layers_to_copy_from = [from_model.layers[i] for i in layer_ids_from]
+        layers_to_copy_to = [to_model.layers[i] for i in layer_ids_to]
         assert len(layers_to_copy_from) == len(layers_to_copy_to), \
             "Models dont match, cannot copy weights"
 
         for from_layer, to_layer in zip(layers_to_copy_from, layers_to_copy_to):
-            logging.info("Copy weights from: %s to %s" % (from_layer.name, to_layer.name))
+            logging.debug("Copy weights from: %s to %s" %
+                          (from_layer.name, to_layer.name))
             to_layer.set_weights(from_layer.get_weights())
 
 
@@ -63,7 +73,7 @@ def set_specific_layers_to_random(model_trained, model_random, layer):
 
     # print layers of new model
     for layer, i in zip(new_model.layers, range(0, len(new_model.layers))):
-        logging.info("New model - layer %s: %s" % (i, layer.name))
+        logging.debug("New model - layer %s: %s" % (i, layer.name))
 
     return new_model
 
@@ -150,21 +160,16 @@ def set_layers_to_non_trainable(model, first_layer_to_train):
 def set_last_layer_to_non_trainable(model):
     """ Set layers of a model to non-trainable """
 
-    layer_names = [x.name for x in model.layers]
-    first_layer_to_train = layer_names[-1]
+    non_output_layers = get_non_output_layer_ids(model)
 
-    # look for specified layer and set all previous layers
-    # to non-trainable
-    n_retrain = layer_names.index(first_layer_to_train)
-    for layer in model.layers[0:n_retrain]:
+    layers_to_non_trainable = [model.layers[i] for i in non_output_layers]
+
+    for layer in layers_to_non_trainable:
         layer.trainable = False
 
-    logging.info("Setting layers before %s to non-trainable" %
-                 first_layer_to_train)
-
     for layer in model.layers:
-        logging.info("Layer %s is trainable: %s" %
-                     (layer.name, layer.trainable))
+        logging.debug("Layer %s is trainable: %s" %
+                      (layer.name, layer.trainable))
     return model
 
 
@@ -230,7 +235,7 @@ def create_model(model_name,
 
     # Define model optimizer
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
-    # opt =  RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+    # opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
 
     if not train:
         model = Model(inputs=model_input, outputs=all_target_outputs)
@@ -252,8 +257,6 @@ def create_model(model_name,
             elif transfer_learning:
                 loaded_model = load_model_from_disk(path_of_model_to_load)
                 copy_model_weights(loaded_model, base_model, incl_last=False)
-                #random_model = Model(inputs=model_input, outputs=all_target_outputs)
-                #base_model = set_last_layer_to_random(base_model, random_model)
                 base_model = set_last_layer_to_non_trainable(base_model)
 
         model = multi_gpu_model(base_model, gpus=n_gpus)
@@ -268,15 +271,13 @@ def create_model(model_name,
         elif transfer_learning:
             loaded_model = load_model_from_disk(path_of_model_to_load)
             copy_model_weights(loaded_model, model, incl_last=False)
-            #random_model = Model(inputs=model_input, outputs=all_target_outputs)
-            #model = set_last_layer_to_random(model, random_model)
             model = set_last_layer_to_non_trainable(model)
 
         base_model = model
 
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
-                  metrics=['accuracy', 'sparse_top_k_categorical_accuracy'],
+                  metrics=['accuracy', 'top_k_categorical_accuracy'],
                   target_tensors=target_tensors)
 
     return model, base_model
