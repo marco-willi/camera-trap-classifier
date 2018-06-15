@@ -14,6 +14,11 @@ label_mappings = './test_big/cats_vs_dogs_multi/model_save_dir/label_mapping.jso
 deploy_path = './test_big/cats_vs_dogs_multi/deploy/'
 deploy_version = 1
 
+model_path = '/host/data_hdd/ctc/ss/example/saves/prediction_model.hdf5'
+label_mappings = '/host/data_hdd/ctc/ss/example/saves/label_mapping.json'
+deploy_path = '/host/data_hdd/ctc/ss/example/deploy/'
+deploy_version = 1
+
 sess = tf.Session()
 
 # Missing this was the source of one of the most challenging an insidious bugs that I've ever encountered.
