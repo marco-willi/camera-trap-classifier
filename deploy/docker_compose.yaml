@@ -8,6 +8,13 @@ services:
       - client
     expose:
       - "3000"
+    # command: >
+    #   bash -c "bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server  \
+    #   --port=3000 \
+    #   --model_name=class \
+    #   --model_base_path=/host/data_hdd/ctc/ss/example/deploy"
+    command: bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server --port=3000 \
+             --model_name=class \
+            --model_base_path=/host/data_hdd/ctc/ss/example/deploy
   client:
     image: "tensorflow/tensorflow:1.9.0-rc1-devel-py3"
-    
