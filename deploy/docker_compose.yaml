@@ -1,0 +1,13 @@
+version: '3'
+services:
+  serving:
+    image: 'ubuntu/tensorflow-serving-devel-cpu'
+    ports:
+      - "3000:3000"
+    links:
+      - client
+    expose:
+      - "3000"
+  client:
+    image: "tensorflow/tensorflow:1.9.0-rc1-devel-py3"
+    

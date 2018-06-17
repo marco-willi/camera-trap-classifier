@@ -202,8 +202,6 @@ if __name__ == '__main__':
 
     tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 
-    data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
-
     logger.info("Create Dataset Reader")
     data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 

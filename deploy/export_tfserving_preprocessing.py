@@ -1,5 +1,9 @@
-""" Export a trained model to Tensorflow Serving """
+""" Export a trained model to Tensorflow Serving with pre-processing included """
 import tensorflow as tf
+from pre_processing.image_transformations import preprocess_image
+from data_processing.utils import  read_json
+from tensorflow.python.keras import Model
+from tensorflow.python.keras.layers import Input
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.models import (
         load_model, model_from_json)
@@ -11,28 +15,28 @@ from tensorflow.python.saved_model import (
 # Parameters
 model_path = './test_big/cats_vs_dogs_multi/model_save_dir/prediction_model.hdf5'
 label_mappings = './test_big/cats_vs_dogs_multi/model_save_dir/label_mapping.json'
-deploy_path = './test_big/cats_vs_dogs_multi/deploy/'
+pre_processing = './test_big/cats_vs_dogs_multi/model_save_dir/image_processing.json'
+deploy_path = './test_big/cats_vs_dogs_multi/deploy_preproc/'
 deploy_version = 1
 
 # Remote parameters
 # git clone -b deploy_models https://github.com/marco-willi/camera-trap-classifier.git ~/code/camera-trap-classifier
 model_path = '/host/data_hdd/ctc/ss/example/saves/prediction_model.hdf5'
 label_mappings = '/host/data_hdd/ctc/ss/example/saves/label_mapping.json'
-deploy_path = '/host/data_hdd/ctc/ss/example/deploy/'
+pre_processing = '/host/data_hdd/ctc/ss/example/saves/image_processing.json'
+deploy_path = '/host/data_hdd/ctc/ss/example/deploy_preproc/'
 deploy_version = 1
 
-sess = tf.Session()
-
-# Missing this was the source of one of the most challenging an insidious bugs that I've ever encountered.
-# Without explicitly linking the session the weights for the dense layer added below don't get loaded
-# and so the model returns random results which vary with each model you upload because of random seeds.
-K.set_session(sess)
 
 
 model = load_model(model_path)
 model_json = model.to_json()
 model_weights = model.get_weights()
+pre_processing = read_json(pre_processing)
 
+
+sess = tf.Session()
+K.set_session(sess)
 K._LEARNING_PHASE = tf.constant(0)
 K.set_learning_phase(0)
 
@@ -40,9 +44,20 @@ K.set_learning_phase(0)
 new_model = model_from_json(model_json)
 new_model.set_weights(model_weights)
 
-prediction_signature = tf.saved_model.signature_def_utils.predict_signature_def(
-        {"image": new_model.input},
-        {"label/class": new_model.output})
+
+x_input = tf.placeholder(tf.float32, name='image', shape=(None, None, 3))
+x_processed = preprocess_image(x_input, **pre_processing)
+x_processed = tf.expand_dims(x_processed, 0)
+x_processed = Input(tensor=x_processed, name='image')
+
+
+new_model = model_from_json(model_json)
+new_model.set_weights(model_weights)
+new_model.layers.pop(0)
+new_model.summary()
+new_outputs = new_model(x_processed)
+new_model2 = Model(x_processed, new_outputs)
+new_model2.summary()
 
 prediction_signature = tf.saved_model.signature_def_utils.predict_signature_def(
         {"image": new_model.input},
@@ -57,7 +72,6 @@ legacy_init_op = tf.group(tf.tables_initializer(), name='legacy_init_op')
 # Initialize global variables and the model
 init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
 sess.run(init_op)
-
 builder.add_meta_graph_and_variables(
       sess, [tag_constants.SERVING],
       signature_def_map={
@@ -68,35 +82,3 @@ builder.add_meta_graph_and_variables(
 
 # save the graph
 builder.save()
-
-
-
-
-##################################
-# OLD
-##################################
-
-model = load_model(model_path)
-
-
-# Build new model for serialization
-
-K.set_learning_phase(0)  # all new operations will be in test mode from now on
-# serialize the model and get its weights, for quick re-building
-model_json = model.to_json()
-model_weights = model.get_weights()
-
-# re-build a model where the learning phase is now hard-coded to 0
-new_model = model_from_json(model_json)
-new_model.set_weights(model_weights)
-
-
-
-saver = tf.train.Saver(sharded=True)
-model_exporter = exporter.Exporter(saver)
-signature = exporter.classification_signature(input_tensor=model.input,
-                                              scores_tensor=model.output)
-
-model_exporter.init(sess.graph.as_graph_def(),
-                    default_graph_signature=signature)
-model_exporter.export(deploy_path, tf.constant(deploy_version), sess)
