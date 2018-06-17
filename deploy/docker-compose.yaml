@@ -16,7 +16,7 @@ services:
     #   --model_name=class \
     #   --model_base_path=/host/data_hdd/ctc/ss/example/deploy"
     command: bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server --port=3000 \
-             --model_name=class \
-            --model_base_path=/host/data_hdd/ctc/ss/example/deploy
+            --model_name=keras_model \
+            --model_base_path=/host/data_hdd/ctc/ss/example/deploy_estimator
   client:
     image: "tensorflow/tensorflow:1.9.0-rc1-devel-py3"
