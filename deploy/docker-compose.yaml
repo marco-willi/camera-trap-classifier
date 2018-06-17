@@ -8,6 +8,8 @@ services:
       - client
     expose:
       - "3000"
+    volumes:
+      - ~/:/host
     # command: >
     #   bash -c "bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server  \
     #   --port=3000 \
