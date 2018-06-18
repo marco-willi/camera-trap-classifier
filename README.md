@@ -185,7 +185,7 @@ To deploy a model to production we can export it in a specific form (Estimator) 
 Tensorflow-Serving (https://www.tensorflow.org/serving/). The following code allows for such an export:
 
 ```
-python -model /my_experiment/model_save_dir/prediction_model.hdf5 \
+python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 -class_mapping_json /my_experiment/model_save_dir/label_mappings.json \
 -pre_processing_json /my_experiment/model_save_dir/pre_processing.json \
 -output_dir /my_experiment/my_model_exports/ \

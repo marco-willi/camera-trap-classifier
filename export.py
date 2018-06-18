@@ -6,7 +6,7 @@
     Example Usage:
     --------------
 
-    python3 -model /my_experiment/model_save_dir/prediction_model.hdf5 \
+    python3 export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
     -class_mapping_json /my_experiment/model_save_dir/label_mappings.json \
     -pre_processing_json /my_experiment/model_save_dir/pre_processing.json \
     -output_dir /my_experiment/my_model_exports/ \
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         model_dir=args['estimator_save_dir'])
 
     def decode_and_process_image(image):
-        """ Pre-Process a single image """"
+        """ Pre-Process a single image """
         image = tf.image.decode_jpeg(image, channels=3)
         image = preprocess_image(image, **pre_processing)
         return image
