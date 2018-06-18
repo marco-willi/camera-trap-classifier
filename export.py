@@ -2,6 +2,16 @@
     with Tensorflow-Serving
 
     WARNING: Requires Tensorflow 1.9 or higher
+
+    Example Usage:
+    --------------
+
+    python3 -model /my_experiment/model_save_dir/prediction_model.hdf5 \
+    -class_mapping_json /my_experiment/model_save_dir/label_mappings.json \
+    -pre_processing_json /my_experiment/model_save_dir/pre_processing.json \
+    -output_dir /my_experiment/my_model_exports/ \
+    -estimator_save_dir /my_experiment/my_estimators/
+
 """
 import argparse
 import logging
@@ -13,7 +23,6 @@ from data_processing.utils import read_json
 from tensorflow.python.keras.models import load_model
 
 from config.config_logging import setup_logging
-from deploy.export_tfserving_estimator import serving_input_receiver_fn
 
 # Configure Logging
 setup_logging()
