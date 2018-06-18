@@ -47,6 +47,28 @@ def create_dataset_iterator(image):
 
 
 
+def decode_and_process_image(image):
+    image = tf.image.decode_jpeg(image, channels=3)
+    image = preprocess_image(image, **pre_processing)
+    return image
+
+
+def create_dataset_iterator(image_list):
+    """ Creates an iterator interating over the input images
+        and applying image transformations (resizing)
+    """
+
+    dataset = tf.data.Dataset.from_tensor_slices(image_list)
+    dataset = dataset.map(lambda x: decode_and_process_image(x))
+    dataset = dataset.batch(1)
+
+
+    iterator = dataset.make_one_shot_iterator()
+    images = iterator.get_next()
+    return images
+
+
+
 #def _get_and_transform_image(image_path, pre_proc_args):
 #    """ Returns a processed image """
 #    image_raw = tf.read_file(image_path)
@@ -70,6 +92,35 @@ def serving_input_receiver_fn():
         # The size of input image is flexible.
         'image': tf.placeholder(tf.string)
     }
+
+    image_list= tf.placeholder(dtype=tf.string)
+
+
+    # decode jpeg image to tensor
+    images =  decode_and_process_image(image_list)
+    images = tf.stack([images])
+
+    # Convert give inputs to adjust to the model.
+    features = {
+        # Resize given images.
+        'input_3': images
+    }
+    return tf.estimator.export.ServingInputReceiver(receiver_tensors=receiver_tensors,features=features)
+
+
+
+
+
+def serving_input_receiver_fn2():
+    """
+    This is used to define inputs to serve the model.
+
+    :return: ServingInputReciever
+    """
+    receiver_tensors = {
+        # The size of input image is flexible.
+        'image': tf.placeholder(tf.string)
+    }
     image_raw = tf.placeholder(dtype=tf.string)
     # decode jpeg image to tensor
     image_decoded = tf.image.decode_jpeg(image_raw, channels=3)
@@ -83,30 +134,6 @@ def serving_input_receiver_fn():
     return tf.estimator.export.ServingInputReceiver(receiver_tensors=receiver_tensors,features=features)
 
 
-
-def serving_input_receiver_fn2():
-    """
-    This is used to define inputs to serve the model.
-
-    :return: ServingInputReciever
-    """
-    receiver_tensors = {
-        # The size of input image is flexible.
-        'image': tf.placeholder(tf.float32, [None, None, 3])
-    }
-
-    proc = preprocess_image(receiver_tensors['image'], **pre_processing)
-    images = create_dataset_iterator(proc)
-
-
-    # Convert give inputs to adjust to the model.
-    features = {
-        # Resize given images.
-        'input_3': images
-
-    }
-    return tf.estimator.export.ServingInputReceiver(receiver_tensors=receiver_tensors,
-                                                    features=features)
 
 # Save the model
 estimator.export_savedmodel(deploy_path,

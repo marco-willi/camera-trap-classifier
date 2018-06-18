@@ -20,7 +20,7 @@ def read_jpeg(image):
     return image_bytes
 
 
-channel = implementations.insecure_channel('localhost', 3000)
+channel = implementations.insecure_channel('0.0.0.0', 3000)
 stub = prediction_service_pb2.beta_create_PredictionService_stub(channel)
 example_image = '/host/data_hdd/ctc/ss/images/elephant/ASG000r7uh_0.jpeg'
 data = read_jpeg(example_image)
@@ -28,6 +28,8 @@ request = predict_pb2.PredictRequest()
 request.model_spec.name = 'keras_model'
 request.model_spec.signature_name = 'serving_default'
 request.inputs['image'].CopyFrom(make_tensor_proto(data))
+result = stub.Predict(request, 10.0)
+
 
 
 def run(host, port, image, model, signature_name):
