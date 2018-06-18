@@ -59,10 +59,12 @@ pip install tensorflow-serving-api-python3
 ################
 # REST CLIENT
 ################
-curl -X POST {'image':'/host/data_hdd/ctc/ss/images/elephant/ASG000r7uh_0.jpeg'} http://0.0.0.0:5000/tf_api/model_client/prediction
 
-curl -X POST -d @/host/data_hdd/ctc/ss/images/elephant/ASG000r7uh_0.jpeg http://0.0.0.0:5000/tf_api/model_client/prediction
-
-
-
+# Elephant
 curl -X POST -d '{"url": "https://panoptes-uploads.zooniverse.org/production/subject_location/9e4556a3-5aba-46d0-a932-1f0e9e158d0d.jpeg"}' -H 'Content-Type: application/json' http://0.0.0.0:5000/tf_api/model_client/prediction
+
+# Zebra
+curl -X POST -d '{"url": "https://s3-eu-west-1.amazonaws.com/pantherabucket1/17_2013/CS38_40185_20130427_101803.jpg"}' -H 'Content-Type: application/json' http://0.0.0.0:5000/tf_api/model_client/prediction
+
+# Lion
+curl -X POST -d '{"url": "https://static.zooniverse.org/www.snapshotserengeti.org/subjects/standard/50c213e88a607540b9033aed_0.jpg"}' -H 'Content-Type: application/json' http://0.0.0.0:5000/tf_api/model_client/prediction
