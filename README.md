@@ -230,6 +230,8 @@ python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 In the following repository is code to create a tensorflow-serving service that can be queried via a REST API:
 https://github.com/marco-willi/tf_serving_flask_app
 
+More updates on that topic are planned.
+
 
 ## Acknowledgements
 
