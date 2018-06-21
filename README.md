@@ -1,13 +1,18 @@
 # Camera Trap Image Classifier
-Automatically identify animals in camera trap images by training and applying a deep neural network.
+
+**Automatically identify animals in camera trap images by training and applying a deep neural network.**
+
+This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
+
+## Example Camera Trap Images and Model Predictions
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.png"/>
 
-*This figure shows examples of correctly predicted camera trap images.*
+*This figure shows examples of correctly classified camera trap images.*
 
-## Overview
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions_wrong.png"/>
 
-This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
+*This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
 
 ## Pre-Requisites
 
@@ -27,11 +32,15 @@ The following steps are required to train a model:
 4. Train a model.
 5. Apply a model on new data.
 
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/general_workflow.png"/>
+
+*Overview of the process*
+
 ### 1) Data Preparation
 
 The first thing is to organize the image and label data. There are several options:
 
-1. Save images into class-specific image directories (image names are arbitrary).
+**Option 1**: Save images into class-specific image directories (image names are arbitrary).
 ```
 root_dir:
   - elephant
@@ -43,7 +52,7 @@ root_dir:
       - zebra2.jpg
       - ...
 ```
-2. Create a csv file that contains all labels and links to images.
+**Option 2**: Create a csv file that contains all labels and links to images.
 ```
 id,image,species,count
 1,/my_images/image1.jpg,elephant,2
@@ -53,6 +62,29 @@ id,image,species,count
 ```
 The advantage of using a csv file is that more than one label can be provided. In this example species and count.
 
+```
+id,image1,image2,species,count
+1,/my_images/image1a.jpg,/my_images/image1b.jpg,elephant,2
+2,/my_images/image2a.jpg,/my_images/image2b.jpg,elephant,10
+3,/my_images/image3a.jpg,,lion,1
+4,/my_images/image4a.jpg,/my_images/image4b.jpgzebra,10
+```
+
+Multiple images can be grouped into one capture event. During model training a random image will be chosen, also during
+the evaluation. Other, more sophisticated ways to handle multi-image capture events can be implemented.
+
+```
+id,image,species,count
+1,/my_images/image1.jpg,elephant,2
+1,/my_images/image1.jpg,lion,3
+2,/my_images/image2.jpg,elephant,10
+3,/my_images/image3.jpg,lion,1
+4,/my_images/image4.jpg,zebra,10
+4,/my_images/image4.jpg,wildebeest,2
+```
+Multiple observations per capture event can be grouped. Note that modelling multi-label multi-class classification is
+not supported. However, the data will be processed and stored to TFRecord files but only one observation is chosen during
+model training and evaluation.
 
 ### 2) Creating a Dataset Inventory
 
@@ -168,6 +200,10 @@ Such images are widely available and may be provided by the cloud providers. We 
 We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
 Tensorflow can be found at https://www.tensorflow.org/install/.
 
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/server_config.png"/>
+
+*Overview of the AWS setup we used*
+
 ## Testing the Code
 
 Following commands should run without error:
@@ -177,9 +213,30 @@ python -m unittest discover test/data_processing
 python -m unittest discover test/training
 ```
 
+## Exporting and Deploying a Model
+
+**WARNING**: The following is only possible with Tensorflow 1.9 (currently only dev status)
+
+To deploy a model to production we can export it in a specific form (Estimator) such that it can be used with
+Tensorflow-Serving (https://www.tensorflow.org/serving/). The following code allows for such an export:
+
+```
+python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
+-class_mapping_json /my_experiment/model_save_dir/label_mappings.json \
+-pre_processing_json /my_experiment/model_save_dir/pre_processing.json \
+-output_dir /my_experiment/my_model_exports/ \
+-estimator_save_dir /my_experiment/my_estimators/
+```
+
+The following repository contains code to create Tensorflow-Serving service that can be queried via a REST API:
+https://github.com/marco-willi/tf_serving_flask_app
+
+More updates on that topic are planned.
+
+
 ## Acknowledgements
 
-This code is based on work conducted in following study:
+This code is based on work conducted in the following study:
 
 *Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, submitted*
 

@@ -33,6 +33,10 @@ sudo mount /dev/xvdf ~/data_hdd
 # Start Local Nvidia docker
 sudo nvidia-docker run -it -v ~/:/host root/tensorflow:latest-devel-gpu-py3 bash
 
+# install nightly devel CPU version
+sudo docker run -it -v ~/:/host tensorflow/tensorflow:1.9.0-rc1-devel-py3 bash
+
+
 # Detach from docker with CTRL+P+Q
 
 
