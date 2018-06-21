@@ -1,9 +1,13 @@
 # Camera Trap Image Classifier
 Automatically identify animals in camera trap images by training and applying a deep neural network.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/sample_predictions.png"/>
 
-*This figure shows examples of correctly predicted camera trap images.*
+*This figure shows examples of correctly classified camera trap images.*
+
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/sample_predictions_wrong.png"/>
+
+*This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
 
 ## Overview
 
@@ -27,14 +31,15 @@ The following steps are required to train a model:
 4. Train a model.
 5. Apply a model on new data.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/general_workflow.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/general_workflow.png"/>
 
+*Overview of the process*
 
 ### 1) Data Preparation
 
 The first thing is to organize the image and label data. There are several options:
 
-1. Save images into class-specific image directories (image names are arbitrary).
+Option 1: Save images into class-specific image directories (image names are arbitrary).
 ```
 root_dir:
   - elephant
@@ -46,7 +51,7 @@ root_dir:
       - zebra2.jpg
       - ...
 ```
-2. Create a csv file that contains all labels and links to images.
+Option 2: Create a csv file that contains all labels and links to images.
 ```
 id,image,species,count
 1,/my_images/image1.jpg,elephant,2
@@ -56,6 +61,29 @@ id,image,species,count
 ```
 The advantage of using a csv file is that more than one label can be provided. In this example species and count.
 
+```
+id,image1,image2,species,count
+1,/my_images/image1a.jpg,/my_images/image1b.jpg,elephant,2
+2,/my_images/image2a.jpg,/my_images/image2b.jpg,elephant,10
+3,/my_images/image3a.jpg,,lion,1
+4,/my_images/image4a.jpg,/my_images/image4b.jpgzebra,10
+```
+
+Multiple images can be grouped into one capture event. During model training a random image will be chosen, also during
+the evaluation. Other, more sophisticated ways to handle multi-image capture events can be implemented.
+
+```
+id,image,species,count
+1,/my_images/image1.jpg,elephant,2
+1,/my_images/image1.jpg,lion,3
+2,/my_images/image2.jpg,elephant,10
+3,/my_images/image3.jpg,lion,1
+4,/my_images/image4.jpg,zebra,10
+4,/my_images/image4.jpg,wildebeest,2
+```
+Multiple observations per capture event can be grouped. Note that modelling multi-label multi-class classification is
+not supported. However, the data will be processed and stored to TFRecord files but only one observation is chosen during
+model training and evaluation.
 
 ### 2) Creating a Dataset Inventory
 
@@ -170,6 +198,10 @@ Such images are widely available and may be provided by the cloud providers. We 
 ### Tensorflow GPU Docker installation on AWS
 We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
 Tensorflow can be found at https://www.tensorflow.org/install/.
+
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/server_config.png"/>
+
+*Overview of the AWS setup we have used*
 
 ## Testing the Code
 
