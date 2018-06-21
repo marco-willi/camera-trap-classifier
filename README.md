@@ -1,5 +1,10 @@
 # Camera Trap Image Classifier
-Automatically identify animals in camera trap images by training and applying a deep neural network.
+
+**Automatically identify animals in camera trap images by training and applying a deep neural network.**
+
+This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
+
+## Example Camera Trap Images and Model Predictions
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/sample_predictions.png"/>
 
@@ -8,10 +13,6 @@ Automatically identify animals in camera trap images by training and applying a 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/sample_predictions_wrong.png"/>
 
 *This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
-
-## Overview
-
-This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
 
 ## Pre-Requisites
 
@@ -39,7 +40,7 @@ The following steps are required to train a model:
 
 The first thing is to organize the image and label data. There are several options:
 
-Option 1: Save images into class-specific image directories (image names are arbitrary).
+**Option 1**: Save images into class-specific image directories (image names are arbitrary).
 ```
 root_dir:
   - elephant
@@ -51,7 +52,7 @@ root_dir:
       - zebra2.jpg
       - ...
 ```
-Option 2: Create a csv file that contains all labels and links to images.
+**Option 2**: Create a csv file that contains all labels and links to images.
 ```
 id,image,species,count
 1,/my_images/image1.jpg,elephant,2
@@ -201,7 +202,7 @@ Tensorflow can be found at https://www.tensorflow.org/install/.
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/server_config.png"/>
 
-*Overview of the AWS setup we have used*
+*Overview of the AWS setup we used*
 
 ## Testing the Code
 
@@ -214,7 +215,7 @@ python -m unittest discover test/training
 
 ## Exporting and Deploying a Model
 
-WARNING: The following is only possible with Tensorflow 1.9 (currently only dev status)
+**WARNING**: The following is only possible with Tensorflow 1.9 (currently only dev status)
 
 To deploy a model to production we can export it in a specific form (Estimator) such that it can be used with
 Tensorflow-Serving (https://www.tensorflow.org/serving/). The following code allows for such an export:
@@ -227,7 +228,7 @@ python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 -estimator_save_dir /my_experiment/my_estimators/
 ```
 
-In the following repository is code to create a tensorflow-serving service that can be queried via a REST API:
+The following repository contains code to create Tensorflow-Serving service that can be queried via a REST API:
 https://github.com/marco-willi/tf_serving_flask_app
 
 More updates on that topic are planned.
