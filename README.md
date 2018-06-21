@@ -6,11 +6,11 @@ This repository contains code and documentation to train and apply a convolution
 
 ## Example Camera Trap Images and Model Predictions
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/sample_predictions.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.png"/>
 
 *This figure shows examples of correctly classified camera trap images.*
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/sample_predictions_wrong.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions_wrong.png"/>
 
 *This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
 
@@ -32,7 +32,7 @@ The following steps are required to train a model:
 4. Train a model.
 5. Apply a model on new data.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/general_workflow.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/general_workflow.png"/>
 
 *Overview of the process*
 
@@ -200,7 +200,7 @@ Such images are widely available and may be provided by the cloud providers. We 
 We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
 Tensorflow can be found at https://www.tensorflow.org/install/.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/deploy_models/documentation/figures/server_config.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/server_config.png"/>
 
 *Overview of the AWS setup we used*
 
@@ -236,7 +236,7 @@ More updates on that topic are planned.
 
 ## Acknowledgements
 
-This code is based on work conducted in following study:
+This code is based on work conducted in the following study:
 
 *Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, submitted*
 
