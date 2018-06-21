@@ -27,6 +27,9 @@ The following steps are required to train a model:
 4. Train a model.
 5. Apply a model on new data.
 
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/general_workflow.png"/>
+
+
 ### 1) Data Preparation
 
 The first thing is to organize the image and label data. There are several options:
