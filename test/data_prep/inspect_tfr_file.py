@@ -54,7 +54,7 @@ image_processing = model_cfg.cfg['models']['cats_vs_dogs']['image_processing']
 # Calculate Dataset Image Means and Stdevs for a dummy batch
 batch_data = data_reader.get_iterator(
         tfr_files=tfr_train,
-        batch_size=2048,
+        batch_size=10,
         is_train=False,
         n_repeats=1,
         output_labels=output_labels,
@@ -63,7 +63,8 @@ batch_data = data_reader.get_iterator(
                                    'is_training': False},
         max_multi_label_number=None,
         buffer_size=32,
-        num_parallel_calls=2)
+        num_parallel_calls=2,
+        return_only_ml_data=False)
 
 with tf.Session() as sess:
     for i in range(0,1):
@@ -72,6 +73,8 @@ with tf.Session() as sess:
             print("Class: %s" % data['label/class'][j])
             plt.imshow(data['images'][j,:,:,:])
             plt.show()
+
+
 
 with tf.Session() as sess:
     for i in range(0,1):

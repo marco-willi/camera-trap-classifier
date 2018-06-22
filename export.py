@@ -68,10 +68,17 @@ if __name__ == '__main__':
         model_dir=args['estimator_save_dir'])
 
     def decode_and_process_image(image):
-        """ Pre-Process a single image """
         image = tf.image.decode_jpeg(image, channels=3)
         image = preprocess_image(image, **pre_processing)
         return image
+
+    def generate_dataset_iterator(image_list):
+        """ Dataset Iterator from a list of Image Bytes """
+        dataset = tf.data.Dataset.from_tensor_slices(image_list)
+        dataset = dataset.map(decode_and_process_image)
+        dataset = dataset.batch(128)
+        next_example = tf.contrib.data.get_single_element(dataset)
+        return next_example
 
     def serving_input_receiver_fn():
         """
@@ -79,18 +86,16 @@ if __name__ == '__main__':
 
         :return: ServingInputReciever
         """
-        single_image = tf.placeholder(dtype=tf.string)
+        # Input Tensor (list of image bytes)
+        list_of_image_bytes = tf.placeholder(shape=[1], dtype=tf.string)
         receiver_tensors = {
-            # The size of input image is flexible.
-            'image': single_image
+            'image': list_of_image_bytes
         }
-        # decode jpeg image to tensor
-        processed_image = decode_and_process_image(single_image)
-        images = tf.stack([processed_image])
-        # Convert give inputs to adjust to the model.
+
+        # Generate an iterator for the images
+        image_batch = generate_dataset_iterator(list_of_image_bytes)
         features = {
-            # Resize given images.
-            input_names[0]: images
+            input_names[0]: image_batch
         }
         return tf.estimator.export.ServingInputReceiver(
             receiver_tensors=receiver_tensors,
