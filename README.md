@@ -213,12 +213,11 @@ python -m unittest discover test/data_processing
 python -m unittest discover test/training
 ```
 
-## Exporting and Deploying a Model
+## Exporting a Model
 
 **WARNING**: The following is only possible with Tensorflow 1.9 (currently only dev status)
 
-To deploy a model to production we can export it in a specific form (Estimator) such that it can be used with
-Tensorflow-Serving (https://www.tensorflow.org/serving/). The following code allows for such an export:
+To export a model for later deployment we can use the following code:
 
 ```
 python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
@@ -228,10 +227,10 @@ python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 -estimator_save_dir /my_experiment/my_estimators/
 ```
 
-The following repository contains code to create Tensorflow-Serving service that can be queried via a REST API:
-https://github.com/marco-willi/tf_serving_flask_app
+## Deploying a Model
 
-More updates on that topic are planned.
+To deploy a model on a server we refer to this documentation:
+[How to deploy a model](deploy/README.md)
 
 
 ## Acknowledgements
