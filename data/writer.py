@@ -6,8 +6,8 @@ import logging
 
 import tensorflow as tf
 
-from pre_processing.image_transformations import read_jpeg
-from data_processing.utils import slice_generator
+from data.image import read_jpeg
+from data.utils import slice_generator
 
 logger = logging.getLogger(__name__)
 

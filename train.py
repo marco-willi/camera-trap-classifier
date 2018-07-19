@@ -4,7 +4,7 @@ Allows for detailed configurations.
 
 Example Usage:
 ---------------
-python train_model.py \
+python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
 -train_tfr_prefix train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
@@ -29,26 +29,22 @@ import os
 
 import tensorflow as tf
 import numpy as np
-from tensorflow.python.keras.callbacks import TensorBoard
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.models import load_model
-# import matplotlib.pyplot as plt
+from tensorflow.python.keras.callbacks import (
+    TensorBoard, EarlyStopping, CSVLogger, ModelCheckpoint, ReduceLROnPlateau)
 
 from config.config import ConfigLoader
 from config.config_logging import setup_logging
-from training.utils import (
-        ReduceLearningRateOnPlateau, EarlyStopping, CSVLogger,
-        ModelCheckpointer, find_the_best_id_in_log, find_model_based_on_epoch,
-        copy_models_and_config_files)
-from training.model_library import create_model
+from training.utils import copy_models_and_config_files
+from training.prepare_model import create_model
 from predicting.predictor import Predictor
-from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from data_processing.data_reader import DatasetReader
-from pre_processing.image_transformations import (
+from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from data.reader import DatasetReader
+from data.image import (
         preprocess_image)
-from data_processing.utils import (
+from data.utils import (
         calc_n_batches_per_epoch, export_dict_to_json, read_json,
-        n_records_in_tfr)
+        n_records_in_tfr, find_files_with_ending,
+        get_most_recent_file_from_files, find_tfr_files)
 
 
 # Configure Logging
@@ -107,7 +103,7 @@ if __name__ == '__main__':
         help="The number of cpus to use. Use all available if possible.")
     parser.add_argument(
         "-n_gpus", type=int, default=1,
-        help='The number of GPUs to use (defualt 1)')
+        help='The number of GPUs to use (default 1)')
     parser.add_argument(
         "-buffer_size", type=int, default=32768,
         help='The buffer size to use for shuffling training records. Use \
@@ -121,15 +117,23 @@ if __name__ == '__main__':
     parser.add_argument(
         "-transfer_learning", default=False,
         action='store_true', required=False,
-        help="Flag to specify that transfer learning should be used")
+        help="Flag to specify that transfer learning should be used, with\
+              frozen non-output layers")
     parser.add_argument(
         "-continue_training", default=False,
         action='store_true', required=False,
         help="Flag that training should be continued from a saved model.")
     parser.add_argument(
-        "-model_to_load", type=str, required=False,
-        help='Path to a model when either continue_training or \
-             transfer_learning are specified')
+        "-fine_tuning", default=False,
+        action='store_true', required=False,
+        help="Flag to specify that transfer learning should be used, with\
+              fine-tuning all layers")
+    parser.add_argument(
+        "-model_to_load", type=str, required=False, default="",
+        help='Path to a model (.hdf5) when either continue_training,\
+             transfer_learning or fine_tuning are specified, \
+             if a directory is specified, \
+             the most recent model in that directory is loaded')
     parser.add_argument(
         "-pre_processing", type=str, default="standard",
         required=False,
@@ -153,7 +157,8 @@ if __name__ == '__main__':
         "model %s not found in config/models.yaml" % args['model']
 
     image_processing = model_cfg.cfg['models'][args['model']]['image_processing']
-
+    input_shape = (image_processing['output_height'],
+                   image_processing['output_width'], 3)
     # Prepare labels to model
     output_labels = args['labels']
     output_labels_clean = ['label/' + x for x in output_labels]
@@ -170,23 +175,16 @@ if __name__ == '__main__':
                         args['run_outputs_dir'] + 'label_mappings.json')
 
     # TFR files
-    def _find_tfr_files(path, prefix):
-        """ Find all TFR files """
-        files = os.listdir(path)
-        tfr_files = [x for x in files if x.endswith('.tfrecord') and
-                     prefix in x]
-        tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
-        return tfr_paths
-
-    tfr_train = _find_tfr_files(args['train_tfr_path'],
-                                args['train_tfr_prefix'])
-    tfr_val = _find_tfr_files(args['val_tfr_path'], args['val_tfr_prefix'])
+    tfr_train = find_tfr_files(
+        args['train_tfr_path'],
+        args['train_tfr_prefix'])
+    tfr_val = find_tfr_files(args['val_tfr_path'], args['val_tfr_prefix'])
 
     if len(args['test_tfr_path']) > 0:
         TEST_SET = True
-        tfr_test = _find_tfr_files(args['test_tfr_path'],
+        tfr_test = find_tfr_files(args['test_tfr_path'],
                                    args['test_tfr_prefix'])
-        pred_output_csv = args['run_outputs_dir'] + 'test_preds.csv'
+        pred_output_json = args['run_outputs_dir'] + 'test_preds.json'
     else:
         TEST_SET = False
 
@@ -195,6 +193,16 @@ if __name__ == '__main__':
 
     # Create prediction model output name
     pred_model_path = args['model_save_dir'] + 'prediction_model.hdf5'
+
+    # Define path of model to load if only directory is specified
+    if len(args['model_to_load']) > 0:
+        if not args['model_to_load'].endswith('.hdf5'):
+            if os.path.isdir(args['model_to_load']):
+                model_files = find_files_with_ending(args['model_to_load'], '.hdf5')
+                most_recent_model = get_most_recent_file_from_files(model_files)
+                args['model_to_load'] = most_recent_model
+                logging.debug("Loading most recent model file %s:"
+                              % most_recent_model)
 
     ###########################################
     # CALC IMAGE STATS ###########
@@ -207,29 +215,32 @@ if __name__ == '__main__':
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
     logger.info("Get Dataset Reader for calculating datset stats")
-    batch_data = data_reader.get_iterator(
+    dataset = data_reader.get_iterator(
             tfr_files=tfr_train,
-            batch_size=4096,
+            batch_size=30,
             is_train=False,
             n_repeats=1,
             output_labels=output_labels,
             image_pre_processing_fun=preprocess_image,
             image_pre_processing_args={**image_processing,
                                        'is_training': False},
-            max_multi_label_number=None,
             buffer_size=args['buffer_size'],
             num_parallel_calls=args['n_cpus'])
+    iterator = dataset.make_one_shot_iterator()
+    batch_data = iterator.get_next()
 
     logger.info("Calculating image means and stdevs")
     with tf.Session() as sess:
-        data = sess.run(batch_data)
+        features, labels = sess.run(batch_data)
 
     # calculate and save image means and stdvs of each color channel
     # for pre processing purposes
     image_means = [round(float(x), 4) for x in
-                   list(np.mean(data['images'], axis=(0, 1, 2), dtype=np.float64))]
+                   list(np.mean(features['images'],
+                                axis=(0, 1, 2), dtype=np.float64))]
     image_stdevs = [round(float(x), 4) for x in
-                    list(np.std(data['images'], axis=(0, 1, 2), dtype=np.float64))]
+                    list(np.std(features['images'],
+                                axis=(0, 1, 2), dtype=np.float64))]
 
     image_processing['image_means'] = image_means
     image_processing['image_stdevs'] = image_stdevs
@@ -254,7 +265,6 @@ if __name__ == '__main__':
                     image_pre_processing_args={
                         **image_processing,
                         'is_training': True},
-                    max_multi_label_number=None,
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
 
@@ -269,7 +279,6 @@ if __name__ == '__main__':
                     image_pre_processing_args={
                         **image_processing,
                         'is_training': False},
-                    max_multi_label_number=None,
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
 
@@ -285,9 +294,9 @@ if __name__ == '__main__':
                         image_pre_processing_args={
                             **image_processing,
                             'is_training': False},
-                        max_multi_label_number=None,
                         buffer_size=args['buffer_size'],
-                        num_parallel_calls=args['n_cpus'])
+                        num_parallel_calls=args['n_cpus'],
+                        drop_batch_remainder=False)
 
     # Export Image Processing Settings
     export_dict_to_json({**image_processing,
@@ -306,34 +315,28 @@ if __name__ == '__main__':
     if TEST_SET:
         n_records_test = n_records_in_tfr(tfr_test)
         n_batches_per_epoch_test = calc_n_batches_per_epoch(
-            n_records_test, args['batch_size'])
+            n_records_test, args['batch_size'], drop_remainder=False)
 
     ###########################################
-    # CREATE MODELS ###########
+    # CREATE MODEL ###########
     ###########################################
 
-    logger.info("Building Train and Validation Models")
+    logger.info("Preparing Model")
 
-    train_model, train_model_base = create_model(
+    model = create_model(
         model_name=args['model'],
-        input_feeder=input_feeder_train,
+        input_shape=input_shape,
         target_labels=output_labels_clean,
         n_classes_per_label_type=n_classes_per_label,
         n_gpus=args['n_gpus'],
         continue_training=args['continue_training'],
         transfer_learning=args['transfer_learning'],
+        fine_tuning=args['fine_tuning'],
         path_of_model_to_load=args['model_to_load'])
 
-    val_model, val_model_base = create_model(
-        model_name=args['model'],
-        input_feeder=input_feeder_val,
-        target_labels=output_labels_clean,
-        n_classes_per_label_type=n_classes_per_label,
-        n_gpus=args['n_gpus'])
-
     logger.debug("Final Model Architecture")
-    for layer, i in zip(train_model_base.layers,
-                        range(0, len(train_model_base.layers))):
+    for layer, i in zip(model.layers,
+                        range(0, len(model.layers))):
         logger.debug("Layer %s: Name: %s Input: %s Output: %s" %
                      (i, layer.name, layer.input_shape,
                       layer.output_shape))
@@ -344,26 +347,35 @@ if __name__ == '__main__':
     # MONITORS ###########
     ###########################################
 
-    # stop model training if it does not improve
-    early_stopping = EarlyStopping(stop_after_n_rounds=7,
-                                   minimize=True)
+    # stop model training if validation loss does not improve
+    early_stopping = EarlyStopping(
+        monitor='val_loss',
+        min_delta=0, patience=5, verbose=0, mode='auto')
 
     # reduce learning rate if model progress plateaus
-    reduce_lr_on_plateau = ReduceLearningRateOnPlateau(
-            reduce_after_n_rounds=3,
-            patience_after_reduction=2,
-            reduction_mult=0.1,
-            min_lr=1e-5,
-            minimize=True)
+    reduce_lr_on_plateau = ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.1,
+        patience=3,
+        verbose=0,
+        mode='auto',
+        min_delta=0.0001, cooldown=2, min_lr=1e-5)
 
     # log validation statistics to a csv file
-    csv_logger = CSVLogger(
-        args['run_outputs_dir'] + 'training.log',
-        metrics_names=val_model.metrics_names + ['learning_rate'])
+    csv_logger = CSVLogger(args['run_outputs_dir'] + 'training.log')
 
     # create model checkpoints after each epoch
-    checkpointer = ModelCheckpointer(train_model_base,
-                                     args['run_outputs_dir'])
+    checkpointer = ModelCheckpoint(
+        filepath=args['run_outputs_dir'] +
+        'model_epoch_{epoch:02d}_loss_{val_loss:.2f}.hdf5',
+        monitor='val_loss', verbose=0, save_best_only=False,
+        save_weights_only=False, mode='auto', period=1)
+
+    # save best model
+    checkpointer_best = ModelCheckpoint(
+        filepath=args['run_outputs_dir'] + 'model_best.hdf5',
+        monitor='val_loss', verbose=0, save_best_only=True,
+        save_weights_only=False, mode='auto', period=1)
 
     # write graph to disk
     tensorboard = TensorBoard(log_dir=args['run_outputs_dir'],
@@ -372,111 +384,54 @@ if __name__ == '__main__':
                               write_graph=True,
                               write_grads=False, write_images=False)
 
+    callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
+                      checkpointer, checkpointer_best]
+
     ###########################################
     # MODEL TRAINING  ###########
     ###########################################
 
     logger.info("Start Model Training")
 
-    for i in range(args['starting_epoch'], args['max_epochs']):
-        logger.info("Starting Epoch %s/%s" % (i+1, args['max_epochs']))
-        # fit the training model over one epoch
-        train_model.fit(epochs=i+1,
-                        steps_per_epoch=n_batches_per_epoch_train,
-                        initial_epoch=i,
-                        callbacks=[checkpointer])
-
-        # Copy weights from training model to validation model
-        training_weights = train_model_base.get_weights()
-        val_model_base.set_weights(training_weights)
-
-        # Run evaluation model and get validation results
-        validation_results = val_model.evaluate(steps=n_batches_per_epoch_val)
-        val_loss = validation_results[val_model.metrics_names == 'loss']
-        vals_to_log = list()
-
-        # log validation results to log file and list
-        for metric, value in zip(val_model.metrics_names, validation_results):
-            logger.info("Eval - %s: %s" % (metric, value))
-            vals_to_log.append(value)
-
-        vals_to_log.append(K.eval(train_model.optimizer.lr))
-
-        csv_logger.addResults(i+1, vals_to_log)
-
-        # Reduce Learning Rate if necessary
-        model_lr = K.eval(train_model.optimizer.lr)
-        reduce_lr_on_plateau.addResult(val_loss, model_lr)
-        if reduce_lr_on_plateau.reduced_in_last_step:
-            K.set_value(train_model.optimizer.lr, reduce_lr_on_plateau.new_lr)
-            logger.info("Setting LR to: %s" % K.eval(train_model.optimizer.lr))
-
-        # Check if training should be stopped
-        early_stopping.addResult(val_loss)
-        if early_stopping.stop_training:
-            logger.info("Early Stopping of Model Training after %s Epochs" %
-                        (i+1))
-            break
+    history = model.fit(
+        input_feeder_train(),
+        epochs=args['max_epochs'],
+        steps_per_epoch=n_batches_per_epoch_train,
+        validation_data=input_feeder_val(),
+        validation_steps=n_batches_per_epoch_val,
+        callbacks=callbacks_list,
+        initial_epoch=args['starting_epoch'])
 
     logger.info("Finished Model Training")
 
     ###########################################
-    # IDENTIFY AND SAVE BEST MODEL ###########
+    # SAVE BEST MODEL ###########
     ###########################################
 
-    # Finding best model run and moving models
-    best_model_run = find_the_best_id_in_log(
-            log_file_path=args['run_outputs_dir'] + 'training.log',
-            metric='loss')
-
-    best_model_path = find_model_based_on_epoch(
-                        model_path=args['run_outputs_dir'],
-                        epoch=best_model_run)
-
-    logger.info("Saving Best Model to: %s" % best_model_save_path)
-    for best_model in best_model_path:
-        if 'model_epoch' in best_model:
-            copy_models_and_config_files(
-                    model_source=best_model,
-                    model_target=best_model_save_path,
-                    files_path_source=args['run_outputs_dir'],
-                    files_path_target=args['model_save_dir'],
-                    copy_files=".json")
-
-    best_model = load_model(best_model_save_path)
+    copy_models_and_config_files(
+            model_source=args['run_outputs_dir'] + 'model_best.hdf5',
+            model_target=best_model_save_path,
+            files_path_source=args['run_outputs_dir'],
+            files_path_target=args['model_save_dir'],
+            copy_files=".json")
 
     ###########################################
-    # SAVE PREDICTION MODEL ###########
-    ###########################################
-
-    pred_model = create_model(
-        model_name=args['model'],
-        target_labels=output_labels_clean,
-        n_classes_per_label_type=n_classes_per_label,
-        train=False,
-        test_input_shape=best_model.input_shape[1:])
-
-    pred_model.set_weights(best_model.get_weights())
-    pred_model.save(pred_model_path)
-
-    logger.info("Saved Prediction Model to %s" % pred_model_path)
-
-    ###########################################
-    # PREDICT ON TEST DATA ###########
+    # PREDICT AND EXPORT TEST DATA ###########
     ###########################################
 
     if TEST_SET:
         logger.info("Starting to predict on test data")
         pred = Predictor(
-                model_path=pred_model_path,
+                model_path=best_model_save_path,
                 class_mapping_json=args['class_mapping_json'],
-                pre_processing_json=args['run_outputs_dir'] + \
-                                    'image_processing.json',
+                pre_processing_json=args['run_outputs_dir'] +
+                'image_processing.json',
                 batch_size=args['batch_size'])
 
-        pred.predict_from_iterator_and_export(
-            input_feeder_test(),
-            pred_output_csv)
+        pred.predict_from_dataset(
+            dataset=input_feeder_test(),
+            export_type='json',
+            output_file=pred_output_json)
 
         logger.info("Finished predicting on test data, saved to: %s" %
-                    pred_output_csv)
+                    pred_output_json)

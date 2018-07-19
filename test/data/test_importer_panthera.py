@@ -1,5 +1,5 @@
 import unittest
-from data_processing.data_importer import DatasetImporter
+from data.importer import DatasetImporter
 
 
 class ImportFromCSVPantheraTester(unittest.TestCase):

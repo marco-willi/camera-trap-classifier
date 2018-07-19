@@ -1,5 +1,5 @@
 import unittest
-from data_processing.utils import (
+from data.utils import (
     hash_string,
     assign_hash_to_zero_one,
     calc_n_batches_per_epoch,

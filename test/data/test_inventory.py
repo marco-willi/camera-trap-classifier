@@ -1,5 +1,5 @@
 import unittest
-from data_processing.data_inventory import (
+from data.inventory import (
     DatasetInventory, DatasetInventoryMaster)
 
 

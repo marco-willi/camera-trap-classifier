@@ -5,10 +5,10 @@ import logging
 import copy
 
 
-from data_processing.utils import (
+from data.utils import (
     randomly_split_dataset, map_label_list_to_numeric_dict,
     export_dict_to_json)
-from data_processing.data_importer import DatasetImporter
+from data.importer import DatasetImporter
 
 
 logger = logging.getLogger(__name__)

@@ -1,13 +1,16 @@
+""" Functions to handle / process images """
 import tensorflow as tf
 import numpy as np
 from PIL import Image
 import io
+
 
 def resize_image(image, target_size):
     """ Resize Image """
     image = tf.image.resize_images(image, size=target_size)
     image = tf.divide(image, 255.0)
     return image
+
 
 def _crop(image, offset_height, offset_width, crop_height, crop_width):
     """Crops the given image using the provided offsets and sizes.

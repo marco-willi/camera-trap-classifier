@@ -136,7 +136,7 @@ def estimate_remaining_time(start_time, n_total, n_current):
     estimated_time = n_remaining * avg_time_per_record
     return time.strftime("%H:%M:%S", time.gmtime(estimated_time))
 
-    
+
 def print_progress(count, total):
     """ Print Progress to stdout """
     pct_complete = float(count) / total
@@ -270,6 +270,15 @@ def check_tfrecord_contents(path_to_tfr):
     print(record)
 
 
+def find_tfr_files(path, prefix):
+    """ Find all TFR files """
+    files = os.listdir(path)
+    tfr_files = [x for x in files if x.endswith('.tfrecord') and
+                 prefix in x]
+    tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
+    return tfr_paths
+
+
 def hash_string(value, constant=""):
     """ Return hashed value """
     to_hash = str(value) + str(constant)
@@ -345,6 +354,22 @@ def get_most_rescent_file_with_string(dirpath, in_str='', excl_str='!'):
     return dirpath + os.path.sep + latest
 
 
+def find_files_with_ending(dirpath, ending):
+    """ get all files in dirpath with ending """
+    all = os.listdir(dirpath)
+    all_files = [x for x in all if os.path.isfile(os.path.join(dirpath, x))]
+    all_ending = [x for x in all_files if x.endswith(ending)]
+    full_paths = [os.path.join(dirpath, x) for x in all_ending]
+    return full_paths
+
+
+def get_most_recent_file_from_files(files):
+    """ get most recent file from files """
+    files.sort(key=lambda x: os.path.getmtime(x))
+    latest = files[-1]
+    return latest
+
+
 def copy_file(file, to):
     copyfile(file, to)
 
@@ -362,48 +387,3 @@ def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
                   if re.match(r'([\w-]+\.(?:' + ext + '))', f,
                               re.IGNORECASE)]
     return file_paths
-    # file_paths = list()
-    # file_names = list()
-    # for files in file_path_name:
-    #     file_paths.append(os.path.join(files[0], files[1]))
-    #     file_names.append(files[1])
-    # return file_paths, file_names
-
-# # TODO: Improve
-# def create_default_class_mapper(all_labels, class_mapping=None):
-#     """ Map Classes to Integers for modelling """
-#     class_mapper = dict()
-#
-#     if class_mapping is not None:
-#         class_mapping_key = dict()
-#         for label_type, labels_to_map in class_mapping.items():
-#             class_mapping_key[label_type] = dict()
-#             for label_to_map, label_target in labels_to_map.items():
-#                 class_mapping_key[label_type][label_target] = {label_target: ''}
-#             for i, k in enumerate(class_mapping_key[label_type].keys()):
-#                 class_mapping_key[label_type][k] = i
-#
-#     # loop over all labels dictionary
-#     for label_type, labels in all_labels.items():
-#
-#         # initialize empty key and value pairs to store final mappings
-#         key_id = list()
-#         vals = list()
-#
-#         # create a dictionary for each label type
-#         class_mapper[label_type] = dict()
-#
-#         for i, k in enumerate(labels.keys()):
-#             key_id.append(k)
-#             vals.append(i)
-#
-#         class_mapper[label_type]['keys'] = key_id
-#         class_mapper[label_type]['values'] = vals
-#
-#         # re-map if class mapping available
-#         if class_mapping is not None:
-#             for i, k in enumerate(class_mapper[label_type]['keys']):
-#                 new_val = class_mapping_key[label_type][class_mapping[label_type][k]]
-#                 class_mapper[label_type]['values'][i] = new_val
-#
-#     return class_mapper

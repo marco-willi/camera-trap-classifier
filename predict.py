@@ -13,18 +13,16 @@
 
     -pre_processing_json: path to the image_processing.json
 
-    -export_file_type (optional, default csv): currently only csv
+    -export_file_type (optional, default csv): csv or json
 
     -batch_size (optional, default 128): the number of images once at a time
         to predict before writing results to disk
 
-    -check_images (optional, default 0): whether to check all images for
-        corruption before starting the training (most likely not necessary)
-
     Usage example:
 
-    python3 main_prediction.py -image_dir /user/images/ \
+    python3 predict.py -image_dir /user/images/ \
     -results_file /user/predictions/output.csv \
+    -export_file_type csv \
     -model_path /user/models/my_super_model.hdf5 \
     -class_mapping_json /user/models/label_mappings.json \
     -pre_processing_json /user/models/image_processing.json
@@ -45,7 +43,11 @@ if __name__ == '__main__':
               predict them')
     parser.add_argument(
         "-results_file", type=str, required=True,
-        help='path to the file to store the predictions in')
+        help='path to the file to which to store the predictions')
+    parser.add_argument(
+        "-export_file_type", type=str, default="csv",
+        required=False,
+        help='export file type - csv or json')
     parser.add_argument(
         "-model_path", type=str, required=True,
         help='path to the model to use (hdf5 file)')
@@ -56,18 +58,9 @@ if __name__ == '__main__':
         "-pre_processing_json", type=str, required=True,
         help="path to the image_processing.json")
     parser.add_argument(
-        "-export_file_type", type=str, default="csv",
-        required=False,
-        help='export file type - only csv supported currently')
-    parser.add_argument(
         "-batch_size", default=128, type=int, required=False,
         help="the number of images once at a time \
               to predict before writing results to disk (default 128)")
-    parser.add_argument(
-        "-check_images", default=0, type=int, required=False,
-        help="whether to check all images for \
-            corruption before starting the training\
-            (most likely not necessary)")
 
     args = vars(parser.parse_args())
 
@@ -81,7 +74,7 @@ if __name__ == '__main__':
         pre_processing_json=args['pre_processing_json'],
         batch_size=args['batch_size'])
 
-    pred.predict_image_dir_and_export(
-                path_to_image_dir=args['image_dir'],
-                export_file=args['results_file'],
-                check_images_first=args['check_images'])
+    pred.predict_from_image_dir(
+        path_to_image_dir=args['image_dir'],
+        export_type=args['export_file_type'],
+        export_file=args['results_file'])

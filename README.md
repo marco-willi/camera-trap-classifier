@@ -124,7 +124,7 @@ python create_dataset.py -inventory /my_data/dataset_inventory.json \
 In the next step we train our model. The following code snippet shows an example:
 
 ```
-python train_model.py \
+python train.py \
 -train_tfr_path /my_data/tfr_files/ \
 -val_tfr_path /my_data/tfr_files/ \
 -test_tfr_path /my_data/tfr_files/ \
@@ -146,7 +146,7 @@ Finally, we can apply our model on new data. In the following code snippet the p
 stored in /my_images/new_images/, including subdirectories.
 
 ```
-python main_prediction.py -image_dir /my_images/new_images/ \
+python predict.py -image_dir /my_images/new_images/ \
   -results_file /my_predictions/output.csv \
   -model_path /my_model/save1/pred_model.hdf5 \
   -class_mapping_json /my_model/save1/label_mappings.json \
@@ -155,11 +155,9 @@ python main_prediction.py -image_dir /my_images/new_images/ \
 
 ## Installation
 
-The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly
-used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with
-GPU support on a server is required.
+The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required.
 
-We have used python 3.5 and Tensorflow 1.6 (newer/older version may work as well).
+We have used python 3.5 and Tensorflow 1.9 (older versions may not work properly).
 
 
 ### Installing from Requirements
@@ -190,10 +188,8 @@ conda install jupyter yaml nb_conda pillow h5py
 
 ### Using a GPU
 
-To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules,
-nvidia drivers have to be installed on the computer to make use of the GPU (see https://developer.nvidia.com/cuda-downloads and https://developer.nvidia.com/cudnn). An easy option is
-to use an image that contains all required installations and use that to set up a GPU instance of a cloud provider.
-Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
+To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU (see https://developer.nvidia.com/cuda-downloads and https://developer.nvidia.com/cudnn). An easy option is
+to use an image that contains all required installations and use that to set up a GPU instance of a cloud provider. Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
 
 
 ### Tensorflow GPU Docker installation on AWS
@@ -209,13 +205,15 @@ Tensorflow can be found at https://www.tensorflow.org/install/.
 Following commands should run without error:
 
 ```
-python -m unittest discover test/data_processing
+python -m unittest discover test/data
 python -m unittest discover test/training
 ```
 
+There are some manual tests in 'test/manual_tests' that require to create directories to and provide some simple data (image directories).
+
 ## Exporting a Model
 
-**WARNING**: The following is only possible with Tensorflow 1.9 (currently only dev status)
+**WARNING**: The following is only possible with Tensorflow 1.9.
 
 To export a model for later deployment we can use the following code:
 

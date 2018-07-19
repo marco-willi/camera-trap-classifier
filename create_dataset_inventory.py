@@ -15,7 +15,7 @@ import argparse
 import logging
 
 from config.config_logging import setup_logging
-from data_processing.data_inventory import DatasetInventoryMaster
+from data.inventory import DatasetInventoryMaster
 
 # Configure Logging
 setup_logging()

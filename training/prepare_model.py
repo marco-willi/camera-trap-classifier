@@ -1,7 +1,6 @@
-""" Model Library """
+""" Prepare Model """
 import logging
 
-import tensorflow as tf
 from tensorflow.python.keras.models import Model, Sequential, load_model
 from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.optimizers import SGD
@@ -9,8 +8,8 @@ from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
 from tensorflow.python.keras.utils import multi_gpu_model
 
-from models.resnet_keras_mod import ResnetBuilder
-from models.cats_vs_dogs import architecture as cats_vs_dogs_arch
+from models.resnet import ResnetBuilder
+from models.small_cnn import architecture as small_cnn
 
 
 def load_model_from_disk(path_to_model_on_disk):
@@ -172,25 +171,35 @@ def set_last_layer_to_non_trainable(model):
                       (layer.name, layer.trainable))
     return model
 
+def set_layers_to_non_trainable(model, layers):
+    """ Set layers of a model to non-trainable """
+
+    layers_to_non_trainable = [model.layers[i] for i in layers]
+
+    for layer in layers_to_non_trainable:
+        layer.trainable = False
+
+    for layer in model.layers:
+        logging.debug("Layer %s is trainable: %s" %
+                      (layer.name, layer.trainable))
+    return model
+
 
 def create_model(model_name,
-                 target_labels, n_classes_per_label_type,
-                 input_feeder=None, n_gpus=1,
-                 train=True, test_input_shape=None,
+                 input_shape,
+                 target_labels,
+                 n_classes_per_label_type,
+                 n_gpus,
+                 train=True,
                  continue_training=False,
                  transfer_learning=False,
+                 fine_tuning=False,
                  path_of_model_to_load=None,
                  ):
 
     """ Returns specified model architecture """
 
-    if train:
-        assert input_feeder is not None, \
-            "input_feeder must be specified with train=True (default)"
-        data = input_feeder()
-        model_input = Input(tensor=data['images'])
-    else:
-        model_input = Input(shape=test_input_shape)
+    model_input = Input(shape=input_shape, name='images')
 
     if model_name == 'InceptionResNetV2':
 
@@ -219,9 +228,9 @@ def create_model(model_name,
         elif model_name == 'ResNet152':
             output_flat = res_builder.build_resnet_152(model_input)
 
-    elif model_name == 'cats_vs_dogs':
+    elif model_name == 'small_cnn':
 
-        output_flat = cats_vs_dogs_arch(model_input)
+        output_flat = small_cnn(model_input)
     else:
         raise ValueError("Model: %s not implemented" % model_name)
 
@@ -237,48 +246,35 @@ def create_model(model_name,
     opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
     # opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
 
-    if not train:
-        model = Model(inputs=model_input, outputs=all_target_outputs)
-        model.compile(loss='sparse_categorical_crossentropy',
-                      optimizer=opt)
-        return model
+    model = Model(inputs=model_input, outputs=all_target_outputs)
 
-    target_tensors = {x: tf.cast(data[x], tf.float32)
-                      for x in target_labels}
+    if continue_training:
+        logging.debug("Preparing continue_training")
+        loaded_model = load_model_from_disk(path_of_model_to_load)
+        copy_model_weights(loaded_model, model, incl_last=True)
 
-    if n_gpus > 1:
-        with tf.device('/cpu:0'):
-            base_model = Model(inputs=model_input, outputs=all_target_outputs)
+    elif transfer_learning:
+        logging.debug("Preparing transfer_learning")
+        loaded_model = load_model_from_disk(path_of_model_to_load)
+        copy_model_weights(loaded_model, model, incl_last=False)
+        non_output_layers = get_non_output_layer_ids(model)
+        model = set_layers_to_non_trainable(model, non_output_layers)
 
-            if continue_training:
-                loaded_model = load_model_from_disk(path_of_model_to_load)
-                copy_model_weights(loaded_model, base_model, incl_last=True)
+    elif fine_tuning:
+        logging.debug("Preparing fine_tuning")
+        loaded_model = load_model_from_disk(path_of_model_to_load)
+        copy_model_weights(loaded_model, model, incl_last=False)
 
-            elif transfer_learning:
-                loaded_model = load_model_from_disk(path_of_model_to_load)
-                copy_model_weights(loaded_model, base_model, incl_last=False)
-                base_model = set_last_layer_to_non_trainable(base_model)
-
-        model = multi_gpu_model(base_model, gpus=n_gpus)
-
-    else:
-        model = Model(inputs=model_input, outputs=all_target_outputs)
-
-        if continue_training:
-            loaded_model = load_model_from_disk(path_of_model_to_load)
-            copy_model_weights(loaded_model, model, incl_last=True)
-
-        elif transfer_learning:
-            loaded_model = load_model_from_disk(path_of_model_to_load)
-            copy_model_weights(loaded_model, model, incl_last=False)
-            model = set_last_layer_to_non_trainable(model)
-
-        base_model = model
+    # Use multiple GPUs if available
+    try:
+        model = multi_gpu_model(model, n_gpus, cpu_relocation=True)
+        logging.info("Training using multiple GPUs..")
+    except:
+        logging.info("Training using single GPU or CPU..")
 
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
                   metrics=['sparse_categorical_accuracy',
-                           'sparse_top_k_categorical_accuracy'],
-                  target_tensors=target_tensors)
+                           'sparse_top_k_categorical_accuracy'])
 
-    return model, base_model
+    return model

@@ -5,7 +5,7 @@ import csv
 import copy
 import logging
 
-from data_processing.utils import clean_input_path
+from data.utils import clean_input_path
 
 
 logger = logging.getLogger(__name__)
@@ -543,7 +543,7 @@ class FromImageDirs(DatasetImporter):
                                  in filename, which is not allowed"
                                 % str(image_name))
                     continue
-                unique_image_id = splitted_file_name[0]
+                unique_image_id = class_dir + '#' + splitted_file_name[0]
                 image_data = {
                     'images': [root_path + class_dir +
                                os.path.sep + image_name],
