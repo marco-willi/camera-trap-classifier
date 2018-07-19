@@ -57,6 +57,9 @@ if __name__ == '__main__':
     parser.add_argument("-remove_label_value", type=str,
                         help='remove records with label value',
                         required=False)
+    parser.add_argument("-image_root_path", type=str, default='',
+                        help='Root path of all images',
+                        required=False)
     parser.add_argument("-image_save_side_max", type=int,
                         default=500,
                         required=False,
@@ -132,6 +135,7 @@ if __name__ == '__main__':
             tfr_writer,
             args['output_dir'],
             file_prefix=split_name,
+            image_root_path=args['image_root_path'],
             image_pre_processing_fun=resize_jpeg,
             image_pre_processing_args={"max_side":
                                        args['image_save_side_max']},

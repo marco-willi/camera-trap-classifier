@@ -21,6 +21,7 @@ class DatasetWriter(object):
          self, tfrecord_dict,
          output_dir,
          file_prefix,
+         image_root_path='',
          image_pre_processing_fun=None,
          image_pre_processing_args=None,
          random_shuffle_before_save=True,
@@ -33,6 +34,7 @@ class DatasetWriter(object):
         self.image_pre_processing_args = image_pre_processing_args
         self.random_shuffle_before_save = random_shuffle_before_save
         self.file_prefix = file_prefix
+        self.image_root_path = image_root_path
         self.files[file_prefix] = list()
 
         logger.info("Starting to Encode Dict")
@@ -106,17 +108,18 @@ class DatasetWriter(object):
                 # Process all images in a record
                 raw_images = list()
                 for image_path in record_data['image_paths']:
+                    image_path_full = os.path.join(self.image_root_path, image_path)
                     try:
                         if self.image_pre_processing_fun is not None:
-                            self.image_pre_processing_args['image'] = image_path
+                            self.image_pre_processing_args['image'] = image_path_full
                             image_raw = self.image_pre_processing_fun(
                                  **self.image_pre_processing_args)
                         else:
-                            image_raw = read_jpeg(image_path)
+                            image_raw = read_jpeg(image_path_full)
 
                     except Exception as e:
                         logger.debug("Failed to read file: %s , error %s" %
-                                     (image_path, str(e)))
+                                     (image_path_full, str(e)))
                         continue
 
                     raw_images.append(image_raw)
