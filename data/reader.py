@@ -24,7 +24,6 @@ class DatasetReader(object):
         logger.info("Creating dataset TFR iterator")
 
         dataset = tf.data.Dataset.from_tensor_slices(tfr_files)
-        # dataset = tf.data.TFRecordDataset(tfr_files)
 
         dataset = dataset.apply(
             tf.contrib.data.parallel_interleave(
@@ -47,6 +46,7 @@ class DatasetReader(object):
                           output_labels=output_labels,
                           **kwargs),
                   batch_size=batch_size,
+                  num_parallel_calls=num_parallel_calls,
                   drop_remainder=drop_batch_remainder))
 
         if not is_train:
