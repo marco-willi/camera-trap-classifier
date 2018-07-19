@@ -1,4 +1,6 @@
-""" Class To Read TFRecord Files """
+""" Class To Read TFRecord Files
+    https://www.tensorflow.org/performance/datasets_performance
+"""
 import tensorflow as tf
 import logging
 
@@ -21,13 +23,20 @@ class DatasetReader(object):
 
         logger.info("Creating dataset TFR iterator")
 
-        dataset = tf.data.TFRecordDataset(tfr_files)
+        # dataset = tf.data.TFRecordDataset(tfr_files)
+        dataset = tfr_files.apply(
+            tf.contrib.data.parallel_interleave(
+                lambda filename: tf.data.TFRecordDataset(filename),
+                cycle_length=4))
 
-        dataset = dataset.prefetch(buffer_size=buffer_size*10)
+        dataset = dataset.prefetch(buffer_size=batch_size)
 
         # shuffle records only for training
         if is_train:
-            dataset = dataset.shuffle(buffer_size=buffer_size)
+            dataset = dataset.apply(
+                tf.contrib.data.shuffle_and_repeat(
+                    buffer_size=buffer_size,
+                    count=n_repeats))
 
         dataset = dataset.apply(
               tf.contrib.data.map_and_batch(
@@ -36,11 +45,9 @@ class DatasetReader(object):
                           output_labels=output_labels,
                           **kwargs),
                   batch_size=batch_size,
-                  num_parallel_batches=num_parallel_calls,
                   drop_remainder=drop_batch_remainder))
 
-        dataset = dataset.repeat(n_repeats)
-
-        dataset = dataset.prefetch(5)
+        if not is_train:
+            dataset = dataset.repeat(n_repeats)
 
         return dataset

@@ -58,7 +58,7 @@ class DatasetWriter(object):
 
         output_paths = list()
         for i in range(0, n_files):
-            file_name = file_prefix + '_%03d.tfrecord' % i
+            file_name = '%s_%03d-_%03d.tfrecord' % (file_prefix, n_files, i)
             output_paths.append(os.path.join(*[output_dir, file_name]))
 
         slices = slice_generator(n_records, n_files)
