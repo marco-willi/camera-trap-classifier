@@ -11,8 +11,8 @@ class ImportFromImageDirsTester(unittest.TestCase):
         params = {'path': path}
         self.importer = DatasetImporter().create(source_type, params)
         self.data = self.importer.import_from_source()
-        self.test_id_dog = 'dog3192'
-        self.invalid_id = 'dog.3206'
+        self.test_id_dog = 'Dogs#dog3192'
+        self.invalid_id = 'Dogs#dog.3206'
 
     def testInstanceInDataSet(self):
         self.assertIn(self.test_id_dog, self.data)
