@@ -23,8 +23,10 @@ class DatasetReader(object):
 
         logger.info("Creating dataset TFR iterator")
 
+        dataset = tf.data.Dataset.from_tensor_slices(tfr_files)
         # dataset = tf.data.TFRecordDataset(tfr_files)
-        dataset = tfr_files.apply(
+
+        dataset = dataset.apply(
             tf.contrib.data.parallel_interleave(
                 lambda filename: tf.data.TFRecordDataset(filename),
                 cycle_length=4))
