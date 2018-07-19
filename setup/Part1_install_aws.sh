@@ -32,6 +32,7 @@ export PATH=$PATH:/usr/local/cuda-9.1/bin
 export LD_LIBRARY_PATH=:/usr/local/cuda-9.1/lib64
 
 # Reboot machine
+sudo reboot
 
 # Verify installation
 # http://docs.nvidia.com/cuda/cuda-installation-guide-linux

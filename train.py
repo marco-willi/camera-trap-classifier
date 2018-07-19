@@ -44,7 +44,7 @@ from data.image import (
 from data.utils import (
         calc_n_batches_per_epoch, export_dict_to_json, read_json,
         n_records_in_tfr, find_files_with_ending,
-        get_most_recent_file_from_files)
+        get_most_recent_file_from_files, find_tfr_files)
 
 
 # Configure Logging
@@ -175,21 +175,14 @@ if __name__ == '__main__':
                         args['run_outputs_dir'] + 'label_mappings.json')
 
     # TFR files
-    def _find_tfr_files(path, prefix):
-        """ Find all TFR files """
-        files = os.listdir(path)
-        tfr_files = [x for x in files if x.endswith('.tfrecord') and
-                     prefix in x]
-        tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
-        return tfr_paths
-
-    tfr_train = _find_tfr_files(args['train_tfr_path'],
-                                args['train_tfr_prefix'])
-    tfr_val = _find_tfr_files(args['val_tfr_path'], args['val_tfr_prefix'])
+    tfr_train = find_tfr_files(
+        args['train_tfr_path'],
+        args['train_tfr_prefix'])
+    tfr_val = find_tfr_files(args['val_tfr_path'], args['val_tfr_prefix'])
 
     if len(args['test_tfr_path']) > 0:
         TEST_SET = True
-        tfr_test = _find_tfr_files(args['test_tfr_path'],
+        tfr_test = find_tfr_files(args['test_tfr_path'],
                                    args['test_tfr_prefix'])
         pred_output_json = args['run_outputs_dir'] + 'test_preds.json'
     else:
