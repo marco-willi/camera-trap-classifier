@@ -8,7 +8,7 @@ from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
 from tensorflow.python.keras.utils import multi_gpu_model
 
-from models.resnet_keras_mod import ResnetBuilder
+from models.resnet import ResnetBuilder
 from models.small_cnn import architecture as small_cnn
 
 
