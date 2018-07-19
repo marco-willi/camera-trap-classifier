@@ -136,7 +136,7 @@ def estimate_remaining_time(start_time, n_total, n_current):
     estimated_time = n_remaining * avg_time_per_record
     return time.strftime("%H:%M:%S", time.gmtime(estimated_time))
 
-    
+
 def print_progress(count, total):
     """ Print Progress to stdout """
     pct_complete = float(count) / total
@@ -343,6 +343,22 @@ def get_most_rescent_file_with_string(dirpath, in_str='', excl_str='!'):
     b = [x for x in a if (in_str in x) and not (excl_str in x)]
     latest = b[-1]
     return dirpath + os.path.sep + latest
+
+
+def find_files_with_ending(dirpath, ending):
+    """ get all files in dirpath with ending """
+    all = os.listdir(dirpath)
+    all_files = [x for x in all if os.path.isfile(os.path.join(dirpath, x))]
+    all_ending = [x for x in all_files if x.endswith(ending)]
+    full_paths = [os.path.join(dirpath, x) for x in all_ending]
+    return full_paths
+
+
+def get_most_recent_file_from_files(files):
+    """ get most recent file from files """
+    files.sort(key=lambda x: os.path.getmtime(x))
+    latest = files[-1]
+    return latest
 
 
 def copy_file(file, to):

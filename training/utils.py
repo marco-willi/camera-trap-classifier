@@ -13,7 +13,7 @@ from data_processing.utils import copy_file
 class CSVLogger(object):
     """ Log stats to a csv """
     def __init__(self, path_to_logfile, metrics_names, row_id_name="epoch"):
-        self.path_to_logfile= path_to_logfile
+        self.path_to_logfile = path_to_logfile
         self.metrics_names = metrics_names
         self.row_id_name = row_id_name
 

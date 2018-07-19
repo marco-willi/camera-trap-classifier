@@ -163,11 +163,11 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
         else:
             raise NotImplemented("Non-Random Image-Choice not implemented")
 
-        return {'images': image,
-                **{y: context[y] for y in context_features.keys()},
+        return ({'images': image},
+                {**{y: context[y] for y in context_features.keys()},
                 **{x: sequence[x] for x in sequence_features.keys()
                    if x not in ['label/', 'images']},
-                **parsed_labels}
+                **parsed_labels})
 
 
 class SingleObsTFRecordEncoderDecoder(TFRecordEncoderDecoder):

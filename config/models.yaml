@@ -49,10 +49,10 @@ models:
       resize_side_min: 299
       resize_side_max: 329
       color_manipulations: True
-  cats_vs_dogs:
+  small_cnn:
     image_processing:
-      output_height: 150
-      output_width: 150
-      resize_side_min: 150
-      resize_side_max: 165
+      output_height: 50
+      output_width: 50
+      resize_side_min: 50
+      resize_side_max: 55
       color_manipulations: True

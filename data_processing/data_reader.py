@@ -11,7 +11,7 @@ class DatasetReader(object):
         self.tfr_decoder = tfr_decoder
 
     def get_iterator(self, tfr_files, batch_size, is_train, n_repeats,
-                     output_labels, max_multi_label_number=None,
+                     output_labels,
                      buffer_size=10192, num_parallel_calls=4,
                      drop_batch_remainder=True, **kwargs):
         """ Create Iterator from TFRecord """
@@ -29,33 +29,18 @@ class DatasetReader(object):
         if is_train:
             dataset = dataset.shuffle(buffer_size=buffer_size)
 
-        dataset = dataset.map(lambda x: self.tfr_decoder(
-                serialized_example=x,
-                output_labels=output_labels,
-                **kwargs), num_parallel_calls=num_parallel_calls
-                )
-
-        if max_multi_label_number is not None:
-            label_pad_dict = {x: [max_multi_label_number]
-                              for x in output_labels}
-            dataset = dataset.padded_batch(
-                batch_size,
-                padded_shapes=({'images': [None, None, None],
-                                'id': [None],
-                               **label_pad_dict}))
-
-        else:
-            if drop_batch_remainder:
-                dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
-            else:
-                dataset = dataset.batch(batch_size)
+        dataset = dataset.apply(
+              tf.contrib.data.map_and_batch(
+                  lambda x: self.tfr_decoder(
+                          serialized_example=x,
+                          output_labels=output_labels,
+                          **kwargs),
+                  batch_size=batch_size,
+                  num_parallel_batches=num_parallel_calls,
+                  drop_remainder=drop_batch_remainder))
 
         dataset = dataset.repeat(n_repeats)
 
         dataset = dataset.prefetch(5)
 
-        iterator = dataset.make_one_shot_iterator()
-
-        batch = iterator.get_next()
-
-        return batch
+        return dataset
