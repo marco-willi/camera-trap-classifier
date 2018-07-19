@@ -18,8 +18,8 @@ import logging
 
 import tensorflow as tf
 from tensorflow.keras.estimator import model_to_estimator
-from pre_processing.image_transformations import preprocess_image
-from data_processing.utils import read_json
+from data.image import preprocess_image
+from data.utils import read_json
 from tensorflow.python.keras.models import load_model
 
 from config.config_logging import setup_logging

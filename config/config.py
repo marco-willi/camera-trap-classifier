@@ -6,7 +6,7 @@ import logging
 import sys
 from datetime import datetime
 
-from data_processing.utils import create_path, get_most_rescent_file_with_string
+from data.utils import create_path, get_most_rescent_file_with_string
 
 
 ##############################

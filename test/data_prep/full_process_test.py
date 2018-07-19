@@ -3,11 +3,11 @@ import tensorflow as tf
 import logging
 
 from config.config_logging import setup_logging
-from data_processing.data_inventory import DatasetInventoryMaster
-from data_processing.data_writer import DatasetWriter
-from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from data_processing.data_reader import DatasetReader
-from pre_processing.image_transformations import (
+from data.inventory import DatasetInventoryMaster
+from data.writer import DatasetWriter
+from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from data.reader import DatasetReader
+from data.image import (
         preprocess_image,
         resize_jpeg)
 

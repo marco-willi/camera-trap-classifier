@@ -9,8 +9,8 @@ import tensorflow as tf
 from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras import backend as K
 
-from pre_processing.image_transformations import preprocess_image
-from data_processing.utils import (
+from data.image import preprocess_image
+from data.utils import (
     print_progress, export_dict_to_json, list_pictures,
     clean_input_path)
 

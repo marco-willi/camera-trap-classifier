@@ -3,12 +3,12 @@ import os
 import tensorflow as tf
 import numpy as np
 
-from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from data_processing.data_reader import DatasetReader
-from pre_processing.image_transformations import (
+from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from data.reader import DatasetReader
+from data.image import (
         preprocess_image)
-from data_processing.utils import (
-        calc_n_batches_per_epoch, export_dict_to_json, read_json,
+from data.utils import (
+        calc_n_batches_per_epoch, read_json,
         n_records_in_tfr)
 from config.config import ConfigLoader
 import matplotlib.pyplot as plt
@@ -211,7 +211,3 @@ np.sum(ys == np.argmax(tt, axis=1)) / ys.shape
 test_data
 
 ys = test_data['label/0/class']
-
-
-
-

@@ -37,11 +37,11 @@ from config.config_logging import setup_logging
 from training.utils import copy_models_and_config_files
 from training.prepare_model import create_model
 from predicting.predictor import Predictor
-from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from data_processing.data_reader import DatasetReader
-from pre_processing.image_transformations import (
+from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from data.reader import DatasetReader
+from data.image import (
         preprocess_image)
-from data_processing.utils import (
+from data.utils import (
         calc_n_batches_per_epoch, export_dict_to_json, read_json,
         n_records_in_tfr, find_files_with_ending,
         get_most_recent_file_from_files)

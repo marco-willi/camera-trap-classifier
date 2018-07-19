@@ -7,7 +7,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.keras.callbacks import Callback
 
-from data_processing.utils import copy_file
+from data.utils import copy_file
 
 
 class CSVLogger(object):

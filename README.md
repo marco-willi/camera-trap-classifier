@@ -205,7 +205,7 @@ Tensorflow can be found at https://www.tensorflow.org/install/.
 Following commands should run without error:
 
 ```
-python -m unittest discover test/data_processing
+python -m unittest discover test/data
 python -m unittest discover test/training
 ```
 

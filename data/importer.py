@@ -5,7 +5,7 @@ import csv
 import copy
 import logging
 
-from data_processing.utils import clean_input_path
+from data.utils import clean_input_path
 
 
 logger = logging.getLogger(__name__)

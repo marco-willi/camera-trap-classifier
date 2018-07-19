@@ -2,9 +2,9 @@
 import os
 import json
 
-from pre_processing.image_transformations import preprocess_image
-from data_processing.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from data_processing.data_reader import DatasetReader
+from data.image import preprocess_image
+from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from data.reader import DatasetReader
 from predicting.predictor import Predictor
 
 model_path = './test_big/cats_vs_dogs_multi/model_save_dir/best_model.hdf5'
