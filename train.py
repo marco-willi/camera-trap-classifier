@@ -39,12 +39,11 @@ from training.prepare_model import create_model
 from predicting.predictor import Predictor
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from data.reader import DatasetReader
-from data.image import (
-        preprocess_image)
+from data.image import preprocess_image
 from data.utils import (
-        calc_n_batches_per_epoch, export_dict_to_json, read_json,
-        n_records_in_tfr, find_files_with_ending,
-        get_most_recent_file_from_files, find_tfr_files)
+    calc_n_batches_per_epoch, export_dict_to_json, read_json,
+    n_records_in_tfr, find_files_with_ending,
+    get_most_recent_file_from_files, find_tfr_files)
 
 
 # Configure Logging
@@ -183,16 +182,13 @@ if __name__ == '__main__':
     if len(args['test_tfr_path']) > 0:
         TEST_SET = True
         tfr_test = find_tfr_files(args['test_tfr_path'],
-                                   args['test_tfr_prefix'])
+                                  args['test_tfr_prefix'])
         pred_output_json = args['run_outputs_dir'] + 'test_preds.json'
     else:
         TEST_SET = False
 
     # Create best model output name
     best_model_save_path = args['model_save_dir'] + 'best_model.hdf5'
-
-    # Create prediction model output name
-    pred_model_path = args['model_save_dir'] + 'prediction_model.hdf5'
 
     # Define path of model to load if only directory is specified
     if len(args['model_to_load']) > 0:
@@ -215,9 +211,10 @@ if __name__ == '__main__':
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
     logger.info("Get Dataset Reader for calculating datset stats")
+    n_records_train = n_records_in_tfr(tfr_train)
     dataset = data_reader.get_iterator(
             tfr_files=tfr_train,
-            batch_size=30,
+            batch_size=min([4096, n_records_train]),
             is_train=False,
             n_repeats=1,
             output_labels=output_labels,
@@ -304,7 +301,6 @@ if __name__ == '__main__':
                         args['run_outputs_dir'] + 'image_processing.json')
 
     logger.info("Calculating batches per epoch")
-    n_records_train = n_records_in_tfr(tfr_train)
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
         n_records_train, args['batch_size'])
 
