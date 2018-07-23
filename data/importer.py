@@ -241,56 +241,54 @@ class FromCSV(DatasetImporter):
         try:
             with open(path_to_csv, 'r') as f:
                 csv_reader = csv.reader(f, delimiter=',')
+                # Get and check header
+                header = next(csv_reader)
+                assert all([x in header for x in self.cols_in_csv]), \
+                    "CSV must have a header containing following \
+                     entries: %s, found following: %s" \
+                     % (self.cols_in_csv, header)
+                # map columns to position
+                col_mapper = {x: header.index(x) for x in
+                              self.cols_in_csv}
                 for i, row in enumerate(csv_reader):
-                    # handle first row which is expected to be a header
-                    if i == 0:
-                        # ensure all colums are in header
-                        assert all([x in self.cols_in_csv for x in row]), \
-                            "CSV must have a header containing following \
-                             entries: %s" % self.cols_in_csv
+                    # extract fields from csv
+                    attrs = {attr: row[ind] for attr, ind in
+                             col_mapper.items()}
 
-                        # map columns
-                        col_mapper = {x: row.index(x) for x in
-                                      self.cols_in_csv}
+                    # build a new record
+                    new_record = {}
+
+                    # get labels
+                    labels = {k: str(v) for k, v in attrs.items() if k in
+                              set(self.attributes_col_list)}
+
+                    new_record['labels'] = [labels]
+
+                    # get images
+                    images = [attrs[im] for im in self.image_path_col_list]
+                    images = [x for x in images if x is not '']
+
+                    new_record['images'] = images
+
+                    # get meta data
+                    if len(self.meta_col_list) > 0:
+                        meta = {k: str(v) for k, v in attrs.items() if k in
+                                set(self.meta_col_list)}
+
+                        new_record['meta_data'] = meta
+
+                    capture_id = attrs[self.capture_id_col]
+
+                    # consolidate records
+                    if capture_id in data_dict:
+                        consolidated_record = self._consolidate_records(
+                            first=data_dict[capture_id],
+                            second=new_record
+                        )
+
+                        data_dict[capture_id] = consolidated_record
                     else:
-                        # extract fields from csv
-                        attrs = {attr: row[ind] for attr, ind in
-                                 col_mapper.items()}
-
-                        # build a new record
-                        new_record = {}
-
-                        # get labels
-                        labels = {k: str(v) for k, v in attrs.items() if k in
-                                  set(self.attributes_col_list)}
-
-                        new_record['labels'] = [labels]
-
-                        # get images
-                        images = [attrs[im] for im in self.image_path_col_list]
-                        images = [x for x in images if x is not '']
-
-                        new_record['images'] = images
-
-                        # get meta data
-                        if len(self.meta_col_list) > 0:
-                            meta = {k: str(v) for k, v in attrs.items() if k in
-                                    set(self.meta_col_list)}
-
-                            new_record['meta_data'] = meta
-
-                        capture_id = attrs[self.capture_id_col]
-
-                        # consolidate records
-                        if capture_id in data_dict:
-                            consolidated_record = self._consolidate_records(
-                                first=data_dict[capture_id],
-                                second=new_record
-                            )
-
-                            data_dict[capture_id] = consolidated_record
-                        else:
-                            data_dict[capture_id] = new_record
+                        data_dict[capture_id] = new_record
 
         except Exception as e:
             logger.error('Failed to read csv:\n' + str(e))
@@ -346,71 +344,71 @@ class FromPantheraCSV(DatasetImporter):
         try:
             with open(path_to_csv, 'r') as f:
                 csv_reader = csv.reader(f, delimiter=',', quotechar='"')
+
+                # Get and check header
+                header = next(csv_reader)
+
+                # Panthera Hack
+                count_in_header = 'count' in header
+                if not count_in_header:
+                    self.cols_in_csv.remove('count')
+
+                assert all([x in header for x in self.cols_in_csv]), \
+                    "CSV must have a header containing following \
+                     entries: %s, found following: %s" \
+                     % (self.cols_in_csv, header)
+
+                # map columns to position
+                col_mapper = {x: header.index(x) for x in
+                              self.cols_in_csv}
+
                 duplicate_count = 0
                 for i, row in enumerate(csv_reader):
-                    # handle first row which is expected to be a header
-                    if i == 0:
-                        # Panthera Hack
-                        count_in_header = 'count' in row
-                        if not count_in_header:
-                            self.cols_in_csv.remove('count')
+                    # extract fields from csv
+                    attrs = {attr: row[ind] for attr, ind in
+                             col_mapper.items()}
 
-                        # ensure all colums are in header
-                        assert all([x in row for x in self.cols_in_csv]), \
-                            "CSV must have a header containing following \
-                             entries: %s, found following: %s" \
-                             % (self.cols_in_csv, row)
+                    # build a record
+                    labels = {k: str(v) for k, v in attrs.items() if k in
+                              set(self.attributes_col_list)}
 
-                        # map columns
-                        col_mapper = {x: row.index(x) for x in
-                                      self.cols_in_csv}
+                    images = [attrs[im] for im in self.image_path_col_list]
 
-                    else:
-                        # extract fields from csv
-                        attrs = {attr: row[ind] for attr, ind in
-                                 col_mapper.items()}
+                    # handle count categories
+                    if count_in_header:
+                        new_count_attr = \
+                            self._categorize_counts(labels['count'])
+                        labels['count'] = new_count_attr
 
-                        # build a record
-                        labels = {k: str(v) for k, v in attrs.items() if k in
-                                  set(self.attributes_col_list)}
+                    new_record = {'images': images,
+                                  'labels': [labels]
+                                  }
 
-                        images = [attrs[im] for im in self.image_path_col_list]
+                    # check if capture id already exists and consolidate
+                    capture_id = attrs[self.capture_id_col]
+                    if capture_id in data_dict:
+                        new_record = self._consolidate(
+                            data_dict[capture_id],
+                            new_record)
 
-                        # handle count categories
-                        if count_in_header:
-                            new_count_attr = \
-                                self._categorize_counts(labels['count'])
-                            labels['count'] = new_count_attr
+                        if duplicate_count < 30:
+                            logger.info("ID: %s already exists - \
+                                          consolidating" % capture_id)
 
-                        new_record = {'images': images,
-                                      'labels': [labels]
-                                      }
+                            logger.info(" OLD Record:")
+                            for k, v in data_dict[capture_id].items():
+                                logger.info("  Attr: %s - Value: %s"
+                                            % (k, v))
+                            logger.info(" Consolidated Record:")
+                            for k, v in new_record.items():
+                                logger.info("  Attr: %s - Value: %s"
+                                            % (k, v))
+                        elif duplicate_count == 30:
+                            logger.info("More IDs already exist - \
+                                          consolidating all...")
+                        duplicate_count += 1
 
-                        # check if capture id already exists and consolidate
-                        capture_id = attrs[self.capture_id_col]
-                        if capture_id in data_dict:
-                            new_record = self._consolidate(
-                                data_dict[capture_id],
-                                new_record)
-
-                            if duplicate_count < 30:
-                                logger.info("ID: %s already exists - \
-                                              consolidating" % capture_id)
-
-                                logger.info(" OLD Record:")
-                                for k, v in data_dict[capture_id].items():
-                                    logger.info("  Attr: %s - Value: %s"
-                                                % (k, v))
-                                logger.info(" Consolidated Record:")
-                                for k, v in new_record.items():
-                                    logger.info("  Attr: %s - Value: %s"
-                                                % (k, v))
-                            elif duplicate_count == 30:
-                                logger.info("More IDs already exist - \
-                                              consolidating all...")
-                            duplicate_count += 1
-
-                        data_dict[capture_id] = new_record
+                    data_dict[capture_id] = new_record
 
         except Exception as e:
             logger.error('Failed to read csv:\n' + str(e))
