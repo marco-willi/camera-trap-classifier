@@ -76,10 +76,14 @@ if __name__ == '__main__':
                         action='store_true', required=False,
                         help="whether to process images in parallel \
                               (only if 'write_tfr_in_parallel' is false)")
-    parser.add_argument("-process_n_images_in_parallel", type=int,
+    parser.add_argument("-process_images_in_parallel_size", type=int,
                         default=100, required=False,
                         help="if processing images in parallel - how many per \
                               process, this can influene memory requirements")
+    parser.add_argument("-processes_images_in_parallel_n_processes", type=int,
+                        default=4, required=False,
+                        help="if processing images in parallel - how many \
+                              processes to use (default 4)")
     parser.add_argument("-max_records_per_file", type=int,
                         default=500000,
                         required=False,
@@ -153,5 +157,9 @@ if __name__ == '__main__':
                                        args['image_save_side_max']},
             random_shuffle_before_save=True,
             overwrite_existing_files=args['overwrite'],
-            max_records_per_file=args['max_records_per_file']
+            max_records_per_file=args['max_records_per_file'],
+            write_tfr_in_parallel=args['write_tfr_in_parallel'],
+            process_images_in_parallel=args['process_images_in_parallel'],
+            process_images_in_parallel_size=args['process_images_in_parallel_size'],
+            processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']      
             )
