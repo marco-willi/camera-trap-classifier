@@ -272,11 +272,28 @@ def check_tfrecord_contents(path_to_tfr):
     print(record)
 
 
-def find_tfr_files(path, prefix):
+def find_tfr_files(path, prefix=''):
     """ Find all TFR files """
     files = os.listdir(path)
     tfr_files = [x for x in files if x.endswith('.tfrecord') and
                  prefix in x]
+    tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
+    return tfr_paths
+
+
+def find_tfr_files_pattern(path, pattern=None):
+    """ Find all TFR files """
+    files = os.listdir(path)
+    tfr_files = [x for x in files if x.endswith('.tfrecord')]
+    if pattern is None:
+        pass
+    # check for a single pattern
+    elif isinstance(pattern, str):
+        tfr_files = [x for x in tfr_files if re.search(pattern, x) is not None]
+    # check for multiple patterns (AND condition)
+    elif isinstance(pattern, list):
+        for pat in pattern:
+            tfr_files = [x for x in tfr_files if re.search(pat, x) is not None]
     tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
     return tfr_paths
 

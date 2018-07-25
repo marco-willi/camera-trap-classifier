@@ -220,8 +220,8 @@ class DatasetWriter(object):
                 if batch_i % 10 == 0:
                     i = batch_i * self.process_images_in_parallel_size
                     est_t = estimate_remaining_time(start_time, n_records, i)
-                    logger.info("Wrote %s / %s records (estimated \
-                                time remaining: %s)" % (i, n_records, est_t))
+                    logger.info("Wrote %s / %s records (estimated\
+                     time remaining: %s)" % (i, n_records, est_t))
 
                 # Divide current batch to multiple processes
                 record_batch = [self.tfrecord_dict[x] for x in
