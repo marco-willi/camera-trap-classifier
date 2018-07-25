@@ -68,6 +68,18 @@ if __name__ == '__main__':
     parser.add_argument("-overwrite", default=False,
                         action='store_true', required=False,
                         help="whether to overwrite existing tfr files")
+    parser.add_argument("-write_tfr_in_parallel", default=False,
+                        action='store_true', required=False,
+                        help="whether to write tfrecords in parallel if more \
+                              than one is created")
+    parser.add_argument("-process_images_in_parallel", default=False,
+                        action='store_true', required=False,
+                        help="whether to process images in parallel \
+                              (only if 'write_tfr_in_parallel' is false)")
+    parser.add_argument("-process_n_images_in_parallel", type=int,
+                        default=100, required=False,
+                        help="if processing images in parallel - how many per \
+                              process, this can influene memory requirements")
     parser.add_argument("-max_records_per_file", type=int,
                         default=500000,
                         required=False,

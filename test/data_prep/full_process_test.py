@@ -35,13 +35,16 @@ tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
 
 tfr = {k: v.export_to_tfrecord(
         tfr_writer,
-        './test/',
+        './test_big/temp_data/',
         file_prefix=k,
         image_pre_processing_fun=resize_jpeg,
         image_pre_processing_args={"max_side": 150},
         random_shuffle_before_save=True,
         overwrite_existing_files=True,
-        max_records_per_file=20
+        max_records_per_file=10,
+        write_tfr_in_parallel=False,
+        process_images_in_parallel=True,
+        process_n_images_in_parallel=5
         ) for k, v in splitted.items()}
 
 tfr_writer.files

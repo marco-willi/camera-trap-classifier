@@ -6,6 +6,7 @@ from shutil import copyfile
 import re
 from collections import Counter, OrderedDict
 import random
+import time
 
 import tensorflow as tf
 from hashlib import md5
@@ -33,7 +34,7 @@ def order_dict_by_values(d, reversed=True):
     return ordered
 
 
-def _balanced_sampling(id_to_label):
+def _balanced_sampling(id_to_label, random_seed=123):
     """ Balanced sampling for label """
 
     labels_all = [v for v in id_to_label.values()]
@@ -47,6 +48,7 @@ def _balanced_sampling(id_to_label):
 
     # Randomly Shuffle Ids
     all_ids = list(id_to_label.keys())
+    random.seed(random_seed)
     random.shuffle(all_ids)
 
     for record_id in all_ids:
