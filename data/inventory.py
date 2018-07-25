@@ -177,27 +177,28 @@ class DatasetInventoryMaster(DatasetInventory):
     """ Creates Datset Dictionary from a source and allows to
         manipulate labels and create splits
     """
-    def __init__(self):
+    def __init__(self, labels_numeric_map=None):
         self.data_inventory = None
         self.labels = None
-        self.labels_numeric_map = None
+        self.labels_numeric_map = labels_numeric_map
 
     def _map_labels_to_numeric(self):
         """ Map all labels to numerics """
 
-        self.labels = self._get_all_labels()
-        labels_numeric_map = dict()
+        if self.labels_numeric_map is None:
+            self.labels = self._get_all_labels()
+            labels_numeric_map = dict()
 
-        for label_name, label_set in self.labels.items():
-            mapped = map_label_list_to_numeric_dict(list(label_set))
-            labels_numeric_map[label_name] = mapped
+            for label_name, label_set in self.labels.items():
+                mapped = map_label_list_to_numeric_dict(list(label_set))
+                labels_numeric_map[label_name] = mapped
 
-        self.labels_numeric_map = labels_numeric_map
+            self.labels_numeric_map = labels_numeric_map
 
         # create numeric to text labels as well
         self.label_mapping_from_num = \
             {k: {kk: vv for vv, kk in v.items()}
-             for k, v in labels_numeric_map.items()}
+             for k, v in self.labels_numeric_map.items()}
 
     def create_from_source(self, type, params):
         """ Create Dataset Inventory from a specific Source """
