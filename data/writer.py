@@ -193,7 +193,7 @@ class DatasetWriter(object):
                 (output_file, successfull_writes, n_records))
 
     def _write_to_file_parallel(self, output_file, record_ids):
-        """ Write a TFR File """
+        """ Write a TFR File with parallel image processing """
 
         # Create and Write Records to TFRecord file
         logger.info("Start Writing %s" % output_file)
@@ -209,19 +209,13 @@ class DatasetWriter(object):
 
         # divide writes into batches
         max_batch_size = min(self.process_images_in_parallel_size, n_records)
-        n_batches = (n_records // max_batch_size) + \
-                    min(n_records % max_batch_size, 1)
+        n_batches = (n_records // max_batch_size) \
+            + min(n_records % max_batch_size, 1)
         slices = slice_generator(n_records, n_batches)
 
         with tf.python_io.TFRecordWriter(output_file) as writer:
 
             for batch_i, (start_i, end_i) in enumerate(slices):
-
-                if batch_i % 10 == 0:
-                    i = batch_i * self.process_images_in_parallel_size
-                    est_t = estimate_remaining_time(start_time, n_records, i)
-                    logger.info("Wrote %s / %s records (estimated\
-                     time remaining: %s)" % (i, n_records, est_t))
 
                 # Divide current batch to multiple processes
                 record_batch = [self.tfrecord_dict[x] for x in
@@ -249,10 +243,13 @@ class DatasetWriter(object):
                     p.join()
 
                 # Write the serialized data to the TFRecords file.
-                print("List length: %s" % len(serialized_records))
                 for serialized_record in serialized_records:
                     writer.write(serialized_record)
                     successfull_writes += 1
+                est_t = estimate_remaining_time(start_time, n_records,
+                                                successfull_writes)
+                logger.info("Wrote %s / %s records - estimated time remaining: %s - file: %s)" %
+                            (successfull_writes, n_records, est_t, output_file))
 
             logger.info(
                 "Finished Writing Records to %s - Wrote %s/%s" %

@@ -120,6 +120,9 @@ python create_dataset.py -inventory /my_data/dataset_inventory.json \
 -overwrite
 ```
 
+See the function documentations for options regarding how to parallelize / speed up
+the processing for large datasets.
+
 ### 4) Model Training
 
 In the next step we train our model. The following code snippet shows an example:
@@ -144,7 +147,7 @@ python train.py \
 ### 5) Model Use
 
 Finally, we can apply our model on new data. In the following code snippet the program looks for all images
-stored in /my_images/new_images/, including subdirectories.
+stored in '/my_images/new_images/', including subdirectories.
 
 ```
 python predict.py -image_dir /my_images/new_images/ \
@@ -164,7 +167,7 @@ We have used python 3.5 and Tensorflow 1.9 (older versions may not work properly
 ### Installing from Requirements
 
 The most common way to install all required packages is to create a virtual environment and to use a
-requirements.txt file as provided in setup/.
+requirements.txt file as provided in [setup/](setup/).
 
 ```
 cd setup/
@@ -190,7 +193,7 @@ conda install jupyter yaml nb_conda pillow h5py
 ### Using a GPU
 
 To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU (see https://developer.nvidia.com/cuda-downloads and https://developer.nvidia.com/cudnn). An easy option is
-to use an image that contains all required installations and use that to set up a GPU instance of a cloud provider. Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
+to use a disk image that contains all required installations and use that to set up a GPU instance of a cloud provider. Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
 
 
 ### Tensorflow GPU Docker installation on AWS
