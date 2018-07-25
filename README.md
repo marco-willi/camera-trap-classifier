@@ -53,6 +53,9 @@ root_dir:
       - ...
 ```
 **Option 2**: Create a csv file that contains all labels and links to images.
+
+The advantage of using a csv file is that more than one label can be provided. In this example species and count.
+
 ```
 id,image,species,count
 1,/my_images/image1.jpg,elephant,2
@@ -60,7 +63,8 @@ id,image,species,count
 3,/my_images/image3.jpg,lion,1
 4,/my_images/image4.jpg,zebra,10
 ```
-The advantage of using a csv file is that more than one label can be provided. In this example species and count.
+
+Multiple images can be grouped into one capture event. During model training a random image will be chosen, also during the evaluation. Other, more sophisticated ways to handle multi-image capture events can be implemented.
 
 ```
 id,image1,image2,species,count
@@ -70,8 +74,7 @@ id,image1,image2,species,count
 4,/my_images/image4a.jpg,/my_images/image4b.jpgzebra,10
 ```
 
-Multiple images can be grouped into one capture event. During model training a random image will be chosen, also during
-the evaluation. Other, more sophisticated ways to handle multi-image capture events can be implemented.
+Multiple observations per capture event can be grouped. Note that modelling multi-label multi-class classification is not supported. However, the data will be processed and stored to TFRecord files but only one observation is chosen during model training and evaluation.
 
 ```
 id,image,species,count
@@ -82,9 +85,7 @@ id,image,species,count
 4,/my_images/image4.jpg,zebra,10
 4,/my_images/image4.jpg,wildebeest,2
 ```
-Multiple observations per capture event can be grouped. Note that modelling multi-label multi-class classification is
-not supported. However, the data will be processed and stored to TFRecord files but only one observation is chosen during
-model training and evaluation.
+
 
 ### 2) Creating a Dataset Inventory
 
