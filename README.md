@@ -53,6 +53,9 @@ root_dir:
       - ...
 ```
 **Option 2**: Create a csv file that contains all labels and links to images.
+
+The advantage of using a csv file is that more than one label can be provided. In this example species and count.
+
 ```
 id,image,species,count
 1,/my_images/image1.jpg,elephant,2
@@ -60,7 +63,8 @@ id,image,species,count
 3,/my_images/image3.jpg,lion,1
 4,/my_images/image4.jpg,zebra,10
 ```
-The advantage of using a csv file is that more than one label can be provided. In this example species and count.
+
+Multiple images can be grouped into one capture event. During model training a random image will be chosen, also during the evaluation. Other, more sophisticated ways to handle multi-image capture events can be implemented.
 
 ```
 id,image1,image2,species,count
@@ -70,8 +74,7 @@ id,image1,image2,species,count
 4,/my_images/image4a.jpg,/my_images/image4b.jpgzebra,10
 ```
 
-Multiple images can be grouped into one capture event. During model training a random image will be chosen, also during
-the evaluation. Other, more sophisticated ways to handle multi-image capture events can be implemented.
+Multiple observations per capture event can be grouped. Note that modelling multi-label multi-class classification is not supported. However, the data will be processed and stored to TFRecord files but only one observation is chosen during model training and evaluation.
 
 ```
 id,image,species,count
@@ -82,9 +85,7 @@ id,image,species,count
 4,/my_images/image4.jpg,zebra,10
 4,/my_images/image4.jpg,wildebeest,2
 ```
-Multiple observations per capture event can be grouped. Note that modelling multi-label multi-class classification is
-not supported. However, the data will be processed and stored to TFRecord files but only one observation is chosen during
-model training and evaluation.
+
 
 ### 2) Creating a Dataset Inventory
 
@@ -119,6 +120,9 @@ python create_dataset.py -inventory /my_data/dataset_inventory.json \
 -overwrite
 ```
 
+See the function documentations for options regarding how to parallelize / speed up
+the processing for large datasets.
+
 ### 4) Model Training
 
 In the next step we train our model. The following code snippet shows an example:
@@ -143,7 +147,7 @@ python train.py \
 ### 5) Model Use
 
 Finally, we can apply our model on new data. In the following code snippet the program looks for all images
-stored in /my_images/new_images/, including subdirectories.
+stored in '/my_images/new_images/', including subdirectories.
 
 ```
 python predict.py -image_dir /my_images/new_images/ \
@@ -163,7 +167,7 @@ We have used python 3.5 and Tensorflow 1.9 (older versions may not work properly
 ### Installing from Requirements
 
 The most common way to install all required packages is to create a virtual environment and to use a
-requirements.txt file as provided in setup/.
+requirements.txt file as provided in [setup/](setup/).
 
 ```
 cd setup/
@@ -183,13 +187,13 @@ The commands can be executed using, for example, Git BASH (https://gitforwindows
 conda create --no-default-packages -n ctc python=3.5
 source activate ctc
 pip install --upgrade tensorflow
-conda install jupyter yaml nb_conda pillow h5py
+conda install jupyter yaml pyyaml nb_conda pillow h5py
 ```
 
 ### Using a GPU
 
 To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU (see https://developer.nvidia.com/cuda-downloads and https://developer.nvidia.com/cudnn). An easy option is
-to use an image that contains all required installations and use that to set up a GPU instance of a cloud provider. Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
+to use a disk image that contains all required installations and use that to set up a GPU instance of a cloud provider. Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
 
 
 ### Tensorflow GPU Docker installation on AWS

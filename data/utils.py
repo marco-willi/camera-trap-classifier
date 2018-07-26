@@ -5,10 +5,11 @@ import json
 from shutil import copyfile
 import re
 from collections import Counter, OrderedDict
+from hashlib import md5
 import random
+import time
 
 import tensorflow as tf
-from hashlib import md5
 import numpy as np
 
 
@@ -33,7 +34,7 @@ def order_dict_by_values(d, reversed=True):
     return ordered
 
 
-def _balanced_sampling(id_to_label):
+def _balanced_sampling(id_to_label, random_seed=123):
     """ Balanced sampling for label """
 
     labels_all = [v for v in id_to_label.values()]
@@ -47,6 +48,7 @@ def _balanced_sampling(id_to_label):
 
     # Randomly Shuffle Ids
     all_ids = list(id_to_label.keys())
+    random.seed(random_seed)
     random.shuffle(all_ids)
 
     for record_id in all_ids:
@@ -58,6 +60,17 @@ def _balanced_sampling(id_to_label):
             remaining_record_ids.add(record_id)
 
     return remaining_record_ids
+
+
+def _assign_zero_one_to_split(zero_one_value, split_percents, split_names):
+    """ Assign a value between 0 and 1 to a split according to a percentage
+        distribution
+    """
+    split_props_cum = [sum(split_percents[0:(i+1)]) for i in
+                       range(0, len(split_percents))]
+    for sn, sp in zip(split_names, split_props_cum):
+        if zero_one_value <= sp:
+            return sn
 
 
 def randomly_split_dataset(
@@ -97,8 +110,8 @@ def randomly_split_dataset(
                        range(0, len(split_percent))]
 
     for record_id in split_ids:
+        split_val = split_vals[record_id]
         for sn, sp in zip(split_names, split_props_cum):
-            split_val = split_vals[record_id]
             if split_val <= sp:
                 split_assignments.append(sn)
                 break
@@ -270,11 +283,28 @@ def check_tfrecord_contents(path_to_tfr):
     print(record)
 
 
-def find_tfr_files(path, prefix):
+def find_tfr_files(path, prefix=''):
     """ Find all TFR files """
     files = os.listdir(path)
     tfr_files = [x for x in files if x.endswith('.tfrecord') and
                  prefix in x]
+    tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
+    return tfr_paths
+
+
+def find_tfr_files_pattern(path, pattern=None):
+    """ Find all TFR files """
+    files = os.listdir(path)
+    tfr_files = [x for x in files if x.endswith('.tfrecord')]
+    if pattern is None:
+        pass
+    # check for a single pattern
+    elif isinstance(pattern, str):
+        tfr_files = [x for x in tfr_files if re.search(pattern, x) is not None]
+    # check for multiple patterns (AND condition)
+    elif isinstance(pattern, list):
+        for pat in pattern:
+            tfr_files = [x for x in tfr_files if re.search(pat, x) is not None]
     tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
     return tfr_paths
 

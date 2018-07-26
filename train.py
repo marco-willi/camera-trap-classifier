@@ -6,11 +6,11 @@ Example Usage:
 ---------------
 python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--train_tfr_prefix train \
+-train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--val_tfr_prefix val \
+-val_tfr_pattern val \
 -test_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--test_tfr_prefix test \
+-test_tfr_pattern test \
 -class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
@@ -43,7 +43,7 @@ from data.image import preprocess_image
 from data.utils import (
     calc_n_batches_per_epoch, export_dict_to_json, read_json,
     n_records_in_tfr, find_files_with_ending,
-    get_most_recent_file_from_files, find_tfr_files)
+    get_most_recent_file_from_files, find_tfr_files_pattern)
 
 
 # Configure Logging
@@ -60,23 +60,26 @@ if __name__ == '__main__':
         help="Path to directory that contains the training TFR files"
     )
     parser.add_argument(
-        "-train_tfr_prefix", default="train", type=str,
-        required=True,
-        help="The prefix of the training TFR files (default train)")
+        "-train_tfr_pattern", nargs='+', type=str,
+        help="The pattern of the training TFR files (default train) \
+              list of 1 or more patterns that all have to match",
+        default=['train'], required=False)
     parser.add_argument(
         "-val_tfr_path", type=str, required=True,
         help="Path to directory that contains the validation TFR files")
     parser.add_argument(
-        "-val_tfr_prefix", default="val", type=str,
-        required=True,
-        help="The prefix of the validation TFR files (default val)")
+        "-val_tfr_pattern", nargs='+', type=str,
+        help="The pattern of the validation TFR files (default val) \
+              list of 1 or more patterns that all have to match",
+        default=['val'], required=False)
     parser.add_argument(
         "-test_tfr_path", type=str, required=False,
         help="Path to directory that contains the test TFR files (optional)")
     parser.add_argument(
-        "-test_tfr_prefix", default="test", type=str,
-        required=False,
-        help="The prefix of the test TFR files (default test, optional)")
+        "-test_tfr_pattern", nargs='+', type=str,
+        help="The pattern of the test TFR files (default test) \
+              list of 1 or more patterns that all have to match",
+        default=['test'], required=False)
     parser.add_argument(
         "-class_mapping_json", type=str, required=True,
         help='Path to the json file containing the class mappings')
@@ -113,6 +116,9 @@ if __name__ == '__main__':
     parser.add_argument(
         "-starting_epoch", type=int, default=0,
         help="The starting epoch number.")
+    parser.add_argument(
+        "-initial_learning_rate", type=float, default=0.01,
+        help="The initial learning rate.")
     parser.add_argument(
         "-transfer_learning", default=False,
         action='store_true', required=False,
@@ -174,15 +180,18 @@ if __name__ == '__main__':
                         args['run_outputs_dir'] + 'label_mappings.json')
 
     # TFR files
-    tfr_train = find_tfr_files(
+    tfr_train = find_tfr_files_pattern(
         args['train_tfr_path'],
-        args['train_tfr_prefix'])
-    tfr_val = find_tfr_files(args['val_tfr_path'], args['val_tfr_prefix'])
+        args['train_tfr_pattern'])
+    tfr_val = find_tfr_files_pattern(
+        args['val_tfr_path'],
+        args['val_tfr_pattern'])
 
     if len(args['test_tfr_path']) > 0:
         TEST_SET = True
-        tfr_test = find_tfr_files(args['test_tfr_path'],
-                                  args['test_tfr_prefix'])
+        tfr_test = find_tfr_files_pattern(
+            args['test_tfr_path'],
+            args['test_tfr_pattern'])
         pred_output_json = args['run_outputs_dir'] + 'test_preds.json'
     else:
         TEST_SET = False
@@ -328,7 +337,8 @@ if __name__ == '__main__':
         continue_training=args['continue_training'],
         transfer_learning=args['transfer_learning'],
         fine_tuning=args['fine_tuning'],
-        path_of_model_to_load=args['model_to_load'])
+        path_of_model_to_load=args['model_to_load'],
+        initial_learning_rate=args['initial_learning_rate'])
 
     logger.debug("Final Model Architecture")
     for layer, i in zip(model.layers,

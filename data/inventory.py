@@ -177,27 +177,28 @@ class DatasetInventoryMaster(DatasetInventory):
     """ Creates Datset Dictionary from a source and allows to
         manipulate labels and create splits
     """
-    def __init__(self):
+    def __init__(self, labels_numeric_map=None):
         self.data_inventory = None
         self.labels = None
-        self.labels_numeric_map = None
+        self.labels_numeric_map = labels_numeric_map
 
     def _map_labels_to_numeric(self):
         """ Map all labels to numerics """
 
-        self.labels = self._get_all_labels()
-        labels_numeric_map = dict()
+        if self.labels_numeric_map is None:
+            self.labels = self._get_all_labels()
+            labels_numeric_map = dict()
 
-        for label_name, label_set in self.labels.items():
-            mapped = map_label_list_to_numeric_dict(list(label_set))
-            labels_numeric_map[label_name] = mapped
+            for label_name, label_set in self.labels.items():
+                mapped = map_label_list_to_numeric_dict(list(label_set))
+                labels_numeric_map[label_name] = mapped
 
-        self.labels_numeric_map = labels_numeric_map
+            self.labels_numeric_map = labels_numeric_map
 
         # create numeric to text labels as well
         self.label_mapping_from_num = \
             {k: {kk: vv for vv, kk in v.items()}
-             for k, v in labels_numeric_map.items()}
+             for k, v in self.labels_numeric_map.items()}
 
     def create_from_source(self, type, params):
         """ Create Dataset Inventory from a specific Source """
@@ -205,6 +206,17 @@ class DatasetInventoryMaster(DatasetInventory):
         self.data_inventory = importer.import_from_source()
         # self.label_handler = LabelHandler(self.data_inventory)
         # self.label_handler.remove_not_all_label_attributes()
+
+    def remove_multi_label_records(self):
+        """ Remove records with multiple labels / observations """
+        to_remove = list()
+        for record_id, data in self.data_inventory.items():
+            if len(data['labels']) > 1:
+                to_remove.append(record_id)
+        logger.info("Removing %s records with multiple labels" %
+                    len(to_remove))
+        for record_id in to_remove:
+            self.remove_record(record_id)
 
     def randomly_remove_samples_to_percent(self, p_keep):
         """ Randomly sample a percentage of all records """
@@ -222,7 +234,20 @@ class DatasetInventoryMaster(DatasetInventory):
 
         self.data_inventory = new_data_inv
 
-    def remove_records_with_label(self, label_name, label_value):
+    def remove_records_with_label(self, label_name_list, label_value_list):
+        """ Remove all records with labels in label_name and corresponding
+            label values
+            Example: label_name : [species, species]
+                     label_value: ['zebra', 'elephant']
+        """
+        assert all([isinstance(label_name_list, list),
+                    isinstance(label_value_list, list)]), \
+            "label_name_list and label_value_list must be lists"
+
+        for label_name, label_value in zip(label_name_list, label_value_list):
+            self._remove_records_with_label(label_name, label_value)
+
+    def _remove_records_with_label(self, label_name, label_value):
         """ Remove all records with 'label_value' for 'label_name'
             Example: label_name: 'species' label_value: 'Zebra'
         """
@@ -235,6 +260,9 @@ class DatasetInventoryMaster(DatasetInventory):
                     if (label_name == l_name):
                         if label_value in l_val_list:
                             ids_to_remove.append(record_id)
+
+        logger.info("Removing %s records from label %s with value %s" %
+                    (len(ids_to_remove), label_name, label_value))
 
         for id_to_remove in ids_to_remove:
             self.remove_record(id_to_remove)

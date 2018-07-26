@@ -180,6 +180,7 @@ def _mean_image_subtraction(image, means):
 
     return image - means
 
+
 def _image_standardize(image, means, stdevs):
     """Subtracts the given means from each image channel.
     For example:
@@ -207,7 +208,6 @@ def _image_standardize(image, means, stdevs):
     stdevs = tf.cast(stdevs, tf.float32)
 
     return tf.divide(image, stdevs)
-
 
 
 def _smallest_size_at_least(height, width, smallest_side):
@@ -282,14 +282,12 @@ def preprocess_for_train(image,
     Returns:
     A preprocessed image.
     """
-
-
     resize_side = tf.random_uniform(
       [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
 
     image = _aspect_preserving_resize(image, resize_side)
-    image = _random_crop([image], output_height, output_width)[0]
-    image.set_shape([output_height, output_width, 3])
+    image = tf.random_crop(image, [output_height, output_width, 3])
+    #image.set_shape([output_height, output_width, 3])
     image = tf.to_float(image)
     image = tf.image.random_flip_left_right(image)
 

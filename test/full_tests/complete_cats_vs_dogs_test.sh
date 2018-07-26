@@ -9,16 +9,19 @@ python create_dataset.py -inventory ./test_big/cat_dog_dir_test.json \
 -output_dir ./test_big/cats_vs_dogs/tfr_files/ \
 -image_save_side_max 200 \
 -split_percent 0.7 0.15 0.15 \
--overwrite
+-overwrite \
+-process_images_in_parallel \
+-process_images_in_parallel_size 2000 \
+-processes_images_in_parallel_n_processes 2
 
 # Train a Model
 python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--train_tfr_prefix train \
+-train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--val_tfr_prefix val \
+-val_tfr_pattern val \
 -test_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--test_tfr_prefix test \
+-test_tfr_pattern test \
 -class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \

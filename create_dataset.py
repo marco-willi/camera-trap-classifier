@@ -47,16 +47,26 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument("-balanced_sampling_min", default=False,
                         action='store_true', required=False,
-                        help="sample labels balanced to the least frequent")
+                        help="sample labels balanced to the least frequent\
+                              value")
     parser.add_argument("-balanced_sampling_label", type=str,
                         help='label used for balanced sampling',
                         required=False)
-    parser.add_argument("-remove_label_name", type=str,
-                        help='remove records with label name',
+    parser.add_argument("-remove_label_name", nargs='+', type=str,
+                        default=[''],
+                        help='remove records with label names (a list) and \
+                              corresponding remove_label_value',
                         required=False)
-    parser.add_argument("-remove_label_value", type=str,
-                        help='remove records with label value',
+    parser.add_argument("-remove_label_value", nargs='+', type=str,
+                        default=[''],
+                        help='remove records with label value (a list) and \
+                              corresponding remove_label_name',
                         required=False)
+    parser.add_argument("-remove_multi_label_records", default=True,
+                        action='store_true', required=False,
+                        help="whether to remove records with more than one \
+                              observation (multi-label) which is not currently\
+                              supported in model training")
     parser.add_argument("-image_root_path", type=str, default='',
                         help='Root path of all images',
                         required=False)
@@ -64,10 +74,27 @@ if __name__ == '__main__':
                         default=500,
                         required=False,
                         help="resize image to larger side having that\
-                              many pixels, typically at least 330")
+                              many pixels, typically at least 330\
+                              (depending on the model architecture)")
     parser.add_argument("-overwrite", default=False,
                         action='store_true', required=False,
                         help="whether to overwrite existing tfr files")
+    parser.add_argument("-write_tfr_in_parallel", default=False,
+                        action='store_true', required=False,
+                        help="whether to write tfrecords in parallel if more \
+                              than one is created")
+    parser.add_argument("-process_images_in_parallel", default=False,
+                        action='store_true', required=False,
+                        help="whether to process images in parallel \
+                              (only if 'write_tfr_in_parallel' is false)")
+    parser.add_argument("-process_images_in_parallel_size", type=int,
+                        default=200, required=False,
+                        help="if processing images in parallel - how many per \
+                              process, this can influene memory requirements")
+    parser.add_argument("-processes_images_in_parallel_n_processes", type=int,
+                        default=4, required=False,
+                        help="if processing images in parallel - how many \
+                              processes to use (default 4)")
     parser.add_argument("-max_records_per_file", type=int,
                         default=500000,
                         required=False,
@@ -87,14 +114,19 @@ if __name__ == '__main__':
     dinv = DatasetInventoryMaster()
     dinv.create_from_source('json', params)
 
-    # Remove records if requested
-    if args['remove_label_name'] is not '':
-        if args['remove_label_value'] is '':
+    # Remove multi-label subjects
+    if args['remove_multi_label_records']:
+        dinv.remove_multi_label_records()
+
+    # Remove specific labels
+    if args['remove_label_name'] is not ['']:
+        if args['remove_label_value'] is ['']:
             raise ValueError('if remove_label_name is specified\
                               remove_label_value needs to be specified')
 
-        dinv.remove_records_with_label(label_name=args['remove_label_name'],
-                                       label_value=args['remove_label_value'])
+        dinv.remove_records_with_label(
+            label_name_list=args['remove_label_name'],
+            label_value_list=args['remove_label_value'])
 
     # Log Statistics
     dinv.log_stats()
@@ -141,5 +173,9 @@ if __name__ == '__main__':
                                        args['image_save_side_max']},
             random_shuffle_before_save=True,
             overwrite_existing_files=args['overwrite'],
-            max_records_per_file=args['max_records_per_file']
+            max_records_per_file=args['max_records_per_file'],
+            write_tfr_in_parallel=args['write_tfr_in_parallel'],
+            process_images_in_parallel=args['process_images_in_parallel'],
+            process_images_in_parallel_size=args['process_images_in_parallel_size'],
+            processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']
             )
