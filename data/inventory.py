@@ -262,7 +262,7 @@ class DatasetInventoryMaster(DatasetInventory):
                             ids_to_remove.append(record_id)
 
         logger.info("Removing %s records from label %s with value %s" %
-                    len(ids_to_remove, label_name, label_value))
+                    (len(ids_to_remove), label_name, label_value))
 
         for id_to_remove in ids_to_remove:
             self.remove_record(id_to_remove)
