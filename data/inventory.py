@@ -35,17 +35,6 @@ class DatasetInventory(object):
         """ Remove specific record """
         self.data_inventory.pop(id_to_remove, None)
 
-    def remove_multi_label_records(self):
-        """ Remove records with multiple labels / observations """
-        to_remove = list()
-        for record_id, data in self.data_inventory.items():
-            if len(data['labels']) > 1:
-                to_remove.append(record_id)
-        logger.info("Removing %s records with multiple labels" %
-                    len(to_remove))
-        for record_id in to_remove:
-            self.remove_record(record_id)
-
     def _get_all_labels(self):
         """ Extract all labels
             Returns: {'species': ('elephant', 'zebra'),
@@ -218,6 +207,17 @@ class DatasetInventoryMaster(DatasetInventory):
         # self.label_handler = LabelHandler(self.data_inventory)
         # self.label_handler.remove_not_all_label_attributes()
 
+    def remove_multi_label_records(self):
+        """ Remove records with multiple labels / observations """
+        to_remove = list()
+        for record_id, data in self.data_inventory.items():
+            if len(data['labels']) > 1:
+                to_remove.append(record_id)
+        logger.info("Removing %s records with multiple labels" %
+                    len(to_remove))
+        for record_id in to_remove:
+            self.remove_record(record_id)
+
     def randomly_remove_samples_to_percent(self, p_keep):
         """ Randomly sample a percentage of all records """
         if not p_keep <= 1:
@@ -234,7 +234,20 @@ class DatasetInventoryMaster(DatasetInventory):
 
         self.data_inventory = new_data_inv
 
-    def remove_records_with_label(self, label_name, label_value):
+    def remove_records_with_label(self, label_name_list, label_value_list):
+        """ Remove all records with labels in label_name and corresponding
+            label values
+            Example: label_name : [species, species]
+                     label_value: ['zebra', 'elephant']
+        """
+        assert all([isinstance(label_name_list, list),
+                    isinstance(label_value_list, list)]), \
+            "label_name_list and label_value_list must be lists"
+
+        for label_name, label_value in zip(label_name_list, label_value_list):
+            self._remove_records_with_label(label_name, label_value)
+
+    def _remove_records_with_label(self, label_name, label_value):
         """ Remove all records with 'label_value' for 'label_name'
             Example: label_name: 'species' label_value: 'Zebra'
         """
@@ -247,6 +260,9 @@ class DatasetInventoryMaster(DatasetInventory):
                     if (label_name == l_name):
                         if label_value in l_val_list:
                             ids_to_remove.append(record_id)
+
+        logger.info("Removing %s records from label %s with value %s" %
+                    len(ids_to_remove, label_name, label_value))
 
         for id_to_remove in ids_to_remove:
             self.remove_record(id_to_remove)

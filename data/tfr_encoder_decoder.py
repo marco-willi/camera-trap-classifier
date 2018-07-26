@@ -151,9 +151,9 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
             rand = tf.random_uniform([], minval=0, maxval=n_images[0],
                                      dtype=tf.int32)
 
-            # decode jpeg image to tensor
-            image = tf.image.decode_jpeg(sequence['images'][rand],
-                                         channels=n_color_channels)
+            # decode image to tensor
+            image = tf.image.decode_image(sequence['images'][rand],
+                                          channels=n_color_channels)
 
             # Pre-Process image
             if image_pre_processing_fun is not None:
@@ -261,8 +261,8 @@ class SingleObsTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                                      dtype=tf.int32)
 
             # decode jpeg image to tensor
-            image = tf.image.decode_jpeg(sequence['images'][rand],
-                                         channels=n_color_channels)
+            image = tf.image.decode_image(sequence['images'][rand],
+                                          channels=n_color_channels)
 
             # Pre-Process image
             if image_pre_processing_fun is not None:
