@@ -17,11 +17,11 @@ python create_dataset.py -inventory ./test_big/cats_vs_dogs_multi/inventory.json
 # Train a Model
 python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs_multi/tfr_files \
--train_tfr_prefix train \
+-train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs_multi/tfr_files \
--val_tfr_prefix val \
+-val_tfr_pattern val \
 -test_tfr_path ./test_big/cats_vs_dogs_multi/tfr_files \
--test_tfr_prefix test \
+-test_tfr_pattern test \
 -class_mapping_json ./test_big/cats_vs_dogs_multi/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
@@ -37,15 +37,15 @@ python train.py \
 # Transfer Learning
 python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs_multi/tfr_files \
--train_tfr_prefix train \
+-train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs_multi/tfr_files \
--val_tfr_prefix val \
+-val_tfr_pattern val \
 -test_tfr_path ./test_big/cats_vs_dogs_multi/tfr_files \
--test_tfr_prefix test \
+-test_tfr_pattern test \
 -class_mapping_json ./test_big/cats_vs_dogs_multi/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs_multi/run_outputs_tl/ \
 -model_save_dir ./test_big/cats_vs_dogs_multi/model_save_dir_tl/ \
--model cats_vs_dogs \
+-model small_cnn \
 -labels species standing \
 -batch_size 12 \
 -n_cpus 2 \
