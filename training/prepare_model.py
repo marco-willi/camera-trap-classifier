@@ -171,6 +171,7 @@ def set_last_layer_to_non_trainable(model):
                       (layer.name, layer.trainable))
     return model
 
+
 def set_layers_to_non_trainable(model, layers):
     """ Set layers of a model to non-trainable """
 
@@ -195,6 +196,7 @@ def create_model(model_name,
                  transfer_learning=False,
                  fine_tuning=False,
                  path_of_model_to_load=None,
+                 initial_learning_rate=0.01
                  ):
 
     """ Returns specified model architecture """
@@ -243,7 +245,7 @@ def create_model(model_name,
                                         name=target_name)(output_flat))
 
     # Define model optimizer
-    opt = SGD(lr=0.01, momentum=0.9, decay=1e-4)
+    opt = SGD(lr=initial_learning_rate, momentum=0.9, decay=1e-4)
     # opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
 
     model = Model(inputs=model_input, outputs=all_target_outputs)

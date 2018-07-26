@@ -117,6 +117,9 @@ if __name__ == '__main__':
         "-starting_epoch", type=int, default=0,
         help="The starting epoch number.")
     parser.add_argument(
+        "-initial_learning_rate", type=float, default=0.01,
+        help="The initial learning rate.")
+    parser.add_argument(
         "-transfer_learning", default=False,
         action='store_true', required=False,
         help="Flag to specify that transfer learning should be used, with\
@@ -334,7 +337,8 @@ if __name__ == '__main__':
         continue_training=args['continue_training'],
         transfer_learning=args['transfer_learning'],
         fine_tuning=args['fine_tuning'],
-        path_of_model_to_load=args['model_to_load'])
+        path_of_model_to_load=args['model_to_load'],
+        initial_learning_rate=args['initial_learning_rate'])
 
     logger.debug("Final Model Architecture")
     for layer, i in zip(model.layers,
