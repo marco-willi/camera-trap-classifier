@@ -57,6 +57,11 @@ if __name__ == '__main__':
     parser.add_argument("-remove_label_value", type=str,
                         help='remove records with label value',
                         required=False)
+    parser.add_argument("-remove_multi_label_records", default=True,
+                        action='store_true', required=False,
+                        help="whether to remove records with more than one \
+                              observation (multi-label) which is not currently\
+                              supported in model training")
     parser.add_argument("-image_root_path", type=str, default='',
                         help='Root path of all images',
                         required=False)
@@ -102,6 +107,10 @@ if __name__ == '__main__':
     params = {'path': args['inventory']}
     dinv = DatasetInventoryMaster()
     dinv.create_from_source('json', params)
+
+    # Remove multi-label subjects
+    if args['remove_multi_label_records']:
+        dinv.remove_multi_label_records()
 
     # Remove records if requested
     if args['remove_label_name'] is not '':
@@ -161,5 +170,5 @@ if __name__ == '__main__':
             write_tfr_in_parallel=args['write_tfr_in_parallel'],
             process_images_in_parallel=args['process_images_in_parallel'],
             process_images_in_parallel_size=args['process_images_in_parallel_size'],
-            processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']      
+            processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']
             )

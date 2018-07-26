@@ -187,7 +187,7 @@ The commands can be executed using, for example, Git BASH (https://gitforwindows
 conda create --no-default-packages -n ctc python=3.5
 source activate ctc
 pip install --upgrade tensorflow
-conda install jupyter yaml nb_conda pillow h5py
+conda install jupyter yaml pyyaml nb_conda pillow h5py
 ```
 
 ### Using a GPU

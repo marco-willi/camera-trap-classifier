@@ -43,8 +43,9 @@ tfr = {k: v.export_to_tfrecord(
         overwrite_existing_files=True,
         max_records_per_file=10,
         write_tfr_in_parallel=False,
-        process_images_in_parallel=True,
-        process_n_images_in_parallel=5
+        process_images_in_parallel=False,
+        process_n_images_in_parallel=10,
+        n_processes_for_parallel_image=4
         ) for k, v in splitted.items()}
 
 tfr_writer.files

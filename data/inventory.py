@@ -35,6 +35,15 @@ class DatasetInventory(object):
         """ Remove specific record """
         self.data_inventory.pop(id_to_remove, None)
 
+    def remove_multi_label_records(self):
+        """ Remove records with multiple labels / observations """
+        to_remove = list()
+        for record_id, data in self.data_inventory:
+            if len(data['labels']) > 1:
+                to_remove.append(record_id)
+        for record_id in to_remove:
+            self.remove_record(record_id)
+                
     def _get_all_labels(self):
         """ Extract all labels
             Returns: {'species': ('elephant', 'zebra'),

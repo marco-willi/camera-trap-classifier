@@ -5,11 +5,11 @@ import json
 from shutil import copyfile
 import re
 from collections import Counter, OrderedDict
+from hashlib import md5
 import random
 import time
 
 import tensorflow as tf
-from hashlib import md5
 import numpy as np
 
 
@@ -62,6 +62,17 @@ def _balanced_sampling(id_to_label, random_seed=123):
     return remaining_record_ids
 
 
+def _assign_zero_one_to_split(zero_one_value, split_percents, split_names):
+    """ Assign a value between 0 and 1 to a split according to a percentage
+        distribution
+    """
+    split_props_cum = [sum(split_percents[0:(i+1)]) for i in
+                       range(0, len(split_percents))]
+    for sn, sp in zip(split_names, split_props_cum):
+        if zero_one_value <= sp:
+            return sn
+
+
 def randomly_split_dataset(
         split_ids,
         split_names,
@@ -99,8 +110,8 @@ def randomly_split_dataset(
                        range(0, len(split_percent))]
 
     for record_id in split_ids:
+        split_val = split_vals[record_id]
         for sn, sp in zip(split_names, split_props_cum):
-            split_val = split_vals[record_id]
             if split_val <= sp:
                 split_assignments.append(sn)
                 break
