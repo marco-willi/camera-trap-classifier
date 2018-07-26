@@ -172,8 +172,9 @@ class DatasetWriter(object):
 
                 if i % 1000 == 0:
                     est_t = estimate_remaining_time(start_time, n_records, i)
-                    logger.info("Wrote %s / %s records (estimated \
-                                time remaining: %s)" % (i, n_records, est_t))
+                    logger.info(
+                        "Wrote %s / %s records (estimated time remaining: %s)"
+                        % (i, n_records, est_t))
 
                 record_data = self.tfrecord_dict[record_id]
 
