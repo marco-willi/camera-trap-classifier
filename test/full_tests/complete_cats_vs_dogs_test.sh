@@ -61,11 +61,11 @@ python train.py \
 # Pseudo Transfer Training
 python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--train_tfr_prefix train \
+-train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--val_tfr_prefix val \
+-val_tfr_pattern val \
 -test_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--test_tfr_prefix test \
+-test_tfr_pattern test \
 -class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs_tl/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir_tl/ \
@@ -84,11 +84,11 @@ python train.py \
 # Pseudo Fine Tuning
 python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--train_tfr_prefix train \
+-train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--val_tfr_prefix val \
+-val_tfr_pattern val \
 -test_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--test_tfr_prefix test \
+-test_tfr_pattern test \
 -class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs_ft/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir_ft/ \

@@ -22,8 +22,6 @@ data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 tfr_train = find_tfr_files_pattern('./test_big/cats_vs_dogs/tfr_files/',
                             'train')
 
-
-
 output_labels = ['class']
 output_labels_clean = ['label/class']
 
@@ -37,12 +35,10 @@ n_classes_per_label = [n_classes_per_label_dict[x]
 index_to_class = {k: {vv: kk for kk, vv in v.items()} for k, v in class_mapping.items()}
 
 
-
 # Load model config
 model_cfg = ConfigLoader('./config/models.yaml')
 
 image_processing = model_cfg.cfg['models']['small_cnn']['image_processing']
-
 
 # Calculate Dataset Image Means and Stdevs for a dummy batch
 dataset = data_reader.get_iterator(
