@@ -1,7 +1,6 @@
 """ Prepare Model """
 import logging
 
-import tensorflow as tf
 from tensorflow.python.keras.models import Model, Sequential, load_model
 from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.optimizers import SGD
@@ -247,15 +246,8 @@ def create_model(model_name,
         logging.info("Training using single GPU or CPU..")
 
     model.compile(loss='sparse_categorical_crossentropy',
-                  #loss=sparse_loss,
                   optimizer=opt,
                   metrics=['sparse_categorical_accuracy',
                            'sparse_top_k_categorical_accuracy'])
 
     return model
-
-
-def sparse_loss(y_true, y_pred):
-    return tf.losses.sparse_softmax_cross_entropy(
-        labels=tf.cast(y_true, tf.int64),
-        logits=y_pred)

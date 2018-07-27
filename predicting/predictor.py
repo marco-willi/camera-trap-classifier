@@ -118,13 +118,16 @@ class Predictor(object):
 
         # Create Dataset Iterator
         iterator = dataset.make_one_shot_iterator()
-        features, labels = iterator.get_next()
+        #iterator = dataset.make_initializable_iterator()
+        batch_data = iterator.get_next()
 
         with K.get_session() as sess:
+            #tf.tables_initializer().run()
+            #sess.run(iterator.initializer)
             batch_counter = 1
             while True:
                 try:
-                    feat, lab = sess.run([features, labels])
+                    feat, lab = sess.run(batch_data)
                     batch_predictions = OrderedDict()
                 except tf.errors.OutOfRangeError:
                     print("")
@@ -179,8 +182,12 @@ class Predictor(object):
 
                         # add ground truth if available (for evaluations)
                         if output in lab:
-                            ground_truth_num = int(lab[output][i])
-                            ground_truth_str = id_to_class_mapping_clean[output][ground_truth_num]
+                            try:
+                                ground_truth_num = int(lab[output][i])
+                                ground_truth_str = id_to_class_mapping_clean[output][ground_truth_num]
+                            except:
+                                ground_truth_str = \
+                                    lab[output][i].decode('utf-8')
                             result[output_pretty]['ground_truth'] = \
                                 ground_truth_str
 

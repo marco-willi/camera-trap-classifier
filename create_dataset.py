@@ -62,6 +62,17 @@ if __name__ == '__main__':
                         help='remove records with label value (a list) and \
                               corresponding remove_label_name',
                         required=False)
+    parser.add_argument("-keep_label_name", nargs='+', type=str,
+                        default=[''],
+                        help='keep only records with at least one of the \
+                              label names (a list) and \
+                              corresponding keep_label_value',
+                        required=False)
+    parser.add_argument("-keep_label_value", nargs='+', type=str,
+                        default=[''],
+                        help='keep only records with label value (a list) and \
+                              corresponding keep_label_name',
+                        required=False)
     parser.add_argument("-remove_multi_label_records", default=True,
                         action='store_true', required=False,
                         help="whether to remove records with more than one \
@@ -127,6 +138,16 @@ if __name__ == '__main__':
         dinv.remove_records_with_label(
             label_name_list=args['remove_label_name'],
             label_value_list=args['remove_label_value'])
+
+    # keep only specific labels
+    if args['keep_label_name'] is not ['']:
+        if args['keep_label_value'] is ['']:
+            raise ValueError('if keep_label_name is specified\
+                              keep_label_value needs to be specified')
+
+        dinv.keep_only_records_with_label(
+            label_name_list=args['keep_label_name'],
+            label_value_list=args['keep_label_value'])        
 
     # Log Statistics
     dinv.log_stats()

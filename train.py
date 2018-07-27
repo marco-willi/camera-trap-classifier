@@ -29,13 +29,13 @@ import os
 
 import tensorflow as tf
 import numpy as np
-from tensorflow.python.keras.callbacks import (Callback,
+from tensorflow.python.keras.callbacks import (
     TensorBoard, EarlyStopping, CSVLogger, ModelCheckpoint, ReduceLROnPlateau)
-from tensorflow.python.keras import backend as K
 
 from config.config import ConfigLoader
 from config.config_logging import setup_logging
-from training.utils import copy_models_and_config_files
+from training.utils import (
+    copy_models_and_config_files, TableInitializerCallback)
 from training.prepare_model import create_model
 from predicting.predictor import Predictor
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
@@ -264,38 +264,6 @@ if __name__ == '__main__':
 
     logger.info("Preparing Data Feeders")
 
-    # def input_feeder_train():
-    #     dataset = data_reader.get_iterator(
-    #                 tfr_files=tfr_train,
-    #                 batch_size=args['batch_size'],
-    #                 is_train=True,
-    #                 n_repeats=None,
-    #                 output_labels=output_labels,
-    #                 label_to_numeric_mapping=class_mapping,
-    #                 image_pre_processing_fun=preprocess_image,
-    #                 image_pre_processing_args={
-    #                     **image_processing,
-    #                     'is_training': True},
-    #                 buffer_size=args['buffer_size'],
-    #                 num_parallel_calls=args['n_cpus'])
-    #     iterator = dataset.make_initializable_iterator()
-    #     return iterator
-    #     #return iterator.get_next()
-
-    # train_iterator = data_reader.get_iterator(
-    #                     tfr_files=tfr_train,
-    #                     batch_size=args['batch_size'],
-    #                     is_train=True,
-    #                     n_repeats=None,
-    #                     output_labels=output_labels,
-    #                     label_to_numeric_mapping=class_mapping,
-    #                     image_pre_processing_fun=preprocess_image,
-    #                     image_pre_processing_args={
-    #                         **image_processing,
-    #                         'is_training': True},
-    #                     buffer_size=args['buffer_size'],
-    #                     num_parallel_calls=args['n_cpus'])
-
     def input_feeder_train():
         return data_reader.get_iterator(
                     tfr_files=tfr_train,
@@ -310,38 +278,6 @@ if __name__ == '__main__':
                         'is_training': True},
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
-
-    # def input_feeder_val():
-    #     dataset = data_reader.get_iterator(
-    #                 tfr_files=tfr_val,
-    #                 batch_size=args['batch_size'],
-    #                 is_train=False,
-    #                 n_repeats=None,
-    #                 output_labels=output_labels,
-    #                 label_to_numeric_mapping=class_mapping,
-    #                 image_pre_processing_fun=preprocess_image,
-    #                 image_pre_processing_args={
-    #                     **image_processing,
-    #                     'is_training': False},
-    #                 buffer_size=args['buffer_size'],
-    #                 num_parallel_calls=args['n_cpus'])
-    #     iterator = dataset.make_initializable_iterator()
-    #     return iterator
-    #     return iterator.get_next()
-
-    # val_iterator = data_reader.get_iterator(
-    #                 tfr_files=tfr_val,
-    #                 batch_size=args['batch_size'],
-    #                 is_train=False,
-    #                 n_repeats=None,
-    #                 output_labels=output_labels,
-    #                 label_to_numeric_mapping=class_mapping,
-    #                 image_pre_processing_fun=preprocess_image,
-    #                 image_pre_processing_args={
-    #                     **image_processing,
-    #                     'is_training': False},
-    #                 buffer_size=args['buffer_size'],
-    #                 num_parallel_calls=args['n_cpus'])
 
     def input_feeder_val():
         return data_reader.get_iterator(
@@ -360,13 +296,12 @@ if __name__ == '__main__':
 
     if TEST_SET:
         def input_feeder_test():
-            dataset = data_reader.get_iterator(
+            return data_reader.get_iterator(
                         tfr_files=tfr_test,
                         batch_size=args['batch_size'],
                         is_train=False,
                         n_repeats=1,
                         output_labels=output_labels,
-                        label_to_numeric_mapping=class_mapping,
                         image_pre_processing_fun=preprocess_image,
                         image_pre_processing_args={
                             **image_processing,
@@ -374,8 +309,6 @@ if __name__ == '__main__':
                         buffer_size=args['buffer_size'],
                         num_parallel_calls=args['n_cpus'],
                         drop_batch_remainder=False)
-            iterator = dataset.make_initializable_iterator()
-            return iterator.get_next()
 
     # Export Image Processing Settings
     export_dict_to_json({**image_processing,
@@ -463,11 +396,7 @@ if __name__ == '__main__':
                               write_graph=True,
                               write_grads=False, write_images=False)
 
-    class TableInitializerCallback(Callback):
-        def __init__(self):
-            pass
-        def on_train_begin(self, logs=None):
-            K.get_session().run(tf.tables_initializer())
+    # Initialize tables (lookup tables)
     table_init = TableInitializerCallback()
 
     callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
@@ -478,14 +407,6 @@ if __name__ == '__main__':
     ###########################################
 
     logger.info("Start Model Training")
-
-    # with tf.Session() as sess:
-    #     K.set_session(sess)
-    #     tf = input_feeder_train()
-    #     vf = input_feeder_val()
-    #     #tf.tables_initializer().run()
-    #     sess.run(tf.tables_initializer())
-    #
 
     history = model.fit(
         input_feeder_train(),

@@ -38,11 +38,11 @@ python train.py \
 # Continue Training
 python train.py \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--train_tfr_prefix train \
+-train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--val_tfr_prefix val \
+-val_tfr_pattern val \
 -test_tfr_path ./test_big/cats_vs_dogs/tfr_files \
--test_tfr_prefix test \
+-test_tfr_pattern test \
 -class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
@@ -52,7 +52,7 @@ python train.py \
 -n_cpus 2 \
 -n_gpus 1 \
 -buffer_size 512 \
--max_epochs 10 \
+-max_epochs 7 \
 -starting_epoch 6 \
 -continue_training \
 -model_to_load ./test_big/cats_vs_dogs/run_outputs/

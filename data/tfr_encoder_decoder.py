@@ -157,7 +157,7 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
         if only_return_one_label:
             if label_lookup_dict is not None and not numeric_labels:
                 parsed_labels = {
-                    k: label_lookup_dict[k].lookup(v[0])
+                    k: tf.reshape(label_lookup_dict[k].lookup(v[0]), [1])
                     for k, v in sequence.items() if label_prefix in k}
             else:
                 parsed_labels = {

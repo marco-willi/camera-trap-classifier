@@ -52,14 +52,14 @@ dataset = data_reader.get_iterator(
         n_repeats=1,
         #output_labels=['label_num/class'],
         output_labels=output_labels,
-        #label_to_numeric_mapping=class_mapping,
+        label_to_numeric_mapping=class_mapping,
         image_pre_processing_fun=preprocess_image,
         image_pre_processing_args={**image_processing,
                                    'is_training': False},
         buffer_size=32,
         num_parallel_calls=2,
-        only_return_one_label=True,
-        return_only_ml_data=True)
+        only_return_one_label=False,
+        return_only_ml_data=False)
 
 iterator = dataset.make_initializable_iterator()
 #iterator = dataset.make_one_shot_iterator()
@@ -72,7 +72,7 @@ with tf.Session() as sess:
     for i in range(0,1):
         features, labels = sess.run(batch_data)
         for j in range(0, labels['label/class'].shape[0]):
-            print("Class: %s" % index_to_class['class'][labels['label/class'][j]])
+            print("Class: %s" % index_to_class['class'][labels['label/class'][j][0]])
             plt.imshow(features['images'][j,:,:,:])
             plt.show()
 

@@ -6,6 +6,7 @@ from data.image import preprocess_image
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from data.reader import DatasetReader
 from predicting.predictor import Predictor
+from data.utils import find_tfr_files
 
 model_path = './test_big/cats_vs_dogs_multi/model_save_dir/best_model.hdf5'
 pre_processing_json = './test_big/cats_vs_dogs_multi/model_save_dir/image_processing.json'
@@ -17,16 +18,17 @@ pred_output_json = './test_big/cats_vs_dogs_multi/model_save_dir/preds.json'
 batch_size = 5
 
 
-def _find_tfr_files(path, prefix):
-    """ Find all TFR files """
-    files = os.listdir(path)
-    tfr_files = [x for x in files if x.endswith('.tfrecord') and
-                 prefix in x]
-    tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
-    return tfr_paths
+model_path = './test_big/cats_vs_dogs/model_save_dir/best_model.hdf5'
+pre_processing_json = './test_big/cats_vs_dogs/model_save_dir/image_processing.json'
+class_mapping_json = './test_big/cats_vs_dogs/model_save_dir/label_mappings.json'
+image_dir = './test/test_images/'
+tfr_path = './test_big/cats_vs_dogs/tfr_files'
+pred_output_csv = './test_big/cats_vs_dogs/model_save_dir/preds.csv'
+pred_output_json = './test_big/cats_vs_dogs/model_save_dir/preds.json'
+batch_size = 5
 
 
-tfr_test = _find_tfr_files(tfr_path, 'test')
+tfr_test = find_tfr_files(tfr_path, 'test')
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
@@ -65,12 +67,12 @@ pred = Predictor(
             pre_processing_json=pre_processing_json,
             batch_size=batch_size)
 
-pred.predict_from_dataset(
-    dataset=input_feeder_test(),
-    export_type='csv',
-    output_file=pred_output_csv)
+#pred.predict_from_dataset(
+#    dataset=input_feeder_test(),
+#    export_type='csv',
+#    output_file=pred_output_csv)
 
-# pred.predict_from_dataset(
-#     dataset=input_feeder_test(),
-#     export_type='json',
-#     output_file=pred_output_json)
+pred.predict_from_dataset(
+     dataset=input_feeder_test(),
+     export_type='json',
+     output_file=pred_output_json)

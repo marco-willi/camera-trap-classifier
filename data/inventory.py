@@ -275,7 +275,7 @@ class DatasetInventoryMaster(DatasetInventory):
         for id_to_remove in ids_to_remove:
             self.remove_record(id_to_remove)
 
-    def keep_records_with_label(self, label_name_list, label_value_list):
+    def keep_only_records_with_label(self, label_name_list, label_value_list):
         """ Keep only records with (at least one) of the specified
             label_name and corresponding label values
         """
@@ -286,7 +286,7 @@ class DatasetInventoryMaster(DatasetInventory):
         to_keep = set()
         for label_name, label_value in zip(label_name_list, label_value_list):
             to_keep = to_keep.union(
-                self._keep_record_with_label(label_name, label_value))
+                self._keep_only_record_with_label(label_name, label_value))
 
         logger.info("Keeping %s records" % len(to_keep))
 
@@ -294,7 +294,7 @@ class DatasetInventoryMaster(DatasetInventory):
         for id_to_remove in to_remove:
             self.remove_record(id_to_remove)
 
-    def _keep_record_with_label(self, label_name, label_value):
+    def _keep_only_record_with_label(self, label_name, label_value):
         """ Keep only records with the label_value of the label_name
         """
         ids_to_keep = set()
