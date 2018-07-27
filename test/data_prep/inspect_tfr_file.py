@@ -9,25 +9,16 @@ from data.image import (
         preprocess_image)
 from data.utils import (
         calc_n_batches_per_epoch, read_json,
-        n_records_in_tfr)
+        n_records_in_tfr, find_tfr_files)
 from config.config import ConfigLoader
 import matplotlib.pyplot as plt
-from training.model_library import create_model
+from training.prepare_model import create_model
 
 tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 
 data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
-
-def _find_tfr_files(path, prefix):
-    """ Find all TFR files """
-    files = os.listdir(path)
-    tfr_files = [x for x in files if x.endswith('.tfrecord') and
-                 prefix in x]
-    tfr_paths = [os.path.join(*[path, x]) for x in tfr_files]
-    return tfr_paths
-
-tfr_train = _find_tfr_files('./test_big/cats_vs_dogs/tfr_files/',
+tfr_train = find_tfr_files('./test_big/cats_vs_dogs/tfr_files/',
                             'train')
 
 
@@ -48,11 +39,11 @@ n_classes_per_label = [n_classes_per_label_dict[x]
 # Load model config
 model_cfg = ConfigLoader('./config/models.yaml')
 
-image_processing = model_cfg.cfg['models']['cats_vs_dogs']['image_processing']
+image_processing = model_cfg.cfg['models']['small_cnn']['image_processing']
 
 
 # Calculate Dataset Image Means and Stdevs for a dummy batch
-batch_data = data_reader.get_iterator(
+dataset = data_reader.get_iterator(
         tfr_files=tfr_train,
         batch_size=10,
         is_train=False,
@@ -61,17 +52,19 @@ batch_data = data_reader.get_iterator(
         image_pre_processing_fun=preprocess_image,
         image_pre_processing_args={**image_processing,
                                    'is_training': False},
-        max_multi_label_number=None,
         buffer_size=32,
         num_parallel_calls=2,
         return_only_ml_data=False)
+iterator = dataset.make_one_shot_iterator()
+batch_data = iterator.get_next()
+
 
 with tf.Session() as sess:
     for i in range(0,1):
-        data = sess.run(batch_data)
-        for j in range(0, data['label/class'].shape[0]):
-            print("Class: %s" % data['label/class'][j])
-            plt.imshow(data['images'][j,:,:,:])
+        features, labels = sess.run(batch_data)
+        for j in range(0, labels['label/class'].shape[0]):
+            print("Class: %s" % labels['label/class'][j])
+            plt.imshow(features['images'][j,:,:,:])
             plt.show()
 
 
