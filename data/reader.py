@@ -14,6 +14,7 @@ class DatasetReader(object):
 
     def get_iterator(self, tfr_files, batch_size, is_train, n_repeats,
                      output_labels,
+                     label_to_numeric_mapping=None,
                      buffer_size=10192, num_parallel_calls=4,
                      drop_batch_remainder=True, **kwargs):
         """ Create Iterator from TFRecord """
@@ -22,6 +23,24 @@ class DatasetReader(object):
             " type list is of type %s" % type(output_labels)
 
         logger.info("Creating dataset TFR iterator")
+
+        # Map labels to integers
+        if label_to_numeric_mapping is not None:
+            class_to_index_mappings = dict()
+            for label in output_labels:
+                label_mapping = label_to_numeric_mapping[label]
+                # ensure each index between 0 and length is available
+                id_to_label = {v: k for k, v in label_mapping.items()}
+                sorted_label_names = [id_to_label[x] for x in
+                                      range(0, len(id_to_label))]
+                logging.debug("Mapping labels for %s into tensor %s" %
+                              (label, sorted_label_names))
+                lookup = tf.contrib.lookup.index_table_from_tensor(
+                            tf.constant(sorted_label_names),
+                            name='%s/label_name_lookup' % label)
+                class_to_index_mappings['label/%s' % label] = lookup
+        else:
+            class_to_index_mappings = None
 
         dataset = tf.data.Dataset.from_tensor_slices(tfr_files)
 
@@ -44,6 +63,7 @@ class DatasetReader(object):
                   lambda x: self.tfr_decoder(
                           serialized_example=x,
                           output_labels=output_labels,
+                          label_lookup_dict=class_to_index_mappings,
                           **kwargs),
                   batch_size=batch_size,
                   num_parallel_calls=num_parallel_calls,
