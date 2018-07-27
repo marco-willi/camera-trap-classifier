@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
         dinv.keep_only_records_with_label(
             label_name_list=args['keep_label_name'],
-            label_value_list=args['keep_label_value'])        
+            label_value_list=args['keep_label_value'])
 
     # Log Statistics
     dinv.log_stats()

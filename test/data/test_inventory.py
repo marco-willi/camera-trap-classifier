@@ -34,7 +34,7 @@ class DataInventoryTests(unittest.TestCase):
         self.assertIn("is_elephant",  self.inventory)
         self.assertIn("single_species_standard",  self.inventory)
         self.assertIn("counts_is_12",  self.inventory)
-        self.dinv.keep_records_with_label(label_names, label_values)
+        self.dinv.keep_only_records_with_label(label_names, label_values)
         self.assertNotIn("single_species_standard",  self.inventory)
         self.assertIn("is_elephant",  self.inventory)
         self.assertIn("counts_is_12",  self.inventory)
@@ -43,30 +43,21 @@ class DataInventoryTests(unittest.TestCase):
         id = 'single_species_standard'
         self.dinv._map_labels_to_numeric()
         record = self.inventory[id]
-        tfr_dict = self.dinv._convert_record_to_tfr_format(id, record, store_labels_as_numeric=True)
+        tfr_dict = self.dinv._convert_record_to_tfr_format(id, record)
         self.assertEqual(tfr_dict['id'], 'single_species_standard')
         self.assertEqual(tfr_dict['n_images'], 3)
         self.assertEqual(tfr_dict["image_paths"],
          ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
           "\\images\\4715\\all\\cat\\10296726_0.jpeg",
           "\\images\\4715\\all\\cat\\10296727_0.jpeg"])
-        self.assertIsInstance(tfr_dict["label/class"][0], int)
-        self.assertEqual(tfr_dict["label/color_brown"], [1])
-        self.assertEqual(tfr_dict["label/color_white"], [0])
-        self.assertIsInstance(tfr_dict["label/counts"][0], int)
-
-        tfr_dict = self.dinv._convert_record_to_tfr_format(id, record, store_labels_as_numeric=False)
-        self.assertEqual(tfr_dict['id'], 'single_species_standard')
-        self.assertEqual(tfr_dict['n_images'], 3)
-        self.assertEqual(tfr_dict["image_paths"],
-         ["\\images\\4715\\all\\cat\\10296725_0.jpeg",
-          "\\images\\4715\\all\\cat\\10296726_0.jpeg",
-          "\\images\\4715\\all\\cat\\10296727_0.jpeg"])
+        self.assertIsInstance(tfr_dict["label_num/class"][0], int)
+        self.assertEqual(tfr_dict["label_num/color_brown"], [1])
+        self.assertEqual(tfr_dict["label_num/color_white"], [0])
+        self.assertIsInstance(tfr_dict["label_num/counts"][0], int)
         self.assertEqual(tfr_dict["label/class"], ['cat'])
         self.assertEqual(tfr_dict["label/color_brown"], ['1'])
         self.assertEqual(tfr_dict["label/color_white"], ['0'])
         self.assertEqual(tfr_dict["label/counts"], ['1'])
-
 
 
 #    def testTFRecordFormat(self):
