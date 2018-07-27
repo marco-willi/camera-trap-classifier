@@ -43,7 +43,7 @@ if __name__ == '__main__':
                         required=False)
     parser.add_argument("-split_by_meta", type=str,
                         help='split dataset by meta data field in inventory',
-                        default="",
+                        default=None,
                         required=False)
     parser.add_argument("-balanced_sampling_min", default=False,
                         action='store_true', required=False,
@@ -53,12 +53,12 @@ if __name__ == '__main__':
                         help='label used for balanced sampling',
                         required=False)
     parser.add_argument("-remove_label_name", nargs='+', type=str,
-                        default=[''],
+                        default=None,
                         help='remove records with label names (a list) and \
                               corresponding remove_label_value',
                         required=False)
     parser.add_argument("-remove_label_value", nargs='+', type=str,
-                        default=[''],
+                        default=None,
                         help='remove records with label value (a list) and \
                               corresponding remove_label_name',
                         required=False)
@@ -130,8 +130,8 @@ if __name__ == '__main__':
         dinv.remove_multi_label_records()
 
     # Remove specific labels
-    if args['remove_label_name'] is not ['']:
-        if args['remove_label_value'] is ['']:
+    if args['remove_label_name'] is not None:
+        if args['remove_label_value'] is None:
             raise ValueError('if remove_label_name is specified\
                               remove_label_value needs to be specified')
 
@@ -153,7 +153,7 @@ if __name__ == '__main__':
     dinv.log_stats()
 
     # Determine if Meta-Column has been specified
-    if args['split_by_meta']:
+    if args['split_by_meta'] is not None:
         splitted = dinv.split_inventory_by_meta_data_column(
                 meta_colum=args['split_by_meta'])
 
