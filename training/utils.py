@@ -5,6 +5,7 @@ import logging
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.callbacks import Callback
 
 from data.utils import copy_file
@@ -260,3 +261,9 @@ class ReduceLearningRateOnPlateau(object):
 
             current_min_res = np.min(result_history)
         return change_lr
+
+
+class TableInitializerCallback(Callback):
+    """ Initialize Tables """
+    def on_train_begin(self, logs=None):
+        K.get_session().run(tf.tables_initializer())

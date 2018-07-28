@@ -34,7 +34,8 @@ from tensorflow.python.keras.callbacks import (
 
 from config.config import ConfigLoader
 from config.config_logging import setup_logging
-from training.utils import copy_models_and_config_files
+from training.utils import (
+    copy_models_and_config_files, TableInitializerCallback)
 from training.prepare_model import create_model
 from predicting.predictor import Predictor
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
@@ -227,16 +228,19 @@ if __name__ == '__main__':
             is_train=False,
             n_repeats=1,
             output_labels=output_labels,
+            label_to_numeric_mapping=class_mapping,
             image_pre_processing_fun=preprocess_image,
             image_pre_processing_args={**image_processing,
                                        'is_training': False},
             buffer_size=args['buffer_size'],
             num_parallel_calls=args['n_cpus'])
-    iterator = dataset.make_one_shot_iterator()
+    iterator = dataset.make_initializable_iterator()
     batch_data = iterator.get_next()
 
     logger.info("Calculating image means and stdevs")
     with tf.Session() as sess:
+        tf.tables_initializer().run()
+        sess.run(iterator.initializer)
         features, labels = sess.run(batch_data)
 
     # calculate and save image means and stdvs of each color channel
@@ -267,6 +271,7 @@ if __name__ == '__main__':
                     is_train=True,
                     n_repeats=None,
                     output_labels=output_labels,
+                    label_to_numeric_mapping=class_mapping,
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
@@ -281,6 +286,7 @@ if __name__ == '__main__':
                     is_train=False,
                     n_repeats=None,
                     output_labels=output_labels,
+                    label_to_numeric_mapping=class_mapping,
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
@@ -390,8 +396,11 @@ if __name__ == '__main__':
                               write_graph=True,
                               write_grads=False, write_images=False)
 
+    # Initialize tables (lookup tables)
+    table_init = TableInitializerCallback()
+
     callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
-                      checkpointer, checkpointer_best]
+                      checkpointer, checkpointer_best, table_init]
 
     ###########################################
     # MODEL TRAINING  ###########

@@ -161,7 +161,7 @@ python predict.py -image_dir /my_images/new_images/ \
 
 The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required.
 
-We have used python 3.5 and Tensorflow 1.9 (older versions may not work properly).
+We have used python 3.5 (newer versions should work) and Tensorflow 1.9 (older versions don't work).
 
 
 ### Installing from Requirements
@@ -170,10 +170,9 @@ The most common way to install all required packages is to create a virtual envi
 requirements.txt file as provided in [setup/](setup/).
 
 ```
-cd setup/
 python3 -m virtualenv ctc
 source ctc/bin/activate
-pip install -r requirements.txt
+pip install -r ./setup/requirements.txt
 ```
 
 ### Windows users with Anaconda
@@ -183,10 +182,13 @@ commands allow for a full installation using Anaconda (https://conda.io/docs/use
 The commands can be executed using, for example, Git BASH (https://gitforwindows.org).
 
 ```
-# create a new conda environment
+# create a new conda environment with name 'ctc'
 conda create --no-default-packages -n ctc python=3.5
+# activate the environment
 source activate ctc
+# install tensorflow (according to official documentation)
 pip install --upgrade tensorflow
+# alternatively: conda install tensorflow
 conda install jupyter yaml pyyaml nb_conda pillow h5py
 ```
 

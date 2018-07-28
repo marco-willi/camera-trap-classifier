@@ -14,6 +14,7 @@ class DatasetReader(object):
 
     def get_iterator(self, tfr_files, batch_size, is_train, n_repeats,
                      output_labels,
+                     label_to_numeric_mapping=None,
                      buffer_size=10192, num_parallel_calls=4,
                      drop_batch_remainder=True, **kwargs):
         """ Create Iterator from TFRecord """
@@ -22,6 +23,24 @@ class DatasetReader(object):
             " type list is of type %s" % type(output_labels)
 
         logger.info("Creating dataset TFR iterator")
+
+        # Create Hash Map to map str labels to numerics if specified
+        if label_to_numeric_mapping is not None:
+            class_to_index_mappings = dict()
+            for label in output_labels:
+                label_mapping = label_to_numeric_mapping[label]
+                if not self._is_correct_mapping(label_mapping):
+                    err_msg = "Label mapping %s is invalid" % label_mapping
+                    logging.error(err_msg)
+                    raise ValueError(err_msg)
+                lookup_tab = self._create_hash_table_from_dict(
+                    label_mapping,
+                    name='%s/label_lookup' % label)
+                logging.debug("Mapping labels for %s are %s" %
+                              (label, label_mapping))
+                class_to_index_mappings['label/%s' % label] = lookup_tab
+        else:
+            class_to_index_mappings = None
 
         dataset = tf.data.Dataset.from_tensor_slices(tfr_files)
 
@@ -44,6 +63,7 @@ class DatasetReader(object):
                   lambda x: self.tfr_decoder(
                           serialized_example=x,
                           output_labels=output_labels,
+                          label_lookup_dict=class_to_index_mappings,
                           **kwargs),
                   batch_size=batch_size,
                   num_parallel_calls=num_parallel_calls,
@@ -53,3 +73,35 @@ class DatasetReader(object):
             dataset = dataset.repeat(n_repeats)
 
         return dataset
+
+    def _create_hash_table_from_dict(self, mapping, name=None):
+        """ Create a hash table from a dictionary """
+        keys, values = zip(*mapping.items())
+        table = tf.contrib.lookup.HashTable(
+          tf.contrib.lookup.KeyValueTensorInitializer(list(keys), list(values)),
+          -1, name=name)
+        return table
+
+    def _create_lookup_from_dict(self, mapping, name=None):
+        """ Create a lookup table from a dictionary """
+        id_to_label = {v: k for k, v in mapping.items()}
+        sorted_label_names = [id_to_label[x] for x in
+                              range(0, len(id_to_label))]
+        table = tf.contrib.lookup.index_table_from_tensor(
+                    tf.constant(sorted_label_names),
+                    name=name)
+        return table
+
+    def _is_correct_mapping(self, mapping):
+        """ Check label to numeric mapping is
+            as expectet - input is a dict
+            Example: {'cat': 0, 'dog': 1, 'doggy': 1}
+        """
+        all_indx_values = set()
+        for k, v in mapping.items():
+            all_indx_values.add(v)
+        # ensure each index for 0 to N is in the indexes
+        for i in range(0, len(all_indx_values)):
+            if i not in all_indx_values:
+                return False
+        return True

@@ -100,13 +100,15 @@ class DatasetInventory(object):
             logger.warning("Cant export data inventory to json - no\
                             inventory created yet")
 
-    def export_to_tfrecord(self, tfr_writer, tfr_path, **kwargs):
+    def export_to_tfrecord(self, tfr_writer, tfr_path,
+                           **kwargs):
         """ Export Dataset to TFRecod """
 
         # create tfrecord dictionary
         tfrecord_dict = dict()
         for _id, record_values in self.data_inventory.items():
-            tfr_record = self._convert_record_to_tfr_format(_id, record_values)
+            tfr_record = self._convert_record_to_tfr_format(
+                _id, record_values)
             tfrecord_dict[_id] = tfr_record
 
         # Write to disk
@@ -133,15 +135,20 @@ class DatasetInventory(object):
                 label_text += ['#' + label_name + ':' + label_value]
         label_text = ''.join(label_text)
 
-        # generate labels dict
+        # generate labels dict, save string and numeric labels
         labels_dict = dict()
+        labels_num_dict = dict()
         for label in record['labels']:
             for label_name, label_value in label.items():
                 label_id = 'label/' + label_name
+                label_id_num = 'label_num/' + label_name
                 if label_name not in labels_dict:
                     labels_dict[label_id] = []
-                num_value = self.labels_numeric_map[label_name][label_value]
-                labels_dict[label_id].append(num_value)
+                    labels_num_dict[label_id_num] = []
+                val_num = self.labels_numeric_map[label_name][label_value]
+                val = label_value
+                labels_num_dict[label_id_num].append(val_num)
+                labels_dict[label_id].append(val)
 
         tfr_data = {
             "id": str(id),
@@ -150,7 +157,8 @@ class DatasetInventory(object):
             "image_paths": record['images'],
             "meta_data": meta_data,
             "labelstext": label_text,
-            **labels_dict
+            **labels_dict,
+            **labels_num_dict
         }
 
         return tfr_data
@@ -266,6 +274,38 @@ class DatasetInventoryMaster(DatasetInventory):
 
         for id_to_remove in ids_to_remove:
             self.remove_record(id_to_remove)
+
+    def keep_only_records_with_label(self, label_name_list, label_value_list):
+        """ Keep only records with (at least one) of the specified
+            label_name and corresponding label values
+        """
+        assert all([isinstance(label_name_list, list),
+                    isinstance(label_value_list, list)]), \
+            "label_name_list and label_value_list must be lists"
+
+        to_keep = set()
+        for label_name, label_value in zip(label_name_list, label_value_list):
+            to_keep = to_keep.union(
+                self._keep_only_record_with_label(label_name, label_value))
+
+        logger.info("Keeping %s records" % len(to_keep))
+
+        to_remove = self.data_inventory.keys() - to_keep
+        for id_to_remove in to_remove:
+            self.remove_record(id_to_remove)
+
+    def _keep_only_record_with_label(self, label_name, label_value):
+        """ Keep only records with the label_value of the label_name
+        """
+        ids_to_keep = set()
+        for record_id, record_value in self.data_inventory.items():
+            labels_list = record_value['labels']
+            for label in labels_list:
+                for l_name, l_val_list in label.items():
+                    if (label_name == l_name):
+                        if label_value in l_val_list:
+                            ids_to_keep.add(record_id)
+        return ids_to_keep
 
     def split_inventory_by_random_splits_with_balanced_sample(
             self,

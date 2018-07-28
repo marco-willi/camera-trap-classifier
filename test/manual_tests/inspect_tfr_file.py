@@ -9,7 +9,7 @@ from data.image import (
         preprocess_image)
 from data.utils import (
         calc_n_batches_per_epoch, read_json,
-        n_records_in_tfr, find_tfr_files)
+        n_records_in_tfr, find_tfr_files_pattern)
 from config.config import ConfigLoader
 import matplotlib.pyplot as plt
 from training.prepare_model import create_model
@@ -18,10 +18,9 @@ tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
 
 data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
-tfr_train = find_tfr_files('./test_big/cats_vs_dogs/tfr_files/',
+
+tfr_train = find_tfr_files_pattern('./test_big/cats_vs_dogs/tfr_files/',
                             'train')
-
-
 
 output_labels = ['class']
 output_labels_clean = ['label/class']
@@ -33,7 +32,7 @@ n_classes_per_label_dict = {c: len(class_mapping[o]) for o, c in
                             zip(output_labels, output_labels_clean)}
 n_classes_per_label = [n_classes_per_label_dict[x]
                        for x in output_labels_clean]
-
+index_to_class = {k: {vv: kk for kk, vv in v.items()} for k, v in class_mapping.items()}
 
 
 # Load model config
@@ -41,29 +40,39 @@ model_cfg = ConfigLoader('./config/models.yaml')
 
 image_processing = model_cfg.cfg['models']['small_cnn']['image_processing']
 
-
 # Calculate Dataset Image Means and Stdevs for a dummy batch
 dataset = data_reader.get_iterator(
         tfr_files=tfr_train,
         batch_size=10,
         is_train=False,
         n_repeats=1,
+        #output_labels=['label_num/class'],
         output_labels=output_labels,
+        label_to_numeric_mapping=class_mapping,
+        #label_to_numeric_mapping={'class': {'cat': 0, 'dog': 2}},
         image_pre_processing_fun=preprocess_image,
         image_pre_processing_args={**image_processing,
                                    'is_training': False},
         buffer_size=32,
         num_parallel_calls=2,
+        only_return_one_label=False,
         return_only_ml_data=False)
 iterator = dataset.make_one_shot_iterator()
 batch_data = iterator.get_next()
 
 
+iterator = dataset.make_initializable_iterator()
+#iterator = dataset.make_one_shot_iterator()
+batch_data = iterator.get_next()
+
+
 with tf.Session() as sess:
+    tf.tables_initializer().run()
+    sess.run(iterator.initializer)
     for i in range(0,1):
         features, labels = sess.run(batch_data)
         for j in range(0, labels['label/class'].shape[0]):
-            print("Class: %s" % labels['label/class'][j])
+            print("Class: %s" % index_to_class['class'][labels['label/class'][j][0]])
             plt.imshow(features['images'][j,:,:,:])
             plt.show()
 
@@ -124,6 +133,7 @@ def input_feeder_train():
                         **image_processing,
                         'is_training': True},
                     max_multi_label_number=None,
+                    numeric_labels=True
                     buffer_size=2,
                     num_parallel_calls=2)
 

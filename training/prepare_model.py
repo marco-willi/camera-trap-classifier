@@ -127,35 +127,6 @@ def load_model_and_replace_output(model_old, model_new, new_output_layer):
     return new_model
 
 
-def set_layers_to_non_trainable(model, first_layer_to_train):
-    """ Set layers of a model to non-trainable """
-
-    layer_names = [x.name for x in model.layers]
-
-    # check if layer name is in model
-    if first_layer_to_train not in layer_names:
-        logging.error("Layer %s not in model.layers" %
-                      first_layer_to_train)
-        logging.error("Available Layers %s" %
-                      layer_names)
-        raise IOError("Layer %s not in model.layers" %
-                      first_layer_to_train)
-
-    # look for specified layer and set all previous layers
-    # to non-trainable
-    n_retrain = layer_names.index(first_layer_to_train)
-    for layer in model.layers[0:n_retrain]:
-        layer.trainable = False
-
-    logging.info("Setting layers before %s to non-trainable" %
-                 first_layer_to_train)
-
-    for layer in model.layers:
-        logging.info("Layer %s is trainable: %s" %
-                     (layer.name, layer.trainable))
-    return model
-
-
 def set_last_layer_to_non_trainable(model):
     """ Set layers of a model to non-trainable """
 
