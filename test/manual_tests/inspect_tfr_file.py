@@ -49,6 +49,7 @@ dataset = data_reader.get_iterator(
         #output_labels=['label_num/class'],
         output_labels=output_labels,
         label_to_numeric_mapping=class_mapping,
+        #label_to_numeric_mapping={'class': {'cat': 0, 'dog': 2}},
         image_pre_processing_fun=preprocess_image,
         image_pre_processing_args={**image_processing,
                                    'is_training': False},
