@@ -137,11 +137,18 @@ python train.py \
 -model_save_dir /my_model/save1/ \
 -model ResNet18 \
 -labels species count \
+-labels_loss_weights 1 0.5 \
 -batch_size 128 \
 -n_cpus 4 \
 -n_gpus 1 \
 -buffer_size 512 \
--max_epochs 70
+-max_epochs 70 \
+-color_augmentation ultra_fast
+```
+
+Use the following command for more help about all the options:
+```
+ python train.py --help
 ```
 
 ### 5) Model Use

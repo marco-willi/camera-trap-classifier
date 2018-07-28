@@ -148,10 +148,11 @@ if __name__ == '__main__':
     parser.add_argument(
         "-color_augmentation", type=str, default="ultra_fast",
         required=False,
-        help="What (random) color augmentation to perform during model\
-              training - choose one of [None, 'fast', 'ultra_fast', 'full']\
-              this can have a heavy impact on pre-processing speed \
-              use None or fast options if input pipeline is slow")
+        help="Which (random) color augmentation to perform during model\
+              training - choose one of [None, 'fast', 'ultra_fast', 'full']. \
+              This can slow down the pre-processing speed and starve the \
+              GPU of data. Use None or fast/ultra_fast options if input \
+              pipeline is slow")
 
     args = vars(parser.parse_args())
 
