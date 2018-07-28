@@ -21,7 +21,8 @@ python train.py \
 -n_gpus 1 \
 -buffer_size 512 \
 -max_epochs 10 \
--starting_epoch 0
+-starting_epoch 0 \
+-color_augmentation full
 """
 import argparse
 import logging
@@ -97,6 +98,10 @@ if __name__ == '__main__':
     parser.add_argument(
         "-labels", nargs='+', type=str, required=True,
         help='The labels to model')
+    parser.add_argument(
+        "-labels_loss_weights", nargs='+', type=float, default=None,
+        help='A list of length labels indicating weights for the different\
+              labels applied during model training')
     parser.add_argument(
         "-batch_size", type=int, default=128,
         help="The batch size for model training, if too large the model may\
@@ -347,7 +352,8 @@ if __name__ == '__main__':
         transfer_learning=args['transfer_learning'],
         fine_tuning=args['fine_tuning'],
         path_of_model_to_load=args['model_to_load'],
-        initial_learning_rate=args['initial_learning_rate'])
+        initial_learning_rate=args['initial_learning_rate'],
+        output_loss_weights=args['labels_loss_weights'])
 
     logger.debug("Final Model Architecture")
     for layer, i in zip(model.layers,
