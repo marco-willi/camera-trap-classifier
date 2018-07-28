@@ -55,7 +55,8 @@ python train.py \
 -max_epochs 7 \
 -starting_epoch 6 \
 -continue_training \
--model_to_load ./test_big/cats_vs_dogs/run_outputs/
+-model_to_load ./test_big/cats_vs_dogs/run_outputs/ \
+-color_augmentation full
 
 
 # Pseudo Transfer Training
