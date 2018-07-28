@@ -21,7 +21,8 @@ python train.py \
 -n_gpus 1 \
 -buffer_size 512 \
 -max_epochs 10 \
--starting_epoch 0
+-starting_epoch 0 \
+-color_augmentation full
 """
 import argparse
 import logging
@@ -98,6 +99,10 @@ if __name__ == '__main__':
         "-labels", nargs='+', type=str, required=True,
         help='The labels to model')
     parser.add_argument(
+        "-labels_loss_weights", nargs='+', type=float, default=None,
+        help='A list of length labels indicating weights for the different\
+              labels applied during model training')
+    parser.add_argument(
         "-batch_size", type=int, default=128,
         help="The batch size for model training, if too large the model may\
               crash with an OOM error. Use values between 64 and 256")
@@ -141,10 +146,13 @@ if __name__ == '__main__':
              if a directory is specified, \
              the most recent model in that directory is loaded')
     parser.add_argument(
-        "-pre_processing", type=str, default="standard",
+        "-color_augmentation", type=str, default="ultra_fast",
         required=False,
-        help="Has currently no effect, standard image pre-processing \
-             is applied")
+        help="Which (random) color augmentation to perform during model\
+              training - choose one of [None, 'fast', 'ultra_fast', 'full']. \
+              This can slow down the pre-processing speed and starve the \
+              GPU of data. Use None or fast/ultra_fast options if input \
+              pipeline is slow")
 
     args = vars(parser.parse_args())
 
@@ -275,7 +283,8 @@ if __name__ == '__main__':
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
-                        'is_training': True},
+                        'is_training': True,
+                        'color_augmentation': args['color_augmentation']},
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
 
@@ -344,7 +353,8 @@ if __name__ == '__main__':
         transfer_learning=args['transfer_learning'],
         fine_tuning=args['fine_tuning'],
         path_of_model_to_load=args['model_to_load'],
-        initial_learning_rate=args['initial_learning_rate'])
+        initial_learning_rate=args['initial_learning_rate'],
+        output_loss_weights=args['labels_loss_weights'])
 
     logger.debug("Final Model Architecture")
     for layer, i in zip(model.layers,

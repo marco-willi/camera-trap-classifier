@@ -167,7 +167,8 @@ def create_model(model_name,
                  transfer_learning=False,
                  fine_tuning=False,
                  path_of_model_to_load=None,
-                 initial_learning_rate=0.01
+                 initial_learning_rate=0.01,
+                 output_loss_weights=None
                  ):
 
     """ Returns specified model architecture """
@@ -247,6 +248,7 @@ def create_model(model_name,
 
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
+                  loss_weights=output_loss_weights,
                   metrics=['sparse_categorical_accuracy',
                            'sparse_top_k_categorical_accuracy'])
 

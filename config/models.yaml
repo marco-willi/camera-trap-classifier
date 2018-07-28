@@ -12,47 +12,39 @@ models:
       # resizing options for data augmentation
       resize_side_min: 224
       resize_side_max: 246
-      # whether to use color data augmentation (randomly adjust colors)
-      color_manipulations: True
   ResNet34:
     image_processing:
       output_height: 224
       output_width: 224
       resize_side_min: 224
       resize_side_max: 246
-      color_manipulations: True
   ResNet50:
     image_processing:
       output_height: 224
       output_width: 224
       resize_side_min: 224
       resize_side_max: 246
-      color_manipulations: True
   ResNet101:
     image_processing:
       output_height: 224
       output_width: 224
       resize_side_min: 224
       resize_side_max: 246
-      color_manipulations: True
   ResNet152:
     image_processing:
       output_height: 224
       output_width: 224
       resize_side_min: 224
       resize_side_max: 246
-      color_manipulations: True
   InceptionResNetV2:
     image_processing:
       output_height: 299
       output_width: 299
       resize_side_min: 299
       resize_side_max: 329
-      color_manipulations: True
   small_cnn:
     image_processing:
       output_height: 50
       output_width: 50
       resize_side_min: 50
       resize_side_max: 55
-      color_manipulations: True
