@@ -1,8 +1,14 @@
 """ Functions to handle / process images """
 import tensorflow as tf
-import numpy as np
+from tensorflow.python.ops import random_ops
+from tensorflow.python.ops import control_flow_ops
 from PIL import Image
+import numpy as np
 import io
+
+# FLAGS
+cb_distortion_range = 0.05
+cr_distortion_range = 0.05
 
 
 def resize_image(image, target_size):
@@ -267,7 +273,7 @@ def preprocess_for_train(image,
                          image_stdevs,
                          resize_side_min,
                          resize_side_max,
-                         color_manipulations):
+                         color_augmentation):
     """Preprocesses the given image for training.
     Note that the actual resizing scale is sampled from
     [`resize_size_min`, `resize_size_max`].
@@ -287,17 +293,35 @@ def preprocess_for_train(image,
 
     image = _aspect_preserving_resize(image, resize_side)
     image = tf.random_crop(image, [output_height, output_width, 3])
-    #image.set_shape([output_height, output_width, 3])
     image = tf.to_float(image)
     image = tf.image.random_flip_left_right(image)
-
-    if color_manipulations:
-        image = tf.image.random_brightness(image, max_delta=0.2)
-        image = tf.image.random_contrast(image, lower=0.9, upper=1)
-        image = tf.image.random_hue(image, max_delta=0.02)
-        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
-
     image = tf.divide(image, tf.cast(255.0, tf.float32))
+
+    if color_augmentation is None:
+        image = _image_standardize(image, image_means, image_stdevs)
+        return image
+
+    elif color_augmentation == 'fast':
+        fast_mode = True
+        use_fast_color_distort = False
+
+    elif color_augmentation == 'ultra_fast':
+        fast_mode = True
+        use_fast_color_distort = True
+
+    elif color_augmentation == 'full':
+        fast_mode = False
+        use_fast_color_distort = False
+
+    if use_fast_color_distort:
+        image = distort_color_fast(image)
+    else:
+        # Randomly distort the colors. There are 4 ways to do it.
+        image = apply_with_random_selector(
+                    image,
+                    lambda x, ordering: distort_color(x, ordering, fast_mode),
+                    num_cases=4)
+
     image = _image_standardize(image, image_means, image_stdevs)
 
     return image
@@ -331,7 +355,7 @@ def preprocess_image(image, output_height, output_width,
                      resize_side_max,
                      image_means=[0, 0, 0],
                      image_stdevs=[1, 1, 1],
-                     color_manipulations=False):
+                     color_augmentation=None):
     """Preprocesses the given image.
     Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -354,7 +378,7 @@ def preprocess_image(image, output_height, output_width,
         return preprocess_for_train(image, output_height, output_width,
                                     image_means, image_stdevs,
                                     resize_side_min, resize_side_max,
-                                    color_manipulations)
+                                    color_augmentation)
     else:
         return preprocess_for_eval(image, output_height, output_width,
                                    image_means, image_stdevs,
@@ -416,32 +440,100 @@ def read_jpeg(image):
     return image_bytes
 
 
-def preprocessing_resize_jpeg2(image, coder, smallest_side, n_color_channels):
-    """ Take Raw JPEG resize with aspect ratio preservation
-         and return JPEG
-    """
+# https://github.com/tensorflow/tpu/blob/master/models/experimental/inception/
+def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
+  """Distort the color of a Tensor image.
+  Each color distortion is non-commutative and thus ordering of the color ops
+  matters. Ideally we would randomly permute the ordering of the color ops.
+  Rather then adding that level of complication, we select a distinct ordering
+  of color ops for each preprocessing thread.
+  Args:
+    image: 3-D Tensor containing single image in [0, 1].
+    color_ordering: Python int, a type of distortion (valid values: 0-3).
+    fast_mode: Avoids slower ops (random_hue and random_contrast)
+    scope: Optional scope for name_scope.
+  Returns:
+    3-D Tensor color-distorted image on range [0, 1]
+  Raises:
+    ValueError: if color_ordering not in [0, 3]
+  """
+  with tf.name_scope(scope, 'distort_color', [image]):
+    if fast_mode:
+      if color_ordering == 0:
+        image = tf.image.random_brightness(image, max_delta=0.2)
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+      else:
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+        image = tf.image.random_brightness(image, max_delta=0.2)
+    else:
+      if color_ordering == 0:
+        image = tf.image.random_brightness(image, max_delta=0.2)
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_contrast(image, lower=0.9, upper=1)
+      elif color_ordering == 1:
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+        image = tf.image.random_brightness(image, max_delta=0.2)
+        image = tf.image.random_contrast(image, lower=0.9, upper=1)
+        image = tf.image.random_hue(image, max_delta=0.02)
+      elif color_ordering == 2:
+        image = tf.image.random_contrast(image, lower=0.9, upper=1)
+        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_brightness(image, max_delta=0.2)
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+      elif color_ordering == 3:
+        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
+        image = tf.image.random_contrast(image, lower=0.9, upper=1)
+        image = tf.image.random_brightness(image, max_delta=0.2)
+      else:
+        raise ValueError('color_ordering must be in [0, 3]')
 
-    _jpeg_data_decode = tf.placeholder(dtype=tf.string)
+    # The random_* ops do not necessarily clamp.
+    return tf.clip_by_value(image, 0.0, 1.0)
 
-    # decode jpeg image to tensor
-    image_decoded = tf.image.decode_jpeg(_jpeg_data_decode,
-                                         channels=n_color_channels)
 
-    image_resized = _aspect_preserving_resize(image_decoded,
-                                              smallest_side)
+def distort_color_fast(image, scope=None):
+  """Distort the color of a Tensor image.
+  Distort brightness and chroma values of input image
+  Args:
+    image: 3-D Tensor containing single image in [0, 1].
+    scope: Optional scope for name_scope.
+  Returns:
+    3-D Tensor color-distorted image on range [0, 1]
+  """
+  with tf.name_scope(scope, 'distort_color', [image]):
+    br_delta = random_ops.random_uniform([], -0.2, 0.2, seed=None)
+    cb_factor = random_ops.random_uniform(
+        [], -cb_distortion_range, cb_distortion_range, seed=None)
+    cr_factor = random_ops.random_uniform(
+        [], -cr_distortion_range, cr_distortion_range, seed=None)
 
-    image_bit = tf.image.convert_image_dtype(image_resized, tf.uint8)
+    channels = tf.split(axis=2, num_or_size_splits=3, value=image)
+    red_offset = 1.402 * cr_factor + br_delta
+    green_offset = -0.344136 * cb_factor - 0.714136 * cr_factor + br_delta
+    blue_offset = 1.772 * cb_factor + br_delta
+    channels[0] += red_offset
+    channels[1] += green_offset
+    channels[2] += blue_offset
+    image = tf.concat(axis=2, values=channels)
+    image = tf.clip_by_value(image, 0., 1.)
 
-    #shape = tf.cast([None, None, n_color_channels], tf.int32)
+    return image
 
-    #tf.logging.info("shape %s" % shape)
-    #image_bit = tf.bitcast(image_resized, tf.uint8)
 
-    image_encoded = tf.image.encode_jpeg(image_bit)
-
-    image_bytes = coder.convert_encoded_jpeg_to_bytes(
-        result=image_encoded,
-        input_image=image,
-        place=_jpeg_data_decode)
-
-    return image_bytes
+def apply_with_random_selector(x, func, num_cases):
+  """Computes func(x, sel), with sel sampled from [0...num_cases-1].
+  Args:
+    x: input Tensor.
+    func: Python function to apply.
+    num_cases: Python int32, number of cases to sample sel from.
+  Returns:
+    The result of func(x, sel), where func receives the value of the
+    selector as a python integer, but sel is sampled dynamically.
+  """
+  sel = tf.random_uniform([], maxval=num_cases, dtype=tf.int32)
+  # Pass the real x only to one of the func calls.
+  return control_flow_ops.merge([
+      func(control_flow_ops.switch(x, tf.equal(sel, case))[1], case)
+      for case in range(num_cases)])[0]

@@ -141,10 +141,12 @@ if __name__ == '__main__':
              if a directory is specified, \
              the most recent model in that directory is loaded')
     parser.add_argument(
-        "-pre_processing", type=str, default="standard",
+        "-color_augmentation", type=str, default="ultra_fast",
         required=False,
-        help="Has currently no effect, standard image pre-processing \
-             is applied")
+        help="What (random) color augmentation to perform during model\
+              training - choose one of [None, 'fast', 'ultra_fast', 'full']\
+              this can have a heavy impact on pre-processing speed \
+              use None or fast options if input pipeline is slow")
 
     args = vars(parser.parse_args())
 
@@ -275,7 +277,8 @@ if __name__ == '__main__':
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
-                        'is_training': True},
+                        'is_training': True,
+                        'color_augmentation': args['color_augmentation']},
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
 
