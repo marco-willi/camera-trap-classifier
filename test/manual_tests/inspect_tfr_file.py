@@ -57,6 +57,9 @@ dataset = data_reader.get_iterator(
         num_parallel_calls=2,
         only_return_one_label=False,
         return_only_ml_data=False)
+iterator = dataset.make_one_shot_iterator()
+batch_data = iterator.get_next()
+
 
 iterator = dataset.make_initializable_iterator()
 #iterator = dataset.make_one_shot_iterator()
