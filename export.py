@@ -18,10 +18,10 @@ import logging
 
 import tensorflow as tf
 from tensorflow.keras.estimator import model_to_estimator
+
+from training.prepare_model import load_model_from_disk
 from data.image import preprocess_image
 from data.utils import read_json
-from tensorflow.python.keras.models import load_model
-
 from config.config_logging import setup_logging
 
 # Configure Logging
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         print("Arg: %s, Value:%s" % (k, v))
 
     # Load Model and extract input/output layers
-    keras_model = load_model(args['model'])
+    keras_model = load_model_from_disk(args['model'])
 
     input_names = keras_model.input_names
     output_names = keras_model.output_names
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     label_mapping = read_json(args['class_mapping_json'])
     pre_processing = read_json(args['pre_processing_json'])
     estimator = model_to_estimator(
-        keras_model_path=args['model'],
+        keras_model,
         model_dir=args['estimator_save_dir'])
 
     def decode_and_process_image(image):
