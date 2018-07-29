@@ -7,15 +7,22 @@ from tensorflow.python.keras.optimizers import SGD
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
 from tensorflow.python.keras.utils import multi_gpu_model
+from tensorflow.python.keras import backend as K
 
 from models.resnet import ResnetBuilder
 from models.small_cnn import architecture as small_cnn
+from training.utils import build_masked_loss, masked_accuracy
 
 
 def load_model_from_disk(path_to_model_on_disk):
     """ Load weights from disk and add to model """
     logging.info("Loading model from: %s" % path_to_model_on_disk)
-    loaded_model = load_model(path_to_model_on_disk)
+    loaded_model = load_model(
+        path_to_model_on_disk,
+        custom_objects={
+            'masked_accuracy': masked_accuracy,
+            'masked_loss_function':
+                build_masked_loss(K.sparse_categorical_crossentropy)})
     return loaded_model
 
 
@@ -246,10 +253,10 @@ def create_model(model_name,
     except:
         logging.info("Training using single GPU or CPU..")
 
-    model.compile(loss='sparse_categorical_crossentropy',
+    model.compile(loss=build_masked_loss(K.sparse_categorical_crossentropy),
                   optimizer=opt,
                   loss_weights=output_loss_weights,
-                  metrics=['sparse_categorical_accuracy',
-                           'sparse_top_k_categorical_accuracy'])
+                  #metrics=[masked_accuracy])
+                  metrics=['sparse_categorical_accuracy'])
 
     return model

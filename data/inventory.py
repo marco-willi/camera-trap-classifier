@@ -19,6 +19,10 @@ class DatasetInventory(object):
         Record
     """
 
+    # changing this could have unexpected consequences
+    missing_label_value = '-1'
+    missing_label_value_num = -1
+
     def get_all_record_ids(self):
         """ Get all ids of the inventory """
         return list(self.data_inventory.keys())
@@ -47,7 +51,8 @@ class DatasetInventory(object):
                 for label_name, label_value in label_entry.items():
                     if label_name not in all_labels:
                         all_labels[label_name] = set()
-                    all_labels[label_name] .add(label_value)
+                    if not label_value == type(self).missing_label_value:
+                        all_labels[label_name].add(label_value)
         return all_labels
 
     def _calc_label_stats(self):
@@ -145,7 +150,10 @@ class DatasetInventory(object):
                 if label_name not in labels_dict:
                     labels_dict[label_id] = []
                     labels_num_dict[label_id_num] = []
-                val_num = self.labels_numeric_map[label_name][label_value]
+                if label_value == type(self).missing_label_value:
+                    val_num = type(self).missing_label_value_num
+                else:
+                    val_num = self.labels_numeric_map[label_name][label_value]
                 val = label_value
                 labels_num_dict[label_id_num].append(val_num)
                 labels_dict[label_id].append(val)

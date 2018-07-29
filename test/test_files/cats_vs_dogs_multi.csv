@@ -19,10 +19,10 @@ cat31.jpg,./test/test_images/Cats/cat31.jpg,cat,1,6
 cat33.jpg,./test/test_images/Cats/cat33.jpg,cat,1,9
 cat34.jpg,./test/test_images/Cats/cat34.jpg,cat,0,3
 cat36.jpg,./test/test_images/Cats/cat36.jpg,cat,0,11
-cat37.jpg,./test/test_images/Cats/cat37.jpg,cat,0,15
+cat37.jpg,./test/test_images/Cats/cat37.jpg,cat,0,
 cat38.jpg,./test/test_images/Cats/cat38.jpg,cat,0,3
-cat39.jpg,./test/test_images/Cats/cat39.jpg,cat,0,15
-cat40.jpg,./test/test_images/Cats/cat40.jpg,cat,1,15
+cat39.jpg,./test/test_images/Cats/cat39.jpg,cat,0,
+cat40.jpg,./test/test_images/Cats/cat40.jpg,cat,1,
 cat44.jpg,./test/test_images/Cats/cat44.jpg,cat,1,12
 cat47.jpg,./test/test_images/Cats/cat47.jpg,cat,1,7
 cat48.jpg,./test/test_images/Cats/cat48.jpg,cat,0,12
@@ -45,7 +45,7 @@ cat7.jpg,./test/test_images/Cats/cat7.jpg,cat,0,11
 cat70.jpg,./test/test_images/Cats/cat70.jpg,cat,0,1
 cat71.jpg,./test/test_images/Cats/cat71.jpg,cat,1,7
 cat73.jpg,./test/test_images/Cats/cat73.jpg,cat,1,5
-cat74.jpg,./test/test_images/Cats/cat74.jpg,cat,0,15
+cat74.jpg,./test/test_images/Cats/cat74.jpg,cat,0,
 cat77.jpg,./test/test_images/Cats/cat77.jpg,cat,1,6
 cat8.jpg,./test/test_images/Cats/cat8.jpg,cat,1,9
 cat80.jpg,./test/test_images/Cats/cat80.jpg,cat,0,2
@@ -53,7 +53,7 @@ cat81.jpg,./test/test_images/Cats/cat81.jpg,cat,1,8
 cat82.jpg,./test/test_images/Cats/cat82.jpg,cat,0,4
 cat83.jpg,./test/test_images/Cats/cat83.jpg,cat,1,5
 cat86.jpg,./test/test_images/Cats/cat86.jpg,cat,0,10
-cat89.jpg,./test/test_images/Cats/cat89.jpg,cat,0,15
+cat89.jpg,./test/test_images/Cats/cat89.jpg,cat,0,
 cat9.jpg,./test/test_images/Cats/cat9.jpg,cat,0,2
 cat90.jpg,./test/test_images/Cats/cat90.jpg,cat,0,14
 cat91.jpg,./test/test_images/Cats/cat91.jpg,cat,0,1
@@ -61,7 +61,7 @@ cat92.jpg,./test/test_images/Cats/cat92.jpg,cat,0,10
 cat93.jpg,./test/test_images/Cats/cat93.jpg,cat,0,4
 cat94.jpg,./test/test_images/Cats/cat94.jpg,cat,1,5
 cat96.jpg,./test/test_images/Cats/cat96.jpg,cat,1,8
-cat98.jpg,./test/test_images/Cats/cat98.jpg,cat,0,15
+cat98.jpg,./test/test_images/Cats/cat98.jpg,cat,0,
 dog.3206.jpg,./test/test_images/Dogs/dog.3206.jpg,dog,1,14
 dog3159.jpg,./test/test_images/Dogs/dog3159.jpg,dog,0,3
 dog3160.jpg,./test/test_images/Dogs/dog3160.jpg,dog,0,14
@@ -82,10 +82,10 @@ dog3178.jpg,./test/test_images/Dogs/dog3178.jpg,dog,1,6
 dog3179.jpg,./test/test_images/Dogs/dog3179.jpg,dog,1,9
 dog3181.jpg,./test/test_images/Dogs/dog3181.jpg,dog,0,3
 dog3182.jpg,./test/test_images/Dogs/dog3182.jpg,dog,0,11
-dog3183.jpg,./test/test_images/Dogs/dog3183.jpg,dog,0,15
+dog3183.jpg,./test/test_images/Dogs/dog3183.jpg,dog,0,
 dog3184.jpg,./test/test_images/Dogs/dog3184.jpg,dog,0,3
-dog3185.jpg,./test/test_images/Dogs/dog3185.jpg,dog,0,15
-dog3186.jpg,./test/test_images/Dogs/dog3186.jpg,dog,1,15
+dog3185.jpg,./test/test_images/Dogs/dog3185.jpg,dog,0,
+dog3186.jpg,./test/test_images/Dogs/dog3186.jpg,dog,1,
 dog3187.jpg,./test/test_images/Dogs/dog3187.jpg,dog,1,12
 dog3188.jpg,./test/test_images/Dogs/dog3188.jpg,dog,1,7
 dog3189.jpg,./test/test_images/Dogs/dog3189.jpg,dog,0,12
@@ -108,7 +108,7 @@ dog3211.jpg,./test/test_images/Dogs/dog3211.jpg,dog,0,11
 dog3213.jpg,./test/test_images/Dogs/dog3213.jpg,dog,0,1
 dog3214.jpg,./test/test_images/Dogs/dog3214.jpg,dog,1,7
 dog3215.jpg,./test/test_images/Dogs/dog3215.jpg,dog,1,5
-dog3217.jpg,./test/test_images/Dogs/dog3217.jpg,dog,0,15
+dog3217.jpg,./test/test_images/Dogs/dog3217.jpg,dog,0,
 dog3218.jpg,./test/test_images/Dogs/dog3218.jpg,dog,1,6
 dog3219.jpg,./test/test_images/Dogs/dog3219.jpg,dog,1,9
 dog3220.jpg,./test/test_images/Dogs/dog3220.jpg,dog,0,2
@@ -116,5 +116,5 @@ dog3221.jpg,./test/test_images/Dogs/dog3221.jpg,dog,1,8
 dog3222.jpg,./test/test_images/Dogs/dog3222.jpg,dog,0,4
 dog3223.jpg,./test/test_images/Dogs/dog3223.jpg,dog,1,5
 dog3224.jpg,./test/test_images/Dogs/dog3224.jpg,dog,0,10
-dog3228.jpg,./test/test_images/Dogs/dog3228.jpg,dog,0,15
+dog3228.jpg,./test/test_images/Dogs/dog3228.jpg,dog,0,
 dog3229.jpg,./test/test_images/Dogs/dog3229.jpg,dog,0,2

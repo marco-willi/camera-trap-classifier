@@ -54,12 +54,15 @@ class ImportFromCSVSingleImageTester(unittest.TestCase):
                                       'standing': '1'}],
                           'images': ["/path/capture_ele_lion.jpg"]})
 
-    def testMissingFields(self):
+    def testMissingImage(self):
         """ Test Removal of Records with missing fields """
         self.assertNotIn('no_image', self.data)
-        self.assertNotIn('no_species', self.data)
-        self.assertNotIn('no_count', self.data)
-        self.assertNotIn('no_standing', self.data)
+
+    def testConvertMissingLabels(self):
+        """ Test Removal of Records with missing fields """
+        self.assertEqual(self.data['no_species']['labels'][0]['species'], '-1')
+        self.assertEqual(self.data['no_count']['labels'][0]['count'], '-1')
+        self.assertEqual(self.data['no_standing']['labels'][0]['standing'], '-1')
 
     def testInconsistendImage(self):
         self.assertEqual(self.data["ele_zebra_diff_image"],

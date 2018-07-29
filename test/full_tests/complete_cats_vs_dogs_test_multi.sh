@@ -26,8 +26,8 @@ python train.py \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
 -model small_cnn \
--labels species standing \
--labels_loss_weights 1 0.2 \
+-labels species standing count \
+-labels_loss_weights 1 0.2 0.5 \
 -batch_size 12 \
 -n_cpus 2 \
 -n_gpus 1 \
