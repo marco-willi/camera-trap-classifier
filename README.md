@@ -215,14 +215,32 @@ Tensorflow can be found at https://www.tensorflow.org/install/.
 
 ## Testing the Code
 
-Following commands should run without error:
+Following commands should run without error and test a part of the code:
 
 ```
 python -m unittest discover test/data
 python -m unittest discover test/training
 ```
 
-There are some manual tests in 'test/manual_tests' that require to create directories to and provide some simple data (image directories).
+The following script tests all components of the code end-to-end using images from a directory:
+
+```
+# 1) adapt the parameters in ./test/full_tests/from_image_dir_test.sh
+# 2) create all the directories as referenced in the script
+# 3) run the script
+./test/full_tests/from_image_dir_test.sh
+```
+
+The following script tests training from data with multiple images per capture event:
+
+```
+# 1) adapt the parameters in ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
+# 2) create all the directories as referenced in the script
+# 3) run the script
+./test/full_tests/complete_cats_vs_dogs_test_multi.sh
+```
+
+There are some manual tests in 'test/manual_tests' for different components that can be run interactively.
 
 ## Exporting a Model
 
