@@ -37,7 +37,7 @@ from tensorflow.python.keras.callbacks import (
 from config.config import ConfigLoader
 from config.config_logging import setup_logging
 from training.utils import (
-    copy_models_and_config_files, TableInitializerCallback)
+    copy_models_and_config_files, TableInitializerCallback, ModelCheckpointer)
 from training.prepare_model import create_model
 from predicting.predictor import Predictor
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
@@ -348,7 +348,7 @@ if __name__ == '__main__':
 
     logger.info("Preparing Model")
 
-    model = create_model(
+    model, base_model = create_model(
         model_name=args['model'],
         input_shape=input_shape,
         target_labels=output_labels_clean,
@@ -392,17 +392,20 @@ if __name__ == '__main__':
     csv_logger = CSVLogger(args['run_outputs_dir'] + 'training.log')
 
     # create model checkpoints after each epoch
-    checkpointer = ModelCheckpoint(
-        filepath=args['run_outputs_dir'] +
-        'model_epoch_{epoch:02d}_loss_{val_loss:.2f}.hdf5',
-        monitor='val_loss', verbose=0, save_best_only=False,
-        save_weights_only=False, mode='auto', period=1)
+    # checkpointer = ModelCheckpoint(
+    #     filepath=args['run_outputs_dir'] +
+    #     'model_epoch_{epoch:02d}_loss_{val_loss:.2f}.hdf5',
+    #     monitor='val_loss', verbose=0, save_best_only=False,
+    #     save_weights_only=False, mode='auto', period=1)
 
     # save best model
     checkpointer_best = ModelCheckpoint(
         filepath=args['run_outputs_dir'] + 'model_best.hdf5',
         monitor='val_loss', verbose=0, save_best_only=True,
         save_weights_only=False, mode='auto', period=1)
+
+    # create model checkpoints after each epoch
+    checkpointer = ModelCheckpointer(base_model, args['run_outputs_dir'])
 
     # write graph to disk
     tensorboard = TensorBoard(log_dir=args['run_outputs_dir'],
