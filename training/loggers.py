@@ -55,13 +55,6 @@ class ModelCheckpoint(Callback):
         self.period = period
         self.epochs_since_last_save = 0
 
-        # assign model to save
-        if _is_multi_gpu_model(self.model):
-            base_model = _get_gpu_base_model()
-            self.model_to_save = base_model
-        else:
-            self.model_to_save = self.model
-
         if mode not in ['auto', 'min', 'max']:
             warnings.warn('ModelCheckpoint mode %s is unknown, '
                           'fallback to auto mode.' % (mode),
@@ -83,6 +76,14 @@ class ModelCheckpoint(Callback):
                 self.best = np.Inf
 
     def on_epoch_end(self, epoch, logs=None):
+
+        # assign model to save
+        if _is_multi_gpu_model(self.model):
+            base_model = _get_gpu_base_model()
+            self.model_to_save = base_model
+        else:
+            self.model_to_save = self.model
+
         logs = logs or {}
         self.epochs_since_last_save += 1
         if self.epochs_since_last_save >= self.period:
