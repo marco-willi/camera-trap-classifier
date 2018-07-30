@@ -85,6 +85,9 @@ class ModelCheckpoint(Callback):
             self.model_to_save.loss = self.model.loss
             self.model_to_save.metrics = self.model.metrics
             self.model_to_save.loss_weights = self.model.loss_weights
+            self.model_to_save.sample_weight_mode = self.model.sample_weight_mode
+            self.model_to_save.weighted_metrics = self.model.weighted_metrics
+            self.model_to_save.target_tensors = self.model.target_tensors
 
         else:
             self.model_to_save = self.model
