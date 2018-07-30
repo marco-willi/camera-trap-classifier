@@ -32,12 +32,13 @@ import os
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import (
-    TensorBoard, EarlyStopping, CSVLogger, ModelCheckpoint, ReduceLROnPlateau)
+    TensorBoard, EarlyStopping, CSVLogger,  ReduceLROnPlateau)
 
 from config.config import ConfigLoader
 from config.config_logging import setup_logging
 from training.utils import (
-    copy_models_and_config_files, TableInitializerCallback, ModelCheckpointer)
+    copy_models_and_config_files, TableInitializerCallback)
+from training.loggers import ModelCheckpoint
 from training.prepare_model import create_model
 from predicting.predictor import Predictor
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
@@ -405,8 +406,8 @@ if __name__ == '__main__':
         save_weights_only=False, mode='auto', period=1)
 
     # create model checkpoints after each epoch
-    checkpointer_old = ModelCheckpointer(base_model, args['run_outputs_dir'],
-                                         save_weights=False)
+    # checkpointer_old = ModelCheckpointer(model, args['run_outputs_dir'],
+    #                                      save_weights=False)
 
     # write graph to disk
     tensorboard = TensorBoard(log_dir=args['run_outputs_dir'],
@@ -419,7 +420,7 @@ if __name__ == '__main__':
     table_init = TableInitializerCallback()
 
     callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
-                      checkpointer, checkpointer_best, checkpointer_old, table_init]
+                      checkpointer, checkpointer_best, table_init]
 
     ###########################################
     # MODEL TRAINING  ###########
