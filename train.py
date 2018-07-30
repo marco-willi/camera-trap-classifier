@@ -392,11 +392,11 @@ if __name__ == '__main__':
     csv_logger = CSVLogger(args['run_outputs_dir'] + 'training.log')
 
     # create model checkpoints after each epoch
-    # checkpointer = ModelCheckpoint(
-    #     filepath=args['run_outputs_dir'] +
-    #     'model_epoch_{epoch:02d}_loss_{val_loss:.2f}.hdf5',
-    #     monitor='val_loss', verbose=0, save_best_only=False,
-    #     save_weights_only=False, mode='auto', period=1)
+    checkpointer = ModelCheckpoint(
+        filepath=args['run_outputs_dir'] +
+        'model_epoch_{epoch:02d}_loss_{val_loss:.2f}.hdf5',
+        monitor='val_loss', verbose=0, save_best_only=False,
+        save_weights_only=False, mode='auto', period=1)
 
     # save best model
     checkpointer_best = ModelCheckpoint(
@@ -405,7 +405,7 @@ if __name__ == '__main__':
         save_weights_only=False, mode='auto', period=1)
 
     # create model checkpoints after each epoch
-    checkpointer = ModelCheckpointer(base_model, args['run_outputs_dir'])
+    checkpointer_old = ModelCheckpointer(base_model, args['run_outputs_dir'])
 
     # write graph to disk
     tensorboard = TensorBoard(log_dir=args['run_outputs_dir'],
@@ -418,7 +418,7 @@ if __name__ == '__main__':
     table_init = TableInitializerCallback()
 
     callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
-                      checkpointer, checkpointer_best, table_init]
+                      checkpointer, checkpointer_best, checkpointer_old, table_init]
 
     ###########################################
     # MODEL TRAINING  ###########
