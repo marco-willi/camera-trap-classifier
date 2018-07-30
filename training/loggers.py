@@ -11,7 +11,7 @@ from tensorflow.python.keras.callbacks import Callback
 from tensorflow.python.keras.models import Model
 
 from data.utils import copy_file
-from data.training.utils import  _is_multi_gpu_model, _get_gpu_base_model
+from training.utils import  _is_multi_gpu_model, _get_gpu_base_model
 
 
 class ModelCheckpoint(Callback):
