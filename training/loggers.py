@@ -81,6 +81,7 @@ class ModelCheckpoint(Callback):
         if _is_multi_gpu_model(self.model):
             base_model = _get_gpu_base_model(self.model)
             self.model_to_save = base_model
+            self.model_to_save.optimizer = self.model.optimizer
         else:
             self.model_to_save = self.model
 
