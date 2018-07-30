@@ -418,7 +418,7 @@ if __name__ == '__main__':
     table_init = TableInitializerCallback()
 
     callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
-                      checkpointer, checkpointer_best, checkpointer_old, table_init]
+                      checkpointer, checkpointer_best, table_init]
 
     ###########################################
     # MODEL TRAINING  ###########
