@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.callbacks import Callback
+from tensorflow.python.keras.models import Model
 
 from data.utils import copy_file
 
@@ -93,7 +94,7 @@ class EarlyStopping(object):
                 n_since_improvement = 0
 
 
-class ModelCheckpointer(Callback):
+class ModelCheckpointer2(Callback):
     """ Save model after each epoch """
     def __init__(self, model, path, save_model=True, save_weights=True):
         self.model_to_save = model
@@ -270,3 +271,46 @@ class TableInitializerCallback(Callback):
     """ Initialize Tables """
     def on_train_begin(self, logs=None):
         K.get_session().run(tf.tables_initializer())
+
+
+class ModelCheckpointer(Callback):
+    """ Save model after each epoch """
+    def __init__(self, model, path, save_model=True, save_weights=True):
+        self.model_to_save = model
+        self.path = path
+        self.save_model = save_model
+        self.save_weights = save_weights
+
+    def on_epoch_end(self, epoch, logs=None):
+        if _is_multi_gpu_model(self.model_to_save):
+            base_model = _get_gpu_base_model(self.model_to_save)
+            self.model_to_save = base_model
+
+        if self.save_model:
+            save_id = 'model_epoch_%d.hdf5' % epoch
+            save_path = os.path.join(self.path, save_id)
+            self.model_to_save.save(save_path)
+
+        if self.save_weights:
+            save_id = 'model_weights_epoch_%d.hdf5' % epoch
+            save_path = os.path.join(self.path, save_id)
+            self.model_to_save.save_weights(save_path)
+
+
+def _is_multi_gpu_model(model):
+    """ Check if a specific model is a multi_gpu model by checking if one of
+        the layers is a keras model itself
+    """
+    for layer in model.layers:
+        if isinstance(layer, Model):
+            return True
+    return False
+
+
+def _get_gpu_base_model(model):
+    """ get multi_gpu base model
+    """
+    for layer in model.layers:
+        if isinstance(layer, Model):
+            return layer
+    return None

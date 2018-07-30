@@ -245,8 +245,6 @@ def create_model(model_name,
     else:
         raise ValueError("optimizer %s not implemented" % optimizer)
 
-    model = Model(inputs=model_input, outputs=all_target_outputs)
-
     if n_gpus > 1:
         logging.debug("Preparing Multi-GPU Model")
         with tf.device('/cpu:0'):
