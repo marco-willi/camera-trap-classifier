@@ -198,13 +198,13 @@ def create_model(model_name,
 
     """ Returns specified model architecture """
 
-    if continue_training:
-        try:
-            logging.debug("Loading model from disk to continue training")
-            model = load_model_from_disk(path_of_model_to_load)
-            return model
-        except:
-            logging.debug("Failed to load model - trying again..")
+    # if continue_training:
+    #     try:
+    #         logging.debug("Loading model from disk to continue training")
+    #         model = load_model_from_disk(path_of_model_to_load)
+    #         return model
+    #     except:
+    #         logging.debug("Failed to load model - trying again..")
 
     model_input = Input(shape=input_shape, name='images')
 
