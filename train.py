@@ -405,7 +405,8 @@ if __name__ == '__main__':
         save_weights_only=False, mode='auto', period=1)
 
     # create model checkpoints after each epoch
-    checkpointer_old = ModelCheckpointer(base_model, args['run_outputs_dir'])
+    checkpointer_old = ModelCheckpointer(base_model, args['run_outputs_dir'],
+                                         save_weights=False)
 
     # write graph to disk
     tensorboard = TensorBoard(log_dir=args['run_outputs_dir'],
@@ -418,7 +419,7 @@ if __name__ == '__main__':
     table_init = TableInitializerCallback()
 
     callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
-                      checkpointer, checkpointer_best, table_init]
+                      checkpointer, checkpointer_best, checkpointer_old, table_init]
 
     ###########################################
     # MODEL TRAINING  ###########

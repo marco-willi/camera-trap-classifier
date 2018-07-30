@@ -103,11 +103,14 @@ class ModelCheckpointer(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if self.save_model:
-            self.model_to_save.save('%smodel_epoch_%d.hdf5' %
-                                    (self.path, epoch))
+            save_id = 'model_epoch_%d.hdf5' % epoch
+            save_path = os.path.join(self.path, save_id)
+            self.model_to_save.save(save_path)
+
         if self.save_weights:
-            self.model_to_save.save_weights('%smodel_weights_epoch_%d.hdf5' %
-                                            (self.path, epoch))
+            save_id = 'model_weights_epoch_%d.hdf5' % epoch
+            save_path = os.path.join(self.path, save_id)
+            self.model_to_save.save_weights(save_path)
 
 
 def find_the_best_id_in_log(log_file_path, metric, id='epoch', offset=-1):
