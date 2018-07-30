@@ -12,3 +12,4 @@ test_big/*
 *.log
 */old/*
 experiments/*
+setup/server_cmds.sh

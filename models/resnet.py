@@ -5,11 +5,8 @@ from __future__ import division
 
 import six
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.layers import (
-    Input,
     Activation,
-    Dense,
     Flatten
 )
 from tensorflow.python.keras.layers import (

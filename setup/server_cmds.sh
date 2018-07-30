@@ -74,3 +74,9 @@ scp -i ~/keys/Machine_Learning.pem /home/ubuntu/data_hdd/west_africa/experiments
 scp -i ~/keys/Machine_Learning.pem ~/keys/Machine_Learning.pem ubuntu@ec2-34-244-241-168.eu-west-1.compute.amazonaws.com:~/.
 
 scp -i ~/keys/Machine_Learning.pem /home/ubuntu/data_hdd/southern_africa/experiments/species/run_201804032004_incresv2/model_epoch_18.hdf5   ubuntu@ec2-34-248-161-95.eu-west-1.compute.amazonaws.com:/home/ubuntu/data_hdd/southern_africa/experiments/species/run_dummy
+
+# transfer from MSI to AWS
+scp -i ~/keys/zv_test_key.pem /home/packerc/will5448/data/tfr_files/all_species_v3/* ubuntu@ec2-52-91-219-250.compute-1.amazonaws.com:/home/ubuntu/data_hdd/ctc/ss/data/species/
+
+/home/packerc/will5448/data/tfr_files/all_species_v3
+/home/ubuntu/data_hdd/ctc/ss/data/species

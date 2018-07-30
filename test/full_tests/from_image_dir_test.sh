@@ -25,7 +25,7 @@ python create_dataset_inventory.py dir -path $image_root_path \
 
 # Create TFRecord Files
 python create_dataset.py -inventory ${export_root_path}inventory.json \
--output_dir ${tfr_files_pat} \
+-output_dir ${tfr_files_path} \
 -image_save_side_max 200 \
 -split_percent 0.7 0.15 0.15 \
 -overwrite \
@@ -35,13 +35,13 @@ python create_dataset.py -inventory ${export_root_path}inventory.json \
 
 # Train a Model
 python train.py \
--train_tfr_path ${tfr_files_pat} \
+-train_tfr_path ${tfr_files_path} \
 -train_tfr_pattern train \
--val_tfr_path ${tfr_files_pat} \
+-val_tfr_path ${tfr_files_path} \
 -val_tfr_pattern val \
--test_tfr_path ${tfr_files_pat} \
+-test_tfr_path ${tfr_files_path} \
 -test_tfr_pattern test \
--class_mapping_json ${tfr_files_pat}label_mapping.json \
+-class_mapping_json ${tfr_files_path}label_mapping.json \
 -run_outputs_dir ${run_outputs_path} \
 -model_save_dir ${model_save_dir} \
 -model small_cnn \
@@ -56,13 +56,13 @@ python train.py \
 
 # Continue Training
 python train.py \
--train_tfr_path ${tfr_files_pat} \
+-train_tfr_path ${tfr_files_path} \
 -train_tfr_pattern train \
--val_tfr_path ${tfr_files_pat} \
+-val_tfr_path ${tfr_files_path} \
 -val_tfr_pattern val \
--test_tfr_path ${tfr_files_pat} \
+-test_tfr_path ${tfr_files_path} \
 -test_tfr_pattern test \
--class_mapping_json ${tfr_files_pat}label_mapping.json \
+-class_mapping_json ${tfr_files_path}label_mapping.json \
 -run_outputs_dir ${run_outputs_path} \
 -model_save_dir ${model_save_dir} \
 -model small_cnn \
@@ -80,13 +80,13 @@ python train.py \
 
 # Pseudo Transfer Training
 python train.py \
--train_tfr_path ${tfr_files_pat} \
+-train_tfr_path ${tfr_files_path} \
 -train_tfr_pattern train \
--val_tfr_path ${tfr_files_pat} \
+-val_tfr_path ${tfr_files_path} \
 -val_tfr_pattern val \
--test_tfr_path ${tfr_files_pat} \
+-test_tfr_path ${tfr_files_path} \
 -test_tfr_pattern test \
--class_mapping_json ${tfr_files_pat}label_mapping.json \
+-class_mapping_json ${tfr_files_path}label_mapping.json \
 -run_outputs_dir ${run_outputs_tl_path} \
 -model_save_dir ${model_save_tl_dir} \
 -model small_cnn \
@@ -103,13 +103,13 @@ python train.py \
 
 # Pseudo Fine Tuning
 python train.py \
--train_tfr_path ${tfr_files_pat} \
+-train_tfr_path ${tfr_files_path} \
 -train_tfr_pattern train \
--val_tfr_path ${tfr_files_pat} \
+-val_tfr_path ${tfr_files_path} \
 -val_tfr_pattern val \
--test_tfr_path ${tfr_files_pat} \
+-test_tfr_path ${tfr_files_path} \
 -test_tfr_pattern test \
--class_mapping_json ${tfr_files_pat}label_mapping.json \
+-class_mapping_json ${tfr_files_path}label_mapping.json \
 -run_outputs_dir ${run_outputs_ft_path} \
 -model_save_dir ${model_save_ft_dir} \
 -model small_cnn \

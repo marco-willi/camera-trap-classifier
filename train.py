@@ -22,7 +22,8 @@ python train.py \
 -buffer_size 512 \
 -max_epochs 10 \
 -starting_epoch 0 \
--color_augmentation full
+-color_augmentation full \
+-optimizer sgd
 """
 import argparse
 import logging
@@ -153,6 +154,10 @@ if __name__ == '__main__':
               This can slow down the pre-processing speed and starve the \
               GPU of data. Use None or fast/ultra_fast options if input \
               pipeline is slow")
+    parser.add_argument(
+        "-optimizer", type=str, default="sgd",
+        required=False,
+        help="Which optimizer to use in trainine the model (sgd or rmsprop)")
 
     args = vars(parser.parse_args())
 

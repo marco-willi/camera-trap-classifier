@@ -3,7 +3,7 @@ import logging
 
 from tensorflow.python.keras.models import Model, Sequential, load_model
 from tensorflow.python.keras.layers import Input, Dense
-from tensorflow.python.keras.optimizers import SGD
+from tensorflow.python.keras.optimizers import SGD, RMSprop
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
 from tensorflow.python.keras.utils import multi_gpu_model
@@ -26,8 +26,32 @@ def get_non_output_layer_ids(model, label_indicator='label/'):
     return layer_ids
 
 
+def _is_multi_gpu_model(model):
+    """ Check if a specific model is a multi_gpu model by checking if one of
+        the layers is a keras model itself
+    """
+    for layer in model.layers:
+        if isinstance(layer, Model):
+            return True
+    return False
+
+
+def _get_gpu_base_model(model):
+    """ get multi_gpu base model
+    """
+    for layer in model.layers:
+        if isinstance(layer, Model):
+            return layer
+    return None
+
+
 def copy_model_weights(from_model, to_model, incl_last=True):
     """ copy the model weights of one model to the other """
+
+    # handle multi_gpu models
+    if _is_multi_gpu_model(from_model):
+        from_model = _get_gpu_base_model(from_model)
+
     if incl_last:
         to_model.set_weights(from_model.get_weights())
     else:
@@ -168,10 +192,19 @@ def create_model(model_name,
                  fine_tuning=False,
                  path_of_model_to_load=None,
                  initial_learning_rate=0.01,
-                 output_loss_weights=None
+                 output_loss_weights=None,
+                 optimizer='sgd'
                  ):
 
     """ Returns specified model architecture """
+
+    if continue_training:
+        try:
+            logging.debug("Loading model from disk to continue training")
+            model = load_model_from_disk(path_of_model_to_load)
+            return model
+        except:
+            logging.debug("Failed to load model - trying again..")
 
     model_input = Input(shape=input_shape, name='images')
 
@@ -215,15 +248,18 @@ def create_model(model_name,
                                         kernel_initializer="he_normal",
                                         activation='softmax',
                                         name=target_name)(output_flat))
-
     # Define model optimizer
-    opt = SGD(lr=initial_learning_rate, momentum=0.9, decay=1e-4)
-    # opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+    if optimizer == 'sgd':
+        opt = SGD(lr=initial_learning_rate, momentum=0.9, decay=1e-4)
+    elif optimizer == 'rmsprop':
+        opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+    else:
+        raise ValueError("optimizer %s not implemented" % optimizer)
 
     model = Model(inputs=model_input, outputs=all_target_outputs)
 
     if continue_training:
-        logging.debug("Preparing continue_training")
+        logging.debug("Loading model from disk to continue training")
         loaded_model = load_model_from_disk(path_of_model_to_load)
         copy_model_weights(loaded_model, model, incl_last=True)
 
@@ -249,7 +285,51 @@ def create_model(model_name,
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
                   loss_weights=output_loss_weights,
-                  metrics=['sparse_categorical_accuracy',
+                  metrics=['accuracy',
                            'sparse_top_k_categorical_accuracy'])
 
     return model
+
+    # if n_gpus > 1:
+    #     logging.debug("Preparing Multi-GPU Model")
+    #     with tf.device('/cpu:0'):
+    #         base_model = Model(inputs=model_input, outputs=all_target_outputs)
+    #
+    #         if continue_training:
+    #             logging.debug("Preparing continue_training")
+    #             loaded_model = load_model_from_disk(path_of_model_to_load)
+    #             copy_model_weights(loaded_model, base_model, incl_last=True)
+    #
+    #         elif transfer_learning:
+    #             logging.debug("Preparing transfer_learning")
+    #             loaded_model = load_model_from_disk(path_of_model_to_load)
+    #             copy_model_weights(loaded_model, base_model, incl_last=False)
+    #             non_output_layers = get_non_output_layer_ids(base_model)
+    #             base_model = set_layers_to_non_trainable(base_model, non_output_layers)
+    #
+    #     model = multi_gpu_model(base_model, gpus=n_gpus)
+    #
+    # else:
+    #     model = Model(inputs=model_input, outputs=all_target_outputs)
+    #
+    #     if continue_training:
+    #         logging.debug("Preparing continue_training")
+    #         loaded_model = load_model_from_disk(path_of_model_to_load)
+    #         copy_model_weights(loaded_model, model, incl_last=True)
+    #
+    #     elif transfer_learning:
+    #         logging.debug("Preparing transfer_learning")
+    #         loaded_model = load_model_from_disk(path_of_model_to_load)
+    #         copy_model_weights(loaded_model, model, incl_last=False)
+    #         non_output_layers = get_non_output_layer_ids(model)
+    #         model = set_layers_to_non_trainable(model, non_output_layers)
+    #
+    #     base_model = model
+    #
+    # model.compile(loss='sparse_categorical_crossentropy',
+    #               optimizer=opt,
+    #               loss_weights=output_loss_weights,
+    #               metrics=['accuracy',
+    #                        'sparse_top_k_categorical_accuracy'])
+    #
+    # return model, base_model

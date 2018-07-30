@@ -99,7 +99,7 @@ if __name__ == '__main__':
                         help="whether to process images in parallel \
                               (only if 'write_tfr_in_parallel' is false)")
     parser.add_argument("-process_images_in_parallel_size", type=int,
-                        default=200, required=False,
+                        default=320, required=False,
                         help="if processing images in parallel - how many per \
                               process, this can influene memory requirements")
     parser.add_argument("-processes_images_in_parallel_n_processes", type=int,
