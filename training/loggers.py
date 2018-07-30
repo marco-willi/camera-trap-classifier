@@ -79,7 +79,7 @@ class ModelCheckpoint(Callback):
 
         # assign model to save
         if _is_multi_gpu_model(self.model):
-            base_model = _get_gpu_base_model()
+            base_model = _get_gpu_base_model(self.model)
             self.model_to_save = base_model
         else:
             self.model_to_save = self.model
