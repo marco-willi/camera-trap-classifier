@@ -289,7 +289,7 @@ class ModelCheckpointer(Callback):
         if self.save_model:
             save_id = 'model_epoch_%d.hdf5' % epoch
             save_path = os.path.join(self.path, save_id)
-            self.model_to_save.save(save_path, , include_optimizer=False)
+            self.model_to_save.save(save_path, include_optimizer=False)
 
         if self.save_weights:
             save_id = 'model_weights_epoch_%d.hdf5' % epoch
