@@ -279,15 +279,13 @@ def create_model(model_name,
             non_output_layers = get_non_output_layer_ids(model)
             model = set_layers_to_non_trainable(model, non_output_layers)
 
-        base_model = model
-
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,
                   loss_weights=output_loss_weights,
                   metrics=['accuracy',
                            'sparse_top_k_categorical_accuracy'])
 
-    return model, base_model
+    return model
 
     # if continue_training:
     #     logging.debug("Loading model from disk to continue training")

@@ -349,7 +349,7 @@ if __name__ == '__main__':
 
     logger.info("Preparing Model")
 
-    model, base_model = create_model(
+    model = create_model(
         model_name=args['model'],
         input_shape=input_shape,
         target_labels=output_labels_clean,
