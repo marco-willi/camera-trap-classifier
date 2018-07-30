@@ -1,16 +1,9 @@
 """ Loggers / Callbacks """
-import csv
-import os
-import logging
 import warnings
 
 import numpy as np
-import tensorflow as tf
-from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.callbacks import Callback
-from tensorflow.python.keras.models import Model
 
-from data.utils import copy_file
 from training.utils import  _is_multi_gpu_model, _get_gpu_base_model
 
 
