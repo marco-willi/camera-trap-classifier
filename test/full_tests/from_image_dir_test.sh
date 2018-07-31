@@ -120,8 +120,9 @@ python train.py \
 -buffer_size 512 \
 -max_epochs 4 \
 -starting_epoch 0 \
--fine_tuning \
--model_to_load ${run_outputs_path} \
+-transfer_learning \
+-transfer_learning_type all_layers \
+-model_to_load ${run_outputs_path}
 
 # Deploy model
 python export.py -model ${model_save_dir}best_model.hdf5 \
