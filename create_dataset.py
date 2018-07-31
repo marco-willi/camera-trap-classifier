@@ -79,12 +79,14 @@ if __name__ == '__main__':
                               observation (multi-label) which is not currently\
                               supported in model training")
     parser.add_argument("-image_root_path", type=str, default='',
-                        help='Root path of all images',
+                        help='Root path of all images - will be appended to\
+                              the image paths stored in the dataset inventory',
                         required=False)
     parser.add_argument("-image_save_side_max", type=int,
                         default=500,
                         required=False,
-                        help="resize image to larger side having that\
+                        help="aspect preserving resizeing of images such that\
+                              the larger side of each image has that\
                               many pixels, typically at least 330\
                               (depending on the model architecture)")
     parser.add_argument("-overwrite", default=False,
@@ -93,7 +95,8 @@ if __name__ == '__main__':
     parser.add_argument("-write_tfr_in_parallel", default=False,
                         action='store_true', required=False,
                         help="whether to write tfrecords in parallel if more \
-                              than one is created")
+                              than one is created (preferably use \
+                              'process_images_in_parallel')")
     parser.add_argument("-process_images_in_parallel", default=False,
                         action='store_true', required=False,
                         help="whether to process images in parallel \
@@ -107,12 +110,12 @@ if __name__ == '__main__':
                         help="if processing images in parallel - how many \
                               processes to use (default 4)")
     parser.add_argument("-max_records_per_file", type=int,
-                        default=500000,
+                        default=5000,
                         required=False,
                         help="The max number of records per TFRecord file.\
                              Multiple files are generated if the size of\
                              the dataset exceeds this value. It is recommended\
-                             to use large values (default 500e3)")
+                             to use large values (default 5000)")
 
     args = vars(parser.parse_args())
 
