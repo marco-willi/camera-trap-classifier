@@ -199,7 +199,7 @@ def create_model(model_name,
     if continue_training and not rebuild_model:
         logging.debug("Preparing continue_training")
         loaded_model = load_model_from_disk(path_of_model_to_load)
-        return load_model
+        return loaded_model
 
     model_input = Input(shape=input_shape, name='images')
 
