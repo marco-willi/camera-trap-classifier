@@ -132,7 +132,7 @@ if __name__ == '__main__':
         action='store_true', required=False,
         help="Option to specify that transfer learning should be used.")
     parser.add_argument(
-        "-transfer_learning_type", default=None, required=False,
+        "-transfer_learning_type", default='last_layer', required=False,
         help="Option to specify that transfer learning should be used, by\
               allowing to adapt only the last layer ('last_layer') \
               or all layers ('all_layers') - default is 'last_layer'")
