@@ -183,10 +183,10 @@ def create_model(model_name,
                  target_labels,
                  n_classes_per_label_type,
                  n_gpus,
-                 train=True,
                  continue_training=False,
+                 rebuild_model=False,
                  transfer_learning=False,
-                 fine_tuning=False,
+                 transfer_learning_type='last_layer',
                  path_of_model_to_load=None,
                  initial_learning_rate=0.01,
                  output_loss_weights=None,
@@ -194,6 +194,12 @@ def create_model(model_name,
                  ):
 
     """ Returns specified model architecture """
+
+    # Load model from disk
+    if continue_training and not rebuild_model:
+        logging.debug("Preparing continue_training")
+        loaded_model = load_model_from_disk(path_of_model_to_load)
+        return load_model
 
     model_input = Input(shape=input_shape, name='images')
 
@@ -250,34 +256,58 @@ def create_model(model_name,
         with tf.device('/cpu:0'):
             base_model = Model(inputs=model_input, outputs=all_target_outputs)
 
-            if continue_training:
-                logging.debug("Preparing continue_training")
+            if continue_training and rebuild_model:
+                logging.debug("Preparing continue_training by \
+                               rebuilding model")
                 loaded_model = load_model_from_disk(path_of_model_to_load)
                 copy_model_weights(loaded_model, base_model, incl_last=True)
 
-            elif transfer_learning:
-                logging.debug("Preparing transfer_learning")
-                loaded_model = load_model_from_disk(path_of_model_to_load)
-                copy_model_weights(loaded_model, base_model, incl_last=False)
-                non_output_layers = get_non_output_layer_ids(base_model)
-                base_model = set_layers_to_non_trainable(base_model, non_output_layers)
+            if transfer_learning is not None:
+                if transfer_learning_type == 'last_layer':
+                    logging.debug("Preparing transfer_learning with freezing \
+                                   all but the last layer")
+                    loaded_model = load_model_from_disk(path_of_model_to_load)
+                    copy_model_weights(loaded_model, base_model, incl_last=False)
+                    non_output_layers = get_non_output_layer_ids(base_model)
+                    base_model = set_layers_to_non_trainable(base_model, non_output_layers)
+
+                elif transfer_learning_type == 'all_layers':
+                    logging.debug("Preparing transfer_learning with freezing \
+                                   no layers")
+                    loaded_model = load_model_from_disk(path_of_model_to_load)
+                    copy_model_weights(loaded_model, base_model, incl_last=False)
+                else:
+                    raise ValueError("transfer_learning_type option %s not \
+                                      recognized" % transfer_learning)
 
         model = multi_gpu_model(base_model, gpus=n_gpus)
 
     else:
         model = Model(inputs=model_input, outputs=all_target_outputs)
 
-        if continue_training:
-            logging.debug("Preparing continue_training")
+        if continue_training and rebuild_model:
+            logging.debug("Preparing continue_training by \
+                           rebuilding model")
             loaded_model = load_model_from_disk(path_of_model_to_load)
             copy_model_weights(loaded_model, model, incl_last=True)
 
         elif transfer_learning:
-            logging.debug("Preparing transfer_learning")
-            loaded_model = load_model_from_disk(path_of_model_to_load)
-            copy_model_weights(loaded_model, model, incl_last=False)
-            non_output_layers = get_non_output_layer_ids(model)
-            model = set_layers_to_non_trainable(model, non_output_layers)
+            if transfer_learning_type == 'last_layer':
+                logging.debug("Preparing transfer_learning with freezing \
+                               all but the last layer")
+                loaded_model = load_model_from_disk(path_of_model_to_load)
+                copy_model_weights(loaded_model, model, incl_last=False)
+                non_output_layers = get_non_output_layer_ids(model)
+                model = set_layers_to_non_trainable(model, non_output_layers)
+
+            elif transfer_learning_type == 'all_layers':
+                logging.debug("Preparing transfer_learning with freezing \
+                               no layers")
+                loaded_model = load_model_from_disk(path_of_model_to_load)
+                copy_model_weights(loaded_model, model, incl_last=False)
+            else:
+                raise ValueError("transfer_learning_type option %s not \
+                                  recognized" % transfer_learning)
 
     model.compile(loss='sparse_categorical_crossentropy',
                   optimizer=opt,

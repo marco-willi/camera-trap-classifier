@@ -122,19 +122,30 @@ if __name__ == '__main__':
         help="The max number of epochs to train the model")
     parser.add_argument(
         "-starting_epoch", type=int, default=0,
-        help="The starting epoch number.")
+        help="The starting epoch number (0-based index).")
     parser.add_argument(
         "-initial_learning_rate", type=float, default=0.01,
         help="The initial learning rate.")
+    # Transfer-Learning and Model Loading
     parser.add_argument(
         "-transfer_learning", default=False,
         action='store_true', required=False,
-        help="Flag to specify that transfer learning should be used, with\
-              frozen non-output layers")
+        help="Option to specify that transfer learning should be used.")
+    parser.add_argument(
+        "-transfer_learning_type", default=None, required=False,
+        help="Option to specify that transfer learning should be used, by\
+              allowing to adapt only the last layer ('last_layer') \
+              or all layers ('all_layers') - default is 'last_layer'")
     parser.add_argument(
         "-continue_training", default=False,
         action='store_true', required=False,
         help="Flag that training should be continued from a saved model.")
+    parser.add_argument(
+        "-rebuild_model", default=False,
+        action='store_true', required=False,
+        help="Flag that model should be rebuild (if continue_training). \
+              This might be necessary if model training should be continued\
+              with different options (e.g. no GPUs, or different optimizer)")
     parser.add_argument(
         "-fine_tuning", default=False,
         action='store_true', required=False,
@@ -360,8 +371,9 @@ if __name__ == '__main__':
         n_classes_per_label_type=n_classes_per_label,
         n_gpus=args['n_gpus'],
         continue_training=args['continue_training'],
+        rebuild_model=args['rebuild_model'],
         transfer_learning=args['transfer_learning'],
-        fine_tuning=args['fine_tuning'],
+        transfer_learning_type=args['transfer_learning_type'],
         path_of_model_to_load=args['model_to_load'],
         initial_learning_rate=args['initial_learning_rate'],
         output_loss_weights=args['labels_loss_weights'])
