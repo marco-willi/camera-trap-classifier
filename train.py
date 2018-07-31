@@ -22,7 +22,7 @@ python train.py \
 -buffer_size 512 \
 -max_epochs 10 \
 -starting_epoch 0 \
--color_augmentation full \
+-color_augmentation full_randomized \
 -optimizer sgd
 """
 import argparse
@@ -123,9 +123,14 @@ if __name__ == '__main__':
     parser.add_argument(
         "-starting_epoch", type=int, default=0,
         help="The starting epoch number (0-based index).")
+    # Model Training Parameters
     parser.add_argument(
         "-initial_learning_rate", type=float, default=0.01,
         help="The initial learning rate.")
+    parser.add_argument(
+        "-optimizer", type=str, default="sgd",
+        required=False,
+        help="Which optimizer to use in training the model (sgd or rmsprop)")
     # Transfer-Learning and Model Loading
     parser.add_argument(
         "-transfer_learning", default=False,
@@ -157,24 +162,29 @@ if __name__ == '__main__':
              transfer_learning or fine_tuning are specified, \
              if a directory is specified, \
              the most recent model in that directory is loaded')
+    # Image Processing
     parser.add_argument(
-        "-color_augmentation", type=str, default="ultra_fast",
+        "-color_augmentation", type=str, default="full_randomized",
         required=False,
         help="Which (random) color augmentation to perform during model\
-              training - choose one of [None, 'fast', 'ultra_fast', 'full']. \
+              training - choose one of:\
+              [None, 'little', 'full_fast', 'full_randomized']. \
               This can slow down the pre-processing speed and starve the \
-              GPU of data. Use None or fast/ultra_fast options if input \
-              pipeline is slow")
+              GPU of data. Use None or little/full_fast options if input \
+              pipeline is slow. Else full_randomized is recommended.")
     parser.add_argument(
-        "-optimizer", type=str, default="sgd",
-        required=False,
-        help="Which optimizer to use in training the model (sgd or rmsprop)")
+        "-ignore_aspect_ratio", default=False, action='store_true',
+        help="Wheter to ignore the aspect ratio of the images during model \
+              training. This can improve the total area of the image the \
+              model sees during training and prediction. However, the images \
+              are slightly distorted with this option since they are \
+              converted to squares.")
 
     args = vars(parser.parse_args())
 
     print("Using arguments:")
     for k, v in args.items():
-        print("Arg: %s, Value:%s" % (k, v))
+        print("Arg: %s: %s" % (k, v))
 
     ###########################################
     # Process Input ###########
@@ -187,6 +197,8 @@ if __name__ == '__main__':
         "model %s not found in config/models.yaml" % args['model']
 
     image_processing = model_cfg.cfg['models'][args['model']]['image_processing']
+    image_processing['ignore_aspect_ratio'] = args['ignore_aspect_ratio']
+
     input_shape = (image_processing['output_height'],
                    image_processing['output_width'], 3)
 
