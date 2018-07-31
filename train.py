@@ -14,7 +14,7 @@ python train.py \
 -class_mapping_json ./test_big/cats_vs_dogs/tfr_files/label_mapping.json \
 -run_outputs_dir ./test_big/cats_vs_dogs/run_outputs/ \
 -model_save_dir ./test_big/cats_vs_dogs/model_save_dir/ \
--model cats_vs_dogs \
+-model small_cnn \
 -labels class \
 -batch_size 128 \
 -n_cpus 2 \
@@ -36,9 +36,8 @@ from tensorflow.python.keras.callbacks import (
 
 from config.config import ConfigLoader
 from config.config_logging import setup_logging
-from training.utils import (
-    copy_models_and_config_files, TableInitializerCallback)
-from training.loggers import ModelCheckpoint
+from training.utils import copy_models_and_config_files
+from training.hooks import ModelCheckpoint, TableInitializerCallback
 from training.prepare_model import create_model
 from predicting.predictor import Predictor
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
@@ -142,7 +141,7 @@ if __name__ == '__main__':
         help="Flag to specify that transfer learning should be used, with\
               fine-tuning all layers")
     parser.add_argument(
-        "-model_to_load", type=str, required=False, default="",
+        "-model_to_load", type=str, required=False, default=None,
         help='Path to a model (.hdf5) when either continue_training,\
              transfer_learning or fine_tuning are specified, \
              if a directory is specified, \
@@ -158,7 +157,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "-optimizer", type=str, default="sgd",
         required=False,
-        help="Which optimizer to use in trainine the model (sgd or rmsprop)")
+        help="Which optimizer to use in training the model (sgd or rmsprop)")
 
     args = vars(parser.parse_args())
 
@@ -179,7 +178,8 @@ if __name__ == '__main__':
     image_processing = model_cfg.cfg['models'][args['model']]['image_processing']
     input_shape = (image_processing['output_height'],
                    image_processing['output_width'], 3)
-    # Prepare labels to model
+
+    # Add 'label/' prefix to labels as they are stored in the .tfrecord files
     output_labels = args['labels']
     output_labels_clean = ['label/' + x for x in output_labels]
 
@@ -190,11 +190,12 @@ if __name__ == '__main__':
     n_classes_per_label = [n_classes_per_label_dict[x]
                            for x in output_labels_clean]
 
-    # save class mapping file to current run puth
-    export_dict_to_json(class_mapping,
-                        args['run_outputs_dir'] + 'label_mappings.json')
+    # save class mapping file to current run path
+    export_dict_to_json(
+        class_mapping,
+        os.path.join(args['run_outputs_dir'], 'label_mappings.json'))
 
-    # TFR files
+    # Find TFR files
     tfr_train = find_tfr_files_pattern(
         args['train_tfr_path'],
         args['train_tfr_pattern'])
@@ -207,15 +208,17 @@ if __name__ == '__main__':
         tfr_test = find_tfr_files_pattern(
             args['test_tfr_path'],
             args['test_tfr_pattern'])
-        pred_output_json = args['run_outputs_dir'] + 'test_preds.json'
+        pred_output_json = os.path.join(args['run_outputs_dir'],
+                                        'test_preds.json')
     else:
         TEST_SET = False
 
     # Create best model output name
-    best_model_save_path = args['model_save_dir'] + 'best_model.hdf5'
+    best_model_save_path = os.path.join(args['model_save_dir'],
+                                        'best_model.hdf5')
 
     # Define path of model to load if only directory is specified
-    if len(args['model_to_load']) > 0:
+    if args['model_to_load'] is not None:
         if not args['model_to_load'].endswith('.hdf5'):
             if os.path.isdir(args['model_to_load']):
                 model_files = find_files_with_ending(args['model_to_load'], '.hdf5')
@@ -328,7 +331,8 @@ if __name__ == '__main__':
     # Export Image Processing Settings
     export_dict_to_json({**image_processing,
                          'is_training': False},
-                        args['run_outputs_dir'] + 'image_processing.json')
+                        os.path.join(args['run_outputs_dir'],
+                                     'image_processing.json'))
 
     logger.info("Calculating batches per epoch")
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
@@ -372,7 +376,7 @@ if __name__ == '__main__':
     logger.info("Preparing Callbacks and Monitors")
 
     ###########################################
-    # MONITORS ###########
+    # MONITORS / HOOKS ###########
     ###########################################
 
     # stop model training if validation loss does not improve
@@ -404,10 +408,6 @@ if __name__ == '__main__':
         filepath=args['run_outputs_dir'] + 'model_best.hdf5',
         monitor='val_loss', verbose=0, save_best_only=True,
         save_weights_only=False, mode='auto', period=1)
-
-    # create model checkpoints after each epoch
-    # checkpointer_old = ModelCheckpointer(model, args['run_outputs_dir'],
-    #                                      save_weights=False)
 
     # write graph to disk
     tensorboard = TensorBoard(log_dir=args['run_outputs_dir'],
