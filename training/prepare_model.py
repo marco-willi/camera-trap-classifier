@@ -262,7 +262,7 @@ def create_model(model_name,
                 loaded_model = load_model_from_disk(path_of_model_to_load)
                 copy_model_weights(loaded_model, base_model, incl_last=True)
 
-            if transfer_learning is not None:
+            elif transfer_learning:
                 if transfer_learning_type == 'last_layer':
                     logging.debug("Preparing transfer_learning with freezing \
                                    all but the last layer")
