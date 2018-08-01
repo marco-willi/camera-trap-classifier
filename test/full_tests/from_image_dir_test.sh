@@ -75,7 +75,7 @@ python train.py \
 -starting_epoch 6 \
 -continue_training \
 -model_to_load ${run_outputs_path} \
--color_augmentation full
+-color_augmentation full_fast
 
 
 # Pseudo Transfer Training
@@ -99,6 +99,7 @@ python train.py \
 -starting_epoch 0 \
 -transfer_learning \
 -model_to_load ${run_outputs_path} \
+-ignore_aspect_ratio
 
 
 # Pseudo Fine Tuning

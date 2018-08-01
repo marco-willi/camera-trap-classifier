@@ -273,7 +273,8 @@ def preprocess_for_train(image,
                          image_stdevs,
                          resize_side_min,
                          resize_side_max,
-                         color_augmentation):
+                         color_augmentation,
+                         ignore_aspect_ratio):
     """Preprocesses the given image for training.
     Note that the actual resizing scale is sampled from
     [`resize_size_min`, `resize_size_max`].
@@ -285,13 +286,24 @@ def preprocess_for_train(image,
       aspect-preserving resizing.
     resize_side_max: The upper bound for the smallest side of the image for
       aspect-preserving resizing.
+     color_augmentation: different options regarding color augmentation
     Returns:
     A preprocessed image.
     """
-    resize_side = tf.random_uniform(
-      [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
 
-    image = _aspect_preserving_resize(image, resize_side)
+    if ignore_aspect_ratio:
+        # choose a wider range if apsect ratio is ignored
+        resize_side = tf.random_uniform(
+          [], minval=resize_side_min, maxval=int(1.2*resize_side_max)+1, dtype=tf.int32)
+        image = tf.expand_dims(image, 0)
+        image = tf.image.resize_bilinear(
+            image, size=[resize_side, resize_side])
+        image = tf.squeeze(image)
+        image.set_shape([None, None, 3])
+    else:
+        resize_side = tf.random_uniform(
+          [], minval=resize_side_min, maxval=resize_side_max+1, dtype=tf.int32)
+        image = _aspect_preserving_resize(image, resize_side)
     image = tf.random_crop(image, [output_height, output_width, 3])
     image = tf.to_float(image)
     image = tf.image.random_flip_left_right(image)
@@ -301,15 +313,15 @@ def preprocess_for_train(image,
         image = _image_standardize(image, image_means, image_stdevs)
         return image
 
-    elif color_augmentation == 'fast':
+    elif color_augmentation == 'little':
         fast_mode = True
         use_fast_color_distort = False
 
-    elif color_augmentation == 'ultra_fast':
+    elif color_augmentation == 'full_fast':
         fast_mode = True
         use_fast_color_distort = True
 
-    elif color_augmentation == 'full':
+    elif color_augmentation == 'full_randomized':
         fast_mode = False
         use_fast_color_distort = False
 
@@ -329,7 +341,8 @@ def preprocess_for_train(image,
 
 def preprocess_for_eval(image, output_height,
                         output_width, image_means, image_stdevs,
-                        resize_side):
+                        resize_side,
+                        ignore_aspect_ratio):
     """Preprocesses the given image for evaluation.
     Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -339,10 +352,18 @@ def preprocess_for_eval(image, output_height,
     Returns:
     A preprocessed image.
     """
-    image = _aspect_preserving_resize(image, resize_side)
-    image = _central_crop([image], output_height, output_width)[0]
-    image.set_shape([output_height, output_width, 3])
-    image = tf.to_float(image)
+    if ignore_aspect_ratio:
+        image = tf.expand_dims(image, 0)
+        image = tf.image.resize_bilinear(
+                    image,
+                    size=[output_height, output_width])
+        image = tf.squeeze(image)
+        image.set_shape([None, None, 3])
+    else:
+        image = _aspect_preserving_resize(image, resize_side)
+        image = _central_crop([image], output_height, output_width)[0]
+        image.set_shape([output_height, output_width, 3])
+        image = tf.to_float(image)
     image = tf.divide(image, tf.cast(255.0, tf.float32))
     image = _image_standardize(image, image_means, image_stdevs)
 
@@ -355,7 +376,8 @@ def preprocess_image(image, output_height, output_width,
                      resize_side_max,
                      image_means=[0, 0, 0],
                      image_stdevs=[1, 1, 1],
-                     color_augmentation=None):
+                     color_augmentation=None,
+                     ignore_aspect_ratio=False):
     """Preprocesses the given image.
     Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -378,45 +400,13 @@ def preprocess_image(image, output_height, output_width,
         return preprocess_for_train(image, output_height, output_width,
                                     image_means, image_stdevs,
                                     resize_side_min, resize_side_max,
-                                    color_augmentation)
+                                    color_augmentation,
+                                    ignore_aspect_ratio)
     else:
         return preprocess_for_eval(image, output_height, output_width,
                                    image_means, image_stdevs,
-                                   resize_side_min)
-
-
-def preprocess_image_default(image, output_height, output_width,
-                             is_training,
-                             resize_side_min,
-                             resize_side_max,
-                             image_means=[0, 0, 0],
-                             image_stdevs=[1, 1, 1],
-                             min_crop_size=0.8):
-    """ Default Image Pre-Processing """
-
-    # normalize between 0 and 1
-    image = tf.divide(tf.cast(image, tf.float32),
-                      tf.cast(255.0, tf.float32))
-
-    if is_training:
-        # Randomly flip image horizontally
-        image = tf.image.random_flip_left_right(image)
-        # Random crop
-        rand_crop = np.random.uniform(min_crop_size, 1)
-        # rand_crop = tf.random_uniform([],
-        #                               minval=tf.cast(min_crop_size, tf.float32),
-        #                               maxval=tf.cast(1, tf.float32),
-        #                               dtype=tf.float32)
-        image = tf.image.central_crop(image, rand_crop)
-
-    image = tf.image.resize_images(
-                image,
-                tf.cast([output_height, output_width], tf.int32))
-
-    # standardize
-    image = _image_standardize(image, image_means, image_stdevs)
-
-    return image
+                                   resize_side_min,
+                                   ignore_aspect_ratio)
 
 
 def resize_jpeg(image,  max_side):
@@ -458,6 +448,8 @@ def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
     ValueError: if color_ordering not in [0, 3]
   """
   with tf.name_scope(scope, 'distort_color', [image]):
+    hue_delta = 0.1
+    upper_contrast = 1.3
     if fast_mode:
       if color_ordering == 0:
         image = tf.image.random_brightness(image, max_delta=0.2)
@@ -469,22 +461,22 @@ def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
       if color_ordering == 0:
         image = tf.image.random_brightness(image, max_delta=0.2)
         image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
-        image = tf.image.random_hue(image, max_delta=0.02)
-        image = tf.image.random_contrast(image, lower=0.9, upper=1)
+        image = tf.image.random_hue(image, max_delta=hue_delta)
+        image = tf.image.random_contrast(image, lower=0.9, upper=upper_contrast)
       elif color_ordering == 1:
         image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
         image = tf.image.random_brightness(image, max_delta=0.2)
-        image = tf.image.random_contrast(image, lower=0.9, upper=1)
-        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_contrast(image, lower=0.9, upper=upper_contrast)
+        image = tf.image.random_hue(image, max_delta=hue_delta)
       elif color_ordering == 2:
-        image = tf.image.random_contrast(image, lower=0.9, upper=1)
-        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_contrast(image, lower=0.9, upper=upper_contrast)
+        image = tf.image.random_hue(image, max_delta=hue_delta)
         image = tf.image.random_brightness(image, max_delta=0.2)
         image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
       elif color_ordering == 3:
-        image = tf.image.random_hue(image, max_delta=0.02)
+        image = tf.image.random_hue(image, max_delta=hue_delta)
         image = tf.image.random_saturation(image, lower=0.8, upper=1.2)
-        image = tf.image.random_contrast(image, lower=0.9, upper=1)
+        image = tf.image.random_contrast(image, lower=0.9, upper=upper_contrast)
         image = tf.image.random_brightness(image, max_delta=0.2)
       else:
         raise ValueError('color_ordering must be in [0, 3]')
@@ -537,3 +529,38 @@ def apply_with_random_selector(x, func, num_cases):
   return control_flow_ops.merge([
       func(control_flow_ops.switch(x, tf.equal(sel, case))[1], case)
       for case in range(num_cases)])[0]
+
+
+
+def preprocess_image_default(image, output_height, output_width,
+                             is_training,
+                             resize_side_min,
+                             resize_side_max,
+                             image_means=[0, 0, 0],
+                             image_stdevs=[1, 1, 1],
+                             min_crop_size=0.8):
+    """ Default Image Pre-Processing """
+
+    # normalize between 0 and 1
+    image = tf.divide(tf.cast(image, tf.float32),
+                      tf.cast(255.0, tf.float32))
+
+    if is_training:
+        # Randomly flip image horizontally
+        image = tf.image.random_flip_left_right(image)
+        # Random crop
+        rand_crop = np.random.uniform(min_crop_size, 1)
+        # rand_crop = tf.random_uniform([],
+        #                               minval=tf.cast(min_crop_size, tf.float32),
+        #                               maxval=tf.cast(1, tf.float32),
+        #                               dtype=tf.float32)
+        image = tf.image.central_crop(image, rand_crop)
+
+    image = tf.image.resize_images(
+                image,
+                tf.cast([output_height, output_width], tf.int32))
+
+    # standardize
+    image = _image_standardize(image, image_means, image_stdevs)
+
+    return image
