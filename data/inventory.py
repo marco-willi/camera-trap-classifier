@@ -325,8 +325,7 @@ class DatasetInventoryMaster(DatasetInventory):
             labels_list = record_value['labels']
             # only consider first entry in labels list
             if split_label_min in labels_list[0]:
-                # only consider first entry in label type list
-                split_label = labels_list[0][split_label_min][0]
+                split_label = labels_list[0][split_label_min]
                 ids_to_split_label[record_id] = split_label
 
         split_ids = list(ids_to_split_label.keys())
