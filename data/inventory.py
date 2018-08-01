@@ -338,6 +338,9 @@ class DatasetInventoryMaster(DatasetInventory):
             balanced_sampling_min=True,
             balanced_sampling_id_to_label=ids_to_split_label)
 
+        logging.debug("Found %s records with split assignments" %
+                      len(split_assignments.keys()))
+
         return self._convert_splits_to_dataset_inventorys(split_assignments)
 
     def split_inventory_by_random_splits(
@@ -394,6 +397,8 @@ class DatasetInventoryMaster(DatasetInventory):
             split_dict = dict()
             for record_id in record_list:
                 split_dict[record_id] = self.data_inventory[record_id]
+            logging.debug("Creating dataset split %s with %s records" %
+                          (split, len(split_dict.keys())))
             splitted_inventories[split] = DatasetInventorySplit(
                                             split_dict,
                                             all_labels,
