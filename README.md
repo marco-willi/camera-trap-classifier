@@ -143,7 +143,7 @@ python train.py \
 -n_gpus 1 \
 -buffer_size 512 \
 -max_epochs 70 \
--color_augmentation ultra_fast
+-color_augmentation full_randomized
 ```
 
 Use the following command for more help about all the options:
