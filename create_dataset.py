@@ -49,9 +49,8 @@ if __name__ == '__main__':
                         action='store_true', required=False,
                         help="sample labels balanced to the least frequent\
                               value")
-    parser.add_argument("-balanced_sampling_label", type=str,
-                        help='label used for balanced sampling',
-                        required=False)
+    parser.add_argument("-balanced_sampling_label", default=None, type=str,
+                        help='label used for balanced sampling')
     parser.add_argument("-remove_label_name", nargs='+', type=str,
                         default=None,
                         help='remove records with label names (a list) and \
@@ -162,7 +161,7 @@ if __name__ == '__main__':
 
     # Determine if balanced sampling is requested
     elif args['balanced_sampling_min']:
-        if args['balanced_sampling_label'] == '':
+        if args['balanced_sampling_label'] is None:
             raise ValueError("balanced_sampling_label must be specified if \
                               balanced_sampling_min is set to true")
 
@@ -176,6 +175,11 @@ if __name__ == '__main__':
         splitted = dinv.split_inventory_by_random_splits(
                 split_names=args['split_names'],
                 split_percent=args['split_percent'])
+
+    # Log Statistics for different splits
+    for split_name, split_data in splitted.items():
+        logging.info("Stats for Split %s" % split_name)
+        split_data.log_stats()
 
     # Write Label Mappings
     out_label_mapping = args['output_dir'] + 'label_mapping.json'
