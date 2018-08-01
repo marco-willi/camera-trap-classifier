@@ -35,7 +35,9 @@ def order_dict_by_values(d, reversed=True):
 
 
 def _balanced_sampling(id_to_label, random_seed=123):
-    """ Balanced sampling for label """
+    """ Balanced sampling for label
+        Args: id_to_label (dict), key: id, value: label
+    """
 
     labels_all = [v for v in id_to_label.values()]
     label_stats = order_dict_by_values(Counter(labels_all), reversed=False)

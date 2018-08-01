@@ -329,6 +329,7 @@ class DatasetInventoryMaster(DatasetInventory):
                 ids_to_split_label[record_id] = split_label
 
         split_ids = list(ids_to_split_label.keys())
+        logging.debug("Found %s record to split randomly" % len(split_ids))
 
         split_assignments = randomly_split_dataset(
             split_ids,

@@ -156,6 +156,7 @@ if __name__ == '__main__':
 
     # Determine if Meta-Column has been specified
     if args['split_by_meta'] is not None:
+        logging.debug("Splitting by metadata %s" % args['split_by_meta'])
         splitted = dinv.split_inventory_by_meta_data_column(
                 meta_colum=args['split_by_meta'])
 
@@ -164,7 +165,7 @@ if __name__ == '__main__':
         if args['balanced_sampling_label'] is None:
             raise ValueError("balanced_sampling_label must be specified if \
                               balanced_sampling_min is set to true")
-
+        logging.debug("Splitting by random balanced sampling")
         splitted = dinv.split_inventory_by_random_splits_with_balanced_sample(
                 split_label_min=args['balanced_sampling_label'],
                 split_names=args['split_names'],
@@ -172,6 +173,7 @@ if __name__ == '__main__':
 
     # Split without balanced sampling
     else:
+        logging.debug("Splitting randomly")
         splitted = dinv.split_inventory_by_random_splits(
                 split_names=args['split_names'],
                 split_percent=args['split_percent'])
