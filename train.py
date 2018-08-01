@@ -265,7 +265,7 @@ if __name__ == '__main__':
     dataset = data_reader.get_iterator(
             tfr_files=tfr_train,
             batch_size=min([4096, n_records_train]),
-            is_train=False,
+            is_train=True,
             n_repeats=1,
             output_labels=output_labels,
             label_to_numeric_mapping=class_mapping,
