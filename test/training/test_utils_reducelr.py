@@ -1,5 +1,5 @@
 import unittest
-from training.utils import ReduceLearningRateOnPlateau, EarlyStopping
+from training.hooks import ReduceLearningRateOnPlateau, EarlyStopping
 
 
 

@@ -2,7 +2,7 @@ import unittest
 import os
 
 
-from training.utils import CSVLogger
+from training.hooks import CSVLogger
 
 
 class CSVLoggerTester(unittest.TestCase):

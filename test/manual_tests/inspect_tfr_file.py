@@ -214,3 +214,21 @@ np.sum(ys == np.argmax(tt, axis=1)) / ys.shape
 test_data
 
 ys = test_data['label/0/class']
+
+
+# Example for inspecting TFR files
+import matplotlib.pyplot as plt
+
+dataset = get_my_dataset(tfr_files, batch_size)
+iterator = dataset.make_one_shot_iterator()
+batch_data = iterator.get_next()
+
+index_to_class = {0: 'wildebeest', 1: 'zebra'}
+
+with tf.Session() as sess:
+    for i in range(0, 1):
+        features, labels = sess.run(batch_data)
+        for j in range(0, labels['label/class'].shape[0]):
+            print("Class: %s" % index_to_class['class'][labels['label/class'][j][0]])
+            plt.imshow(features['image'][j, :, :, :])
+            plt.show()

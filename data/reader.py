@@ -25,29 +25,21 @@ class DatasetReader(object):
         logger.info("Creating dataset TFR iterator")
 
         # Create Hash Map to map str labels to numerics if specified
-        if label_to_numeric_mapping is not None:
-            class_to_index_mappings = dict()
-            for label in output_labels:
-                label_mapping = label_to_numeric_mapping[label]
-                if not self._is_correct_mapping(label_mapping):
-                    err_msg = "Label mapping %s is invalid" % label_mapping
-                    logging.error(err_msg)
-                    raise ValueError(err_msg)
-                lookup_tab = self._create_hash_table_from_dict(
-                    label_mapping,
-                    name='%s/label_lookup' % label)
-                logging.debug("Mapping labels for %s are %s" %
-                              (label, label_mapping))
-                class_to_index_mappings['label/%s' % label] = lookup_tab
-        else:
-            class_to_index_mappings = None
+        class_to_index_mappings = self._create_lookup_table(
+            output_labels, label_to_numeric_mapping)
 
+        # Create a tf.Dataset
         dataset = tf.data.Dataset.from_tensor_slices(tfr_files)
+
+        # Shuffle input files for training
+        if is_train:
+            dataset = dataset.shuffle(buffer_size=len(tfr_files))
 
         dataset = dataset.apply(
             tf.contrib.data.parallel_interleave(
                 lambda filename: tf.data.TFRecordDataset(filename),
-                cycle_length=4))
+                sloppy=is_train,
+                cycle_length=12))
 
         dataset = dataset.prefetch(buffer_size=batch_size)
 
@@ -105,3 +97,25 @@ class DatasetReader(object):
             if i not in all_indx_values:
                 return False
         return True
+
+    def _create_lookup_table(self, output_labels, label_to_numeric_mapping):
+        """ Create a lookup table to map 'output_labels' to integers
+            according to 'label_to_numeric_mapping'
+        """
+        if label_to_numeric_mapping is not None:
+            class_to_index_mappings = dict()
+            for label in output_labels:
+                label_mapping = label_to_numeric_mapping[label]
+                if not self._is_correct_mapping(label_mapping):
+                    err_msg = "Label mapping %s is invalid" % label_mapping
+                    logging.error(err_msg)
+                    raise ValueError(err_msg)
+                lookup_tab = self._create_hash_table_from_dict(
+                    label_mapping,
+                    name='%s/label_lookup' % label)
+                logging.debug("Mapping labels for %s are %s" %
+                              (label, label_mapping))
+                class_to_index_mappings['label/%s' % label] = lookup_tab
+            return class_to_index_mappings
+        else:
+            return None
