@@ -301,9 +301,9 @@ class DatasetInventoryMaster(DatasetInventory):
         for record_id, record_value in self.data_inventory.items():
             labels_list = record_value['labels']
             for label in labels_list:
-                for l_name, l_val_list in label.items():
+                for l_name, l_val in label.items():
                     if (label_name == l_name):
-                        if label_value in l_val_list:
+                        if label_value == l_val:
                             ids_to_keep.add(record_id)
         return ids_to_keep
 
@@ -322,10 +322,10 @@ class DatasetInventoryMaster(DatasetInventory):
         ids_to_split_label = dict()
 
         for record_id, record_value in self.data_inventory.items():
-            labels_list = record_value['labels']
+            first_labels_entry = record_value['labels'][0]
             # only consider first entry in labels list
-            if split_label_min in labels_list[0]:
-                split_label = labels_list[0][split_label_min]
+            if split_label_min in first_labels_entry:
+                split_label = first_labels_entry[split_label_min]
                 ids_to_split_label[record_id] = split_label
 
         split_ids = list(ids_to_split_label.keys())
