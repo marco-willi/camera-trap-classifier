@@ -412,13 +412,14 @@ if __name__ == '__main__':
     reduce_lr_on_plateau = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.1,
-        patience=3,
+        patience=4,
         verbose=0,
         mode='auto',
         min_delta=0.0001, cooldown=2, min_lr=1e-5)
 
     # log validation statistics to a csv file
-    csv_logger = CSVLogger(args['run_outputs_dir'] + 'training.log')
+    csv_logger = CSVLogger(args['run_outputs_dir'] + 'training.log',
+                           append=args['continue_training'])
 
     # create model checkpoints after each epoch
     checkpointer = ModelCheckpoint(
@@ -444,7 +445,7 @@ if __name__ == '__main__':
     table_init = TableInitializerCallback()
 
     callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
-                      checkpointer, checkpointer_best, table_init]
+                      checkpointer, checkpointer_best, table_init, tensorboard]
 
     ###########################################
     # MODEL TRAINING  ###########
