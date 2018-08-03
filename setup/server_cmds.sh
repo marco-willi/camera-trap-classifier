@@ -58,6 +58,8 @@ conda create -n ct3 python=3.5
 conda list -e > requirements.txt
 conda install --yes --file requirements.txt
 
+# commit changes to docker image
+sudo docker commit 244cb559e11b root/tensorflow:latest-devel-gpu-py3
 
 ##########################################
 # Transferring files

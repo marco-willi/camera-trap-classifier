@@ -157,8 +157,14 @@ if __name__ == '__main__':
     # Determine if Meta-Column has been specified
     if args['split_by_meta'] is not None:
         logging.debug("Splitting by metadata %s" % args['split_by_meta'])
-        splitted = dinv.split_inventory_by_meta_data_column(
-                meta_colum=args['split_by_meta'])
+        if args['balanced_sampling_min']:
+            splitted = dinv.split_inventory_by_meta_data_column_and_balanced_sampling(
+                meta_colum=args['split_by_meta'],
+                split_label_min=args['balanced_sampling_label'])
+            logging.debug("Balanced sampling using %s" % args['split_by_meta'])
+        else:
+            splitted = dinv.split_inventory_by_meta_data_column(
+                    meta_colum=args['split_by_meta'])
 
     # Determine if balanced sampling is requested
     elif args['balanced_sampling_min']:

@@ -65,12 +65,21 @@ class DataInventoryTests(unittest.TestCase):
 #         self.dinv._get_tfr_record_format('single_species_multi_color')
 #         self.dinv._get_tfr_record_format('multi_species_standard')
 
-# path = './test/test_files/json_data_file.json'
-# source_type = 'json'
-# dinv = DatasetInventory()
-# dinv.create_from_source(source_type, path)
-# inventory = dinv.data_inventory
+#path = './test_big/cats_vs_dogs/inventory.json'
+#source_type = 'json'
+#params = {'path': path}
+#dinv = DatasetInventoryMaster()
+#dinv.create_from_source(source_type, params)
+#inventory = dinv.data_inventory
+#dinv.keep_only_records_with_label(['class', 'class'], ['cat', 'dog'])
 #
+#tt = dinv.split_inventory_by_random_splits_with_balanced_sample(
+#            split_label_min='class',
+#            split_names=['test', 'train'],
+#            split_percent=[0.5 ,0.5])
+#
+
+
 # dinv._get_tfr_record_format('single_species_standard')
 # dinv._get_tfr_record_format('single_species_multi_color')
 # dinv._get_tfr_record_format('multi_species_standard')

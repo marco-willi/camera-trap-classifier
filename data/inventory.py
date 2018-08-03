@@ -7,7 +7,7 @@ import copy
 
 from data.utils import (
     randomly_split_dataset, map_label_list_to_numeric_dict,
-    export_dict_to_json)
+    export_dict_to_json, _balanced_sampling)
 from data.importer import DatasetImporter
 
 
@@ -364,7 +364,8 @@ class DatasetInventoryMaster(DatasetInventory):
 
     def split_inventory_by_meta_data_column(
             self,
-            meta_colum):
+            meta_colum
+            ):
         """ Split inventory into different sets based on
             meta_data_column
         """
@@ -374,6 +375,35 @@ class DatasetInventoryMaster(DatasetInventory):
         for record_id, record_value in self.data_inventory.items():
             meta_val = record_value['meta_data'][meta_colum]
             split_assignments[record_id] = meta_val
+
+        return self._convert_splits_to_dataset_inventorys(split_assignments)
+
+    def split_inventory_by_meta_data_column_and_balanced_sampling(
+            self,
+            meta_colum,
+            balanced_sampling_label
+            ):
+        """ Split inventory into different sets based on
+            meta_data_column after balanced sampling
+        """
+
+        id_to_label = dict()
+
+        for record_id, record_data in self.data_inventory.items():
+            # take only the first entry of the labels / observations to assign
+            # a label for that record
+            if balanced_sampling_label in record_data['labels'][0]:
+                label = record_data['labels'][0][balanced_sampling_label]
+                id_to_label[record_id] = label
+
+        remaining_ids = set(_balanced_sampling(id_to_label))
+
+        split_assignments = dict()
+
+        for record_id, record_value in self.data_inventory.items():
+            meta_val = record_value['meta_data'][meta_colum]
+            if record_id in remaining_ids:
+                split_assignments[record_id] = meta_val
 
         return self._convert_splits_to_dataset_inventorys(split_assignments)
 
