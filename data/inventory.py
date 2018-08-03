@@ -381,7 +381,7 @@ class DatasetInventoryMaster(DatasetInventory):
     def split_inventory_by_meta_data_column_and_balanced_sampling(
             self,
             meta_colum,
-            balanced_sampling_label
+            split_label_min
             ):
         """ Split inventory into different sets based on
             meta_data_column after balanced sampling
@@ -392,8 +392,8 @@ class DatasetInventoryMaster(DatasetInventory):
         for record_id, record_data in self.data_inventory.items():
             # take only the first entry of the labels / observations to assign
             # a label for that record
-            if balanced_sampling_label in record_data['labels'][0]:
-                label = record_data['labels'][0][balanced_sampling_label]
+            if split_label_min in record_data['labels'][0]:
+                label = record_data['labels'][0][split_label_min]
                 id_to_label[record_id] = label
 
         remaining_ids = set(_balanced_sampling(id_to_label))
