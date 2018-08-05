@@ -11,15 +11,12 @@ Example Usage:
 python create_dataset_inventory.py dir -path /my_images/ \
 -export_path /my_data/dataset_inventory.json
 """
+import os
 import argparse
 import logging
 
 from config.config_logging import setup_logging
 from data.inventory import DatasetInventoryMaster
-
-# Configure Logging
-setup_logging()
-logger = logging.getLogger(__name__)
 
 
 # Different functions depending on input values
@@ -63,6 +60,9 @@ if __name__ == '__main__':
 
     # Parse command line arguments
     parser = argparse.ArgumentParser(prog='CREATE DATSET INVENTORY')
+    parser.add_argument(
+        "-log_outdir", type=str, required=False, default=None,
+        help="The directory to write logfiles to (defaults to export dir)")
 
     subparsers = parser.add_subparsers(help='sub-command help')
 
@@ -125,11 +125,18 @@ if __name__ == '__main__':
                  (e.g. /my_data/dataset_inventory.json)")
     parser_panthera.set_defaults(func=panthera)
 
+    # Parse command line arguments
     args = vars(parser.parse_args())
+
+    # Configure Logging
+    if args['log_outdir'] is None:
+        args['log_outdir'] = os.path.split(args['export_path'])[0]
+    setup_logging(log_output_path=args['log_outdir'])
+    logger = logging.getLogger(__name__)
 
     print("Using arguments:")
     for k, v in args.items():
-        print("Arg: %s, Value:%s" % (k, v))
+        print("Arg: %s: %s" % (k, v))
 
     dinv = args['func'](args)
 

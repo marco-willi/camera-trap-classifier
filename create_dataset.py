@@ -33,6 +33,9 @@ if __name__ == '__main__':
                         help="path to inventory json file")
     parser.add_argument("-output_dir", type=str, required=True,
                         help="Directory to which TFRecord files are written")
+    parser.add_argument(
+        "-log_outdir", type=str, required=False, default=None,
+        help="Directory to write logfiles to (defaults to output_dir)")
     parser.add_argument("-split_names", nargs='+', type=str,
                         help='split dataset into these named splits',
                         default=['train', 'val', 'test'],
@@ -116,11 +119,20 @@ if __name__ == '__main__':
                              the dataset exceeds this value. It is recommended\
                              to use large values (default 5000)")
 
+    # Parse command line arguments
     args = vars(parser.parse_args())
+
+    # Configure Logging
+    if args['log_outdir'] is None:
+        args['log_outdir'] = args['output_dir']
+
+    setup_logging(log_output_path=args['log_outdir'])
+
+    logger = logging.getLogger(__name__)
 
     print("Using arguments:")
     for k, v in args.items():
-        print("Arg: %s, Value:%s" % (k, v))
+        print("Arg: %s: %s" % (k, v))
 
     # Create Dataset Inventory
     params = {'path': args['inventory']}

@@ -49,11 +49,6 @@ from data.utils import (
     get_most_recent_file_from_files, find_tfr_files_pattern)
 
 
-# Configure Logging
-setup_logging()
-logger = logging.getLogger(__name__)
-
-
 if __name__ == '__main__':
 
     # Parse command line arguments
@@ -89,6 +84,9 @@ if __name__ == '__main__':
     parser.add_argument(
         "-run_outputs_dir", type=str, required=True,
         help="Path to a directory to store data during the training")
+    parser.add_argument(
+        "-log_outdir", type=str, required=False, default=None,
+        help="Directory to write logfiles to (defaults to run_outputs_dir)")
     parser.add_argument(
         "-model_save_dir", type=str, required=True,
         help='Path to a directory to store final model files')
@@ -180,7 +178,16 @@ if __name__ == '__main__':
               are slightly distorted with this option since they are \
               converted to squares.")
 
+    # Parse command line arguments
     args = vars(parser.parse_args())
+
+    # Configure Logging
+    if args['log_outdir'] is None:
+        args['log_outdir'] = args['run_outputs_dir']
+
+    setup_logging(log_output_path=args['log_outdir'])
+
+    logger = logging.getLogger(__name__)
 
     print("Using arguments:")
     for k, v in args.items():

@@ -24,10 +24,6 @@ from tensorflow.python.keras.models import load_model
 
 from config.config_logging import setup_logging
 
-# Configure Logging
-setup_logging()
-logger = logging.getLogger(__name__)
-
 
 if __name__ == '__main__':
 
@@ -45,15 +41,29 @@ if __name__ == '__main__':
         "-output_dir", type=str, required=True,
         help="Root directory to which model is exported")
     parser.add_argument(
+        "-log_outdir", type=str, required=False, default=None,
+        help="The directory to write logfiles to (defaults to output_dir)")
+    parser.add_argument(
         "-estimator_save_dir", type=str, required=False,
         help="Directory to which estimator is saved (if not specified)\
               a temporary location is chosen")
 
+    # Parse command line arguments
     args = vars(parser.parse_args())
+
+    # Configure Logging
+    if args['log_outdir'] is None:
+        args['log_outdir'] = args['output_dir']
+
+    setup_logging(log_output_path=args['log_outdir'])
+
+    logger = logging.getLogger(__name__)
 
     print("Using arguments:")
     for k, v in args.items():
-        print("Arg: %s, Value:%s" % (k, v))
+        print("Arg: %s: %s" % (k, v))
+
+    args = vars(parser.parse_args())
 
     # Load Model and extract input/output layers
     keras_model = load_model(args['model'])
