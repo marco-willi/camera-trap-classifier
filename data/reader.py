@@ -66,12 +66,12 @@ class DatasetReader(object):
 
         return dataset
 
-    def _create_hash_table_from_dict(self, mapping, name=None):
+    def _create_hash_table_from_dict(self, mapping, missing_val=-1, name=None):
         """ Create a hash table from a dictionary """
         keys, values = zip(*mapping.items())
         table = tf.contrib.lookup.HashTable(
           tf.contrib.lookup.KeyValueTensorInitializer(list(keys), list(values)),
-          -1, name=name)
+          missing_val, name=name)
         return table
 
     def _create_lookup_from_dict(self, mapping, name=None):

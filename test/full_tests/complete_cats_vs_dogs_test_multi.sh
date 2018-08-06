@@ -39,8 +39,8 @@ python train.py \
 -run_outputs_dir ${run_outputs_path} \
 -model_save_dir ${model_save_dir} \
 -model small_cnn \
--labels species standing \
--labels_loss_weights 1 0.2 \
+-labels species standing count \
+-labels_loss_weights 1 0.2 0.5 \
 -batch_size 12 \
 -n_cpus 2 \
 -n_gpus 1 \

@@ -37,6 +37,9 @@ class DatasetImporter(object):
       }
     """
 
+    # changing this could have unexpected consequences
+    missing_value = '-1'
+
     subclasses = {}
 
     @classmethod
@@ -233,6 +236,13 @@ class FromCSV(DatasetImporter):
         data_dict_clean = super()._remove_invalid_entries(data_dict)
         return data_dict_clean
 
+    def _convert_missing(self, label):
+        """ Conver missing values to default value """
+        if label == '':
+            return super().missing_value
+        else:
+            return label
+
     def _read_csv(self, path_to_csv):
         """ Read CSV File """
         assert os.path.exists(path_to_csv), \
@@ -259,7 +269,8 @@ class FromCSV(DatasetImporter):
                     new_record = {}
 
                     # get labels
-                    labels = {k: str(v) for k, v in attrs.items() if k in
+                    labels = {k: self._convert_missing(str(v))
+                              for k, v in attrs.items() if k in
                               set(self.attributes_col_list)}
 
                     new_record['labels'] = [labels]

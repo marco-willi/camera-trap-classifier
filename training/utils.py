@@ -72,3 +72,42 @@ def get_gpu_base_model(model):
         if isinstance(layer, Model):
             return layer
     return None
+
+  
+class TableInitializerCallback(Callback):
+    """ Initialize Tables """
+    def on_train_begin(self, logs=None):
+        K.get_session().run(tf.tables_initializer())
+
+
+def build_masked_loss(loss_function, mask_value=-1):
+    """Builds a loss function that masks based on targets
+
+    Args:
+        loss_function: The loss function to mask
+        mask_value: The value to mask in the targets
+
+    Returns:
+        function: a loss function that acts like loss_function with masked inputs
+    """
+    def masked_loss_function(y_true, y_pred, mask_value=mask_value):
+        mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
+        return loss_function(y_true * mask, y_pred * mask)
+
+    return masked_loss_function
+
+  
+def masked_sparse_categorical_crossentropy(y_true, y_pred, mask_value=-1):
+    mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
+    return K.sparse_categorical_crossentropy(y_true * mask, y_pred * mask)
+
+
+def sparse_categorical_accuracy(y_true, y_pred):
+    return K.cast(K.equal(K.max(y_true, axis=-1),
+                          K.cast(K.argmax(y_pred, axis=-1), K.floatx())),
+                  K.floatx())
+
+def masked_accuracy(y_true, y_pred, mask_value=-1):
+    total = K.sum(K.cast(K.not_equal(y_true, mask_value), K.floatx()))
+    correct = K.sum(K.cast(K.equal(y_true, K.round(y_pred)), K.floatx()))
+    return correct / total
