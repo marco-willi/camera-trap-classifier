@@ -1,0 +1,3 @@
+image,species,count,position,survey,dir,id,capture_id,empty,standing,resting,moving,eating,interacting,babies,location,split_name,species_panthera
+S1__Station1__Camera1__CAM30817__2013-05-22__10-55-13.JPG,otherbird,1,,S1_20130521_20130704,/raw_images/S1_20130521_20130704/S1__Station1__Camera1__CAM30817__2013-05-22__10-55-13.JPG,1,S1_20130521_20130704_1,species,,,,,,,S1_20130521_20130704,test_S1_20130521_20130704,Bird
+S1__Station1__Camera1__CAM30817__2013-05-22__10-55-24.JPG,otherbird,1,,S1_20130521_20130704,/raw_images/S1_20130521_20130704/S1__Station1__Camera1__CAM30817__2013-05-22__10-55-24.JPG,2,S1_20130521_20130704_2,species,,,,,,,S1_20130521_20130704,test_S1_20130521_20130704,Bird
