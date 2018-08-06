@@ -19,6 +19,9 @@ class DatasetInventory(object):
         Record
     """
 
+    missing_label_value = '-1'
+    missing_label_value_num = -1
+
     def get_all_record_ids(self):
         """ Get all ids of the inventory """
         return list(self.data_inventory.keys())
@@ -47,7 +50,8 @@ class DatasetInventory(object):
                 for label_name, label_value in label_entry.items():
                     if label_name not in all_labels:
                         all_labels[label_name] = set()
-                    all_labels[label_name] .add(label_value)
+                    if not label_value == type(self).missing_label_value:
+                        all_labels[label_name].add(label_value)
         return all_labels
 
     def _calc_label_stats(self):
@@ -145,7 +149,10 @@ class DatasetInventory(object):
                 if label_name not in labels_dict:
                     labels_dict[label_id] = []
                     labels_num_dict[label_id_num] = []
-                val_num = self.labels_numeric_map[label_name][label_value]
+                if label_value == type(self).missing_label_value:
+                    val_num = type(self).missing_label_value_num
+                else:
+                    val_num = self.labels_numeric_map[label_name][label_value]
                 val = label_value
                 labels_num_dict[label_id_num].append(val_num)
                 labels_dict[label_id].append(val)
@@ -306,6 +313,22 @@ class DatasetInventoryMaster(DatasetInventory):
                         if label_value == l_val:
                             ids_to_keep.add(record_id)
         return ids_to_keep
+
+    def _remove_records_with_any_missing_label(self):
+        """ Remove any records with the default missing value of -1 """
+        ids_to_remove = set()
+        for record_id, record_value in self.data_inventory.items():
+            labels_list = record_value['labels']
+            for label in labels_list:
+                for l_vals in label.values():
+                    if l_vals == type(self).missing_label_value:
+                        ids_to_remove.add(record_id)
+
+        logger.info("Removing %s records with missing labels" %
+                    len(ids_to_remove))
+
+        for id_to_remove in ids_to_remove:
+            self.remove_record(id_to_remove)
 
     def split_inventory_by_random_splits_with_balanced_sample(
             self,

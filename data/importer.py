@@ -36,6 +36,7 @@ class DatasetImporter(object):
                   ]
       }
     """
+    missing_value = '-1'
 
     subclasses = {}
 
