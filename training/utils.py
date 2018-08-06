@@ -2,6 +2,7 @@
 import csv
 import os
 
+from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.models import Model
 
 from data.utils import copy_file
@@ -73,12 +74,6 @@ def get_gpu_base_model(model):
             return layer
     return None
 
-  
-class TableInitializerCallback(Callback):
-    """ Initialize Tables """
-    def on_train_begin(self, logs=None):
-        K.get_session().run(tf.tables_initializer())
-
 
 def build_masked_loss(loss_function, mask_value=-1):
     """Builds a loss function that masks based on targets
@@ -96,7 +91,7 @@ def build_masked_loss(loss_function, mask_value=-1):
 
     return masked_loss_function
 
-  
+
 def masked_sparse_categorical_crossentropy(y_true, y_pred, mask_value=-1):
     mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
     return K.sparse_categorical_crossentropy(y_true * mask, y_pred * mask)
@@ -106,6 +101,7 @@ def sparse_categorical_accuracy(y_true, y_pred):
     return K.cast(K.equal(K.max(y_true, axis=-1),
                           K.cast(K.argmax(y_pred, axis=-1), K.floatx())),
                   K.floatx())
+
 
 def masked_accuracy(y_true, y_pred, mask_value=-1):
     total = K.sum(K.cast(K.not_equal(y_true, mask_value), K.floatx()))

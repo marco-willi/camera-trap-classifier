@@ -319,10 +319,10 @@ def create_model(model_name,
     model.compile(loss=build_masked_loss(K.sparse_categorical_crossentropy),
                   optimizer=opt,
                   loss_weights=output_loss_weights,
-                  metrics=['accuracy',
-                           'sparse_top_k_categorical_accuracy'])
-                  #metrics=[masked_accuracy])
-    
+                  # metrics=['accuracy',
+                  #          'sparse_top_k_categorical_accuracy'])
+                  metrics=[masked_accuracy])
+
     return model
 
     # if continue_training:
