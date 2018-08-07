@@ -176,7 +176,7 @@ class DatasetWriter(object):
 
                 if i % 1000 == 0:
                     est_t = estimate_remaining_time(start_time, n_records, i)
-                    logger.info(
+                    logger.debug(
                         "Wrote %s / %s records (estimated time remaining: %s)"
                         % (i, n_records, est_t))
 
@@ -185,7 +185,7 @@ class DatasetWriter(object):
                 serialized_record = self._serialize_record(record_data)
 
                 if serialized_record is None:
-                    logger.info("Discarding record %s - no image avail" %
+                    logger.debug("Discarding record %s - no image avail" %
                                 record_id)
                     continue
 
@@ -253,7 +253,7 @@ class DatasetWriter(object):
                     successfull_writes += 1
                 est_t = estimate_remaining_time(start_time, n_records,
                                                 successfull_writes)
-                logger.info("Wrote %s / %s records - estimated time remaining: %s - file: %s)" %
+                logger.debug("Wrote %s / %s records - estimated time remaining: %s - file: %s)" %
                             (successfull_writes, n_records, est_t, output_file))
 
             logger.info(

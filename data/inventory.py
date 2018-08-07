@@ -72,7 +72,7 @@ class DatasetInventory(object):
                     label_stats[label_name][label_val] += 1
         return label_stats
 
-    def log_stats(self):
+    def log_stats(self, debug_only=False):
         """ Logs Statistics about Data Inventory """
         label_stats = self._calc_label_stats()
         # Log Stats
@@ -86,11 +86,18 @@ class DatasetInventory(object):
             sort_index = sorted(range(len(count_list)), reverse=True,
                                 key=lambda k: count_list[k])
             for idx in sort_index:
-                logger.info(
-                    "Label Type: %s Label: %s Records: %s / %s (%s %%)" %
-                    (label_type, label_list[idx], count_list[idx],
-                     total_counts,
-                     round(100 * (count_list[idx]/total_counts), 4)))
+                if debug_only:
+                    logger.debug(
+                        "Label Type: %s Label: %s Records: %s / %s (%s %%)" %
+                        (label_type, label_list[idx], count_list[idx],
+                         total_counts,
+                         round(100 * (count_list[idx]/total_counts), 4)))
+                else:
+                    logger.info(
+                        "Label Type: %s Label: %s Records: %s / %s (%s %%)" %
+                        (label_type, label_list[idx], count_list[idx],
+                         total_counts,
+                         round(100 * (count_list[idx]/total_counts), 4)))
 
     def export_to_json(self, json_path):
         """ Export Inventory to Json File """

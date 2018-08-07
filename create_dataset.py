@@ -196,10 +196,14 @@ if __name__ == '__main__':
                 split_names=args['split_names'],
                 split_percent=args['split_percent'])
 
+    # Log all the splits to create
+    for i, split_name in enumerate(splitted.keys()):
+        logging.info("Created split %s - %s" % (i, split_name))
+
     # Log Statistics for different splits
     for split_name, split_data in splitted.items():
-        logging.info("Stats for Split %s" % split_name)
-        split_data.log_stats()
+        logging.debug("Stats for Split %s" % split_name)
+        split_data.log_stats(debug_only=True)
 
     # Write Label Mappings
     out_label_mapping = args['output_dir'] + 'label_mapping.json'
