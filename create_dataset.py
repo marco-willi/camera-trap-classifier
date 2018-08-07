@@ -80,7 +80,7 @@ if __name__ == '__main__':
                         help="whether to remove records with more than one \
                               observation (multi-label) which is not currently\
                               supported in model training")
-    parser.add_argument("-image_root_path", type=str, default='',
+    parser.add_argument("-image_root_path", type=str, default=None,
                         help='Root path of all images - will be appended to\
                               the image paths stored in the dataset inventory',
                         required=False)
@@ -196,10 +196,14 @@ if __name__ == '__main__':
                 split_names=args['split_names'],
                 split_percent=args['split_percent'])
 
+    # Log all the splits to create
+    for i, split_name in enumerate(splitted.keys()):
+        logging.info("Created split %s - %s" % (i, split_name))
+
     # Log Statistics for different splits
     for split_name, split_data in splitted.items():
-        logging.info("Stats for Split %s" % split_name)
-        split_data.log_stats()
+        logging.debug("Stats for Split %s" % split_name)
+        split_data.log_stats(debug_only=True)
 
     # Write Label Mappings
     out_label_mapping = args['output_dir'] + 'label_mapping.json'
@@ -209,7 +213,12 @@ if __name__ == '__main__':
     tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
     tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
 
+    counter = 0
+    n_splits = len(splitted.keys())
     for split_name, split_data in splitted.items():
+        counter += 1
+        logging.info("Starting to process %s (%s / %s)" %
+                     (split_name, counter, n_splits))
         out_name = args['output_dir'] + split_name + '.tfrecord'
         split_data.export_to_tfrecord(
             tfr_writer,
@@ -227,3 +236,4 @@ if __name__ == '__main__':
             process_images_in_parallel_size=args['process_images_in_parallel_size'],
             processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']
             )
+    logging.info("Finished writing TFRecords")

@@ -311,6 +311,22 @@ def find_tfr_files_pattern(path, pattern=None):
     return tfr_paths
 
 
+def find_tfr_files_pattern_subdir(path, pattern=None):
+    """ Find all TFR files (including sub-dirs)"""
+    if pattern is not None:
+        file_paths = [os.path.join(root, f)
+                      for root, _, files in os.walk(path)
+                      for f in files
+                      if (f.endswith('.tfrecord') and
+                          all([p in f for p in pattern]))]
+    else:
+        file_paths = [os.path.join(root, f)
+                      for root, _, files in os.walk(path)
+                      for f in files
+                      if f.endswith('.tfrecord')]
+    return file_paths
+
+
 def hash_string(value, constant=""):
     """ Return hashed value """
     to_hash = str(value) + str(constant)

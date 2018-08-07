@@ -23,7 +23,7 @@ class DatasetWriter(object):
          self, tfrecord_dict,
          output_dir,
          file_prefix,
-         image_root_path='',
+         image_root_path=None,
          image_pre_processing_fun=None,
          image_pre_processing_args=None,
          random_shuffle_before_save=True,
@@ -123,8 +123,12 @@ class DatasetWriter(object):
         # Process all images in a record
         raw_images = list()
         for image_path in record_data['image_paths']:
-            image_path_full = os.path.join(self.image_root_path,
-                                           image_path)
+            # Create image path
+            if self.image_root_path is not None:
+                image_path_full = os.path.join(self.image_root_path,
+                                               image_path.lstrip(os.sep))
+            else:
+                image_path_full = image_path
             try:
                 if self.image_pre_processing_fun is not None:
                     self.image_pre_processing_args['image'] = \
@@ -172,7 +176,7 @@ class DatasetWriter(object):
 
                 if i % 1000 == 0:
                     est_t = estimate_remaining_time(start_time, n_records, i)
-                    logger.info(
+                    logger.debug(
                         "Wrote %s / %s records (estimated time remaining: %s)"
                         % (i, n_records, est_t))
 
@@ -181,7 +185,7 @@ class DatasetWriter(object):
                 serialized_record = self._serialize_record(record_data)
 
                 if serialized_record is None:
-                    logger.info("Discarding record %s - no image avail" %
+                    logger.debug("Discarding record %s - no image avail" %
                                 record_id)
                     continue
 
@@ -249,7 +253,7 @@ class DatasetWriter(object):
                     successfull_writes += 1
                 est_t = estimate_remaining_time(start_time, n_records,
                                                 successfull_writes)
-                logger.info("Wrote %s / %s records - estimated time remaining: %s - file: %s)" %
+                logger.debug("Wrote %s / %s records - estimated time remaining: %s - file: %s)" %
                             (successfull_writes, n_records, est_t, output_file))
 
             logger.info(
