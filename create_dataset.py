@@ -213,7 +213,12 @@ if __name__ == '__main__':
     tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
     tfr_writer = DatasetWriter(tfr_encoder_decoder.encode_record)
 
+    counter = 0
+    n_splits = len(splitted.keys())
     for split_name, split_data in splitted.items():
+        counter += 1
+        logging.info("Starting to process %s (%s / %s)" %
+                     (split_name, counter, n_splits))
         out_name = args['output_dir'] + split_name + '.tfrecord'
         split_data.export_to_tfrecord(
             tfr_writer,
@@ -231,3 +236,4 @@ if __name__ == '__main__':
             process_images_in_parallel_size=args['process_images_in_parallel_size'],
             processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']
             )
+    logging.info("Finished writing TFRecords")
