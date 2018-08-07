@@ -80,7 +80,7 @@ if __name__ == '__main__':
                         help="whether to remove records with more than one \
                               observation (multi-label) which is not currently\
                               supported in model training")
-    parser.add_argument("-image_root_path", type=str, default='',
+    parser.add_argument("-image_root_path", type=str, default=None,
                         help='Root path of all images - will be appended to\
                               the image paths stored in the dataset inventory',
                         required=False)

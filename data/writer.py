@@ -23,7 +23,7 @@ class DatasetWriter(object):
          self, tfrecord_dict,
          output_dir,
          file_prefix,
-         image_root_path='',
+         image_root_path=None,
          image_pre_processing_fun=None,
          image_pre_processing_args=None,
          random_shuffle_before_save=True,
@@ -123,8 +123,12 @@ class DatasetWriter(object):
         # Process all images in a record
         raw_images = list()
         for image_path in record_data['image_paths']:
-            image_path_full = os.path.join(self.image_root_path,
-                                           image_path)
+            # Create image path
+            if self.image_root_path is not None:
+                image_path_full = os.path.join(self.image_root_path,
+                                               image_path.lstrip(os.sep))
+            else:
+                image_path_full = image_path
             try:
                 if self.image_pre_processing_fun is not None:
                     self.image_pre_processing_args['image'] = \
