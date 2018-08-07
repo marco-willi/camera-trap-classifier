@@ -46,7 +46,7 @@ from data.image import preprocess_image
 from data.utils import (
     calc_n_batches_per_epoch, export_dict_to_json, read_json,
     n_records_in_tfr, find_files_with_ending,
-    get_most_recent_file_from_files, find_tfr_files_pattern)
+    get_most_recent_file_from_files, find_tfr_files_pattern_subdir)
 
 
 if __name__ == '__main__':
@@ -55,8 +55,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-train_tfr_path", type=str, required=True,
-        help="Path to directory that contains the training TFR files"
-    )
+        help="Path to directory that contains the training TFR files \
+              (incl. subdirs)")
     parser.add_argument(
         "-train_tfr_pattern", nargs='+', type=str,
         help="The pattern of the training TFR files (default train) \
@@ -64,7 +64,8 @@ if __name__ == '__main__':
         default=['train'], required=False)
     parser.add_argument(
         "-val_tfr_path", type=str, required=True,
-        help="Path to directory that contains the validation TFR files")
+        help="Path to directory that contains the validation TFR files \
+              (incl. subdirs)")
     parser.add_argument(
         "-val_tfr_pattern", nargs='+', type=str,
         help="The pattern of the validation TFR files (default val) \
@@ -72,7 +73,8 @@ if __name__ == '__main__':
         default=['val'], required=False)
     parser.add_argument(
         "-test_tfr_path", type=str, required=False,
-        help="Path to directory that contains the test TFR files (optional)")
+        help="Path to directory that contains the test TFR files \
+              (incl. subdirs - optional)")
     parser.add_argument(
         "-test_tfr_pattern", nargs='+', type=str,
         help="The pattern of the test TFR files (default test) \
@@ -226,16 +228,16 @@ if __name__ == '__main__':
         os.path.join(args['run_outputs_dir'], 'label_mappings.json'))
 
     # Find TFR files
-    tfr_train = find_tfr_files_pattern(
+    tfr_train = find_tfr_files_pattern_subdir(
         args['train_tfr_path'],
         args['train_tfr_pattern'])
-    tfr_val = find_tfr_files_pattern(
+    tfr_val = find_tfr_files_pattern_subdir(
         args['val_tfr_path'],
         args['val_tfr_pattern'])
 
     if len(args['test_tfr_path']) > 0:
         TEST_SET = True
-        tfr_test = find_tfr_files_pattern(
+        tfr_test = find_tfr_files_pattern_subdir(
             args['test_tfr_path'],
             args['test_tfr_pattern'])
         pred_output_json = os.path.join(args['run_outputs_dir'],
