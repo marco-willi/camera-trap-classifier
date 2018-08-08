@@ -415,16 +415,16 @@ if __name__ == '__main__':
     # stop model training if validation loss does not improve
     early_stopping = EarlyStopping(
         monitor='val_loss',
-        min_delta=0, patience=5, verbose=0, mode='auto')
+        min_delta=0, patience=3, verbose=0, mode='auto')
 
     # reduce learning rate if model progress plateaus
     reduce_lr_on_plateau = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.1,
-        patience=4,
+        patience=2,
         verbose=0,
         mode='auto',
-        min_delta=0.0001, cooldown=2, min_lr=1e-5)
+        min_delta=0.0001, cooldown=1, min_lr=1e-5)
 
     # log validation statistics to a csv file
     csv_logger = CSVLogger(args['run_outputs_dir'] + 'training.log',
