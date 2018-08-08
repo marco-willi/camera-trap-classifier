@@ -1,6 +1,7 @@
 # Test Multi-Image Captures
 # ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 export_root_path=./test_big//cats_vs_dogs_multi/
+image_root_path=D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all
 tfr_files_path=${export_root_path}tfr_files/
 run_outputs_path=${export_root_path}run_outputs/
 model_save_dir=${export_root_path}model_save_dir/
@@ -69,3 +70,11 @@ python train.py \
 -starting_epoch 0 \
 -transfer_learning \
 -model_to_load ${run_outputs_path}
+
+# Create Predictions
+python predict.py \
+-image_dir ${image_root_path} \
+-results_file ${model_save_dir}preds.csv \
+-model_path ${model_save_dir}best_model.hdf5 \
+-class_mapping_json ${model_save_dir}label_mappings.json \
+-pre_processing_json ${model_save_dir}image_processing.json

@@ -102,7 +102,6 @@ python train.py \
 -ignore_aspect_ratio
 
 
-
 # Pseudo Fine Tuning
 python train.py \
 -train_tfr_path ${tfr_files_path} \
@@ -132,3 +131,12 @@ python export.py -model ${model_save_dir}best_model.hdf5 \
 -pre_processing_json ${model_save_dir}image_processing.json \
 -output_dir ${estimator_deploy_save_dir} \
 -estimator_save_dir ${estimator_save_dir}
+
+
+# Create Predictions
+python predict.py \
+-image_dir ${image_root_path} \
+-results_file ${model_save_dir}preds.csv \
+-model_path ${model_save_dir}best_model.hdf5 \
+-class_mapping_json ${model_save_dir}label_mappings.json \
+-pre_processing_json ${model_save_dir}image_processing.json

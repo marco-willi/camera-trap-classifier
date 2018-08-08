@@ -75,6 +75,6 @@ if __name__ == '__main__':
         batch_size=args['batch_size'])
 
     pred.predict_from_image_dir(
-        path_to_image_dir=args['image_dir'],
+        image_dir=args['image_dir'],
         export_type=args['export_file_type'],
-        export_file=args['results_file'])
+        output_file=args['results_file'])
