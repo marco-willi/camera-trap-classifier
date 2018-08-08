@@ -12,7 +12,7 @@ from tensorflow.python.keras import backend as K
 
 from models.resnet import ResnetBuilder
 from models.small_cnn import architecture as small_cnn
-from training.utils import build_masked_loss, masked_accuracy
+from training.utils import build_masked_loss, accuracy, top_k_accuracy
 
 
 def load_model_from_disk(path_to_model_on_disk):
@@ -319,9 +319,10 @@ def create_model(model_name,
     model.compile(loss=build_masked_loss(K.sparse_categorical_crossentropy),
                   optimizer=opt,
                   loss_weights=output_loss_weights,
+                  metrics=[accuracy, top_k_accuracy])
                   # metrics=['accuracy',
                   #          'sparse_top_k_categorical_accuracy'])
-                  metrics=[masked_accuracy])
+                  # metrics=[masked_accuracy])
 
     return model
 
