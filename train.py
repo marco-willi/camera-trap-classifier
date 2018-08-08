@@ -45,7 +45,7 @@ from data.reader import DatasetReader
 from data.image import preprocess_image
 from data.utils import (
     calc_n_batches_per_epoch, export_dict_to_json, read_json,
-    n_records_in_tfr, find_files_with_ending,
+    n_records_in_tfr, n_records_in_tfr_parallel, find_files_with_ending,
     get_most_recent_file_from_files, find_tfr_files_pattern_subdir)
 
 
@@ -270,7 +270,7 @@ if __name__ == '__main__':
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
     logger.info("Get Dataset Reader for calculating datset stats")
-    n_records_train = n_records_in_tfr(tfr_train)
+    n_records_train = n_records_in_tfr_parallel(tfr_train, args['n_cpus'])
     dataset = data_reader.get_iterator(
             tfr_files=tfr_train,
             batch_size=min([4096, n_records_train]),
@@ -370,12 +370,12 @@ if __name__ == '__main__':
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
         n_records_train, args['batch_size'])
 
-    n_records_val = n_records_in_tfr(tfr_val)
+    n_records_val = n_records_in_tfr_parallel(tfr_val, args['n_cpus'])
     n_batches_per_epoch_val = calc_n_batches_per_epoch(
         n_records_val, args['batch_size'])
 
     if TEST_SET:
-        n_records_test = n_records_in_tfr(tfr_test)
+        n_records_test = n_records_in_tfr_parallel(tfr_test, args['n_cpus'])
         n_batches_per_epoch_test = calc_n_batches_per_epoch(
             n_records_test, args['batch_size'], drop_remainder=False)
 
