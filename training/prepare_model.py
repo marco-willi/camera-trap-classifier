@@ -21,7 +21,8 @@ def load_model_from_disk(path_to_model_on_disk):
     loaded_model = load_model(
         path_to_model_on_disk,
         custom_objects={
-            'masked_accuracy': masked_accuracy,
+            'accuracy': accuracy,
+            'top_k_accuracy': top_k_accuracy,
             'masked_loss_function':
                 build_masked_loss(K.sparse_categorical_crossentropy)})
     return loaded_model
