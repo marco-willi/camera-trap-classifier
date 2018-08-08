@@ -8,6 +8,7 @@ from collections import Counter, OrderedDict
 from hashlib import md5
 import random
 import time
+from multiprocessing import Pool
 
 import tensorflow as tf
 import numpy as np
@@ -274,6 +275,20 @@ def n_records_in_tfr(tfr_path):
     for path in tfr_path:
         total += sum(1 for _ in tf.python_io.tf_record_iterator(path))
     return total
+
+
+def n_records_in_tfr_parallel(tfr_path, n_processes=4):
+    """ Read the number of records in all tfr files in parallel """
+    if not isinstance(tfr_path, list):
+        tfr_path = [tfr_path]
+    if len(tfr_path) > 0:
+        pool = Pool(processes=n_processes)
+        counts = list(pool.imap_unordered(n_records_in_tfr, tfr_path))
+        pool.close()
+        pool.join()
+        return sum(counts)
+    else:
+        return n_records_in_tfr(tfr_path)
 
 
 def check_tfrecord_contents(path_to_tfr):
