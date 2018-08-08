@@ -186,7 +186,7 @@ class DatasetWriter(object):
 
                 if serialized_record is None:
                     logger.debug("Discarding record %s - no image avail" %
-                                record_id)
+                                 record_id)
                     continue
 
                 # Write the serialized data to the TFRecords file.
