@@ -1,7 +1,7 @@
 # Test Multi-Image Captures
 # ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 export_root_path=./test_big//cats_vs_dogs_multi/
-image_root_path=D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all
+image_root_path=./test/test_images/
 tfr_files_path=${export_root_path}tfr_files/
 run_outputs_path=${export_root_path}run_outputs/
 model_save_dir=${export_root_path}model_save_dir/

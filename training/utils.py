@@ -5,7 +5,8 @@ import os
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.models import Model
-from tensorflow.python.keras.metrics import sparse_categorical_accuracy, sparse_top_k_categorical_accuracy
+from tensorflow.python.keras.metrics import (
+    sparse_categorical_accuracy, sparse_top_k_categorical_accuracy)
 
 from data.utils import copy_file
 
@@ -94,28 +95,16 @@ def build_masked_loss(loss_function, mask_value=-1):
     return masked_loss_function
 
 
-def masked_sparse_categorical_crossentropy(y_true, y_pred, mask_value=-1):
-    mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
-    return K.sparse_categorical_crossentropy(y_true * mask, y_pred * mask)
-
-
 def accuracy(y_true, y_pred, mask_value=-1):
-    mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
-    return sparse_categorical_accuracy(y_true * mask, y_pred * mask)
+    """ Accuracy with Masking """
+    # mask = K.not_equal(y_true, mask_value)
+    mask = K.squeeze(K.not_equal(y_true, mask_value), axis=-1)
+    return sparse_categorical_accuracy(tf.boolean_mask(y_true, mask),
+                                       tf.boolean_mask(y_pred, mask))
 
 
-def top_k_accuracy(y_true, y_pred, mask_value=-1):
-    mask = K.cast(K.not_equal(y_true, mask_value), K.floatx())
-    return sparse_top_k_categorical_accuracy(y_true * mask, y_pred * mask)
-
-# def masked_accuracy(y_true, y_pred, mask_value=-1):
-#     mask = tf.not_equal(y_true, tf.cast(mask_value, tf.float32))
-#     y_true_masked = tf.cast(tf.boolean_mask(y_true, mask, axis=0), tf.float32)
-#     y_pred_masked = tf.cast(tf.boolean_mask(y_pred, mask, axis=0), tf.float32)
-#     return sparse_categorical_accuracy(y_true_masked, y_pred_masked)
-
-
-def masked_accuracy2(y_true, y_pred, mask_value=-1):
-    total = K.sum(K.cast(K.not_equal(y_true, mask_value), K.floatx()))
-    correct = K.sum(K.cast(K.equal(y_true, K.round(y_pred)), K.floatx()))
-    return correct / total
+def top_k_accuracy(y_true, y_pred, mask_value=-1, k=5):
+    """ Top-K Accuracy with Masking """
+    mask = K.squeeze(K.not_equal(y_true, mask_value), axis=-1)
+    return sparse_top_k_categorical_accuracy(tf.boolean_mask(y_true, mask),
+                                             tf.boolean_mask(y_pred, mask), k=k)
