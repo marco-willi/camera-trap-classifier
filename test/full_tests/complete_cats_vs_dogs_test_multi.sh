@@ -2,6 +2,7 @@
 # ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 image_root_path=D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all
 export_root_path=./test_big//cats_vs_dogs_multi/
+image_root_path=./test/test_images/
 tfr_files_path=${export_root_path}tfr_files/
 run_outputs_path=${export_root_path}run_outputs/
 model_save_dir=${export_root_path}model_save_dir/
@@ -40,8 +41,8 @@ python train.py \
 -run_outputs_dir ${run_outputs_path} \
 -model_save_dir ${model_save_dir} \
 -model small_cnn \
--labels species standing \
--labels_loss_weights 1 0.2 \
+-labels species standing count \
+-labels_loss_weights 1 0.2 0.5 \
 -batch_size 12 \
 -n_cpus 2 \
 -n_gpus 1 \

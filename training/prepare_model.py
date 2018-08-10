@@ -8,15 +8,25 @@ from tensorflow.python.keras.optimizers import SGD, RMSprop
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
 from tensorflow.python.keras.utils import multi_gpu_model
+from tensorflow.python.keras import backend as K
 
 from models.resnet import ResnetBuilder
 from models.small_cnn import architecture as small_cnn
+from training.utils import (
+    build_masked_loss, accuracy, top_k_accuracy,
+    is_multi_gpu_model, get_gpu_base_model)
 
 
 def load_model_from_disk(path_to_model_on_disk):
     """ Load weights from disk and add to model """
     logging.info("Loading model from: %s" % path_to_model_on_disk)
-    loaded_model = load_model(path_to_model_on_disk)
+    loaded_model = load_model(
+        path_to_model_on_disk,
+        custom_objects={
+            'accuracy': accuracy,
+            'top_k_accuracy': top_k_accuracy,
+            'masked_loss_function':
+                build_masked_loss(K.sparse_categorical_crossentropy)})
     return loaded_model
 
 
@@ -25,25 +35,6 @@ def get_non_output_layer_ids(model, label_indicator='label/'):
     layer_ids = [i for i, x in enumerate(model.layers)
                  if label_indicator not in x.name]
     return layer_ids
-
-
-def _is_multi_gpu_model(model):
-    """ Check if a specific model is a multi_gpu model by checking if one of
-        the layers is a keras model itself
-    """
-    for layer in model.layers:
-        if isinstance(layer, Model):
-            return True
-    return False
-
-
-def _get_gpu_base_model(model):
-    """ get multi_gpu base model
-    """
-    for layer in model.layers:
-        if isinstance(layer, Model):
-            return layer
-    return None
 
 
 def copy_model_weights(from_model, to_model, incl_last=True):
@@ -309,42 +300,9 @@ def create_model(model_name,
                 raise ValueError("transfer_learning_type option %s not \
                                   recognized" % transfer_learning)
 
-    model.compile(loss='sparse_categorical_crossentropy',
+    model.compile(loss=build_masked_loss(K.sparse_categorical_crossentropy),
                   optimizer=opt,
                   loss_weights=output_loss_weights,
-                  metrics=['accuracy',
-                           'sparse_top_k_categorical_accuracy'])
+                  metrics=[accuracy, top_k_accuracy])
 
     return model
-
-    # if continue_training:
-    #     logging.debug("Loading model from disk to continue training")
-    #     loaded_model = load_model_from_disk(path_of_model_to_load)
-    #     copy_model_weights(loaded_model, model, incl_last=True)
-    #
-    # elif transfer_learning:
-    #     logging.debug("Preparing transfer_learning")
-    #     loaded_model = load_model_from_disk(path_of_model_to_load)
-    #     copy_model_weights(loaded_model, model, incl_last=False)
-    #     non_output_layers = get_non_output_layer_ids(model)
-    #     model = set_layers_to_non_trainable(model, non_output_layers)
-    #
-    # elif fine_tuning:
-    #     logging.debug("Preparing fine_tuning")
-    #     loaded_model = load_model_from_disk(path_of_model_to_load)
-    #     copy_model_weights(loaded_model, model, incl_last=False)
-    #
-    # # Use multiple GPUs if available
-    # try:
-    #     model = multi_gpu_model(model, n_gpus, cpu_relocation=True)
-    #     logging.info("Training using multiple GPUs..")
-    # except:
-    #     logging.info("Training using single GPU or CPU..")
-    #
-    # model.compile(loss='sparse_categorical_crossentropy',
-    #               optimizer=opt,
-    #               loss_weights=output_loss_weights,
-    #               metrics=['accuracy',
-    #                        'sparse_top_k_categorical_accuracy'])
-    #
-    # return model

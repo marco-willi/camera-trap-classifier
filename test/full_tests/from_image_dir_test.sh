@@ -125,12 +125,14 @@ python train.py \
 -transfer_learning_type all_layers \
 -model_to_load ${run_outputs_path}
 
+
 # Deploy model
 python export.py -model ${model_save_dir}best_model.hdf5 \
 -class_mapping_json ${model_save_dir}label_mappings.json \
 -pre_processing_json ${model_save_dir}image_processing.json \
 -output_dir ${estimator_deploy_save_dir} \
 -estimator_save_dir ${estimator_save_dir}
+
 
 # Create Predictions
 python predict.py \

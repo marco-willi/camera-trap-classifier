@@ -54,7 +54,7 @@ class ImportFromCSVSingleImageTester(unittest.TestCase):
                                       'standing': '1'}],
                           'images': ["/path/capture_ele_lion.jpg"]})
 
-    def testMissingFields(self):
+    def testMissingImage(self):
         """ Test Removal of Records with missing fields """
         self.assertNotIn('no_image', self.data)
 

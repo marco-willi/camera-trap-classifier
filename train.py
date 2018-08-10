@@ -152,14 +152,9 @@ if __name__ == '__main__':
               This might be necessary if model training should be continued\
               with different options (e.g. no GPUs, or different optimizer)")
     parser.add_argument(
-        "-fine_tuning", default=False,
-        action='store_true', required=False,
-        help="Flag to specify that transfer learning should be used, with\
-              fine-tuning all layers")
-    parser.add_argument(
         "-model_to_load", type=str, required=False, default=None,
         help='Path to a model (.hdf5) when either continue_training,\
-             transfer_learning or fine_tuning are specified, \
+             or transfer_learning are specified, \
              if a directory is specified, \
              the most recent model in that directory is loaded')
     # Image Processing

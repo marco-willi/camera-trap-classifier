@@ -6,9 +6,9 @@ from collections import OrderedDict
 import traceback
 
 import tensorflow as tf
-from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras import backend as K
 
+from training.prepare_model import load_model_from_disk
 from data.image import preprocess_image
 from data.utils import (
     print_progress, export_dict_to_json, list_pictures,
@@ -62,7 +62,7 @@ class Predictor(object):
         print("Read following pre processing options:")
         self._log_cfg(self.pre_processing)
 
-        self.model = load_model(self.model_path)
+        self.model = load_model_from_disk(self.model_path)
 
     def _log_cfg(self, cfg):
         """ Print configuration file """
