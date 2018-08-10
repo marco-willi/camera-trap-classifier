@@ -64,9 +64,9 @@ if __name__ == '__main__':
         "-log_outdir", type=str, required=False, default=None,
         help="The directory to write logfiles to (defaults to export dir)")
     parser.add_argument(
-        "-keep_missing", default=False,
+        "-discard_missing", default=False,
         action='store_true', required=False,
-        help="whether to keep records with missing label entries")
+        help="whether to discard records with any missing label entries")
 
     subparsers = parser.add_subparsers(help='sub-command help')
 
@@ -144,7 +144,7 @@ if __name__ == '__main__':
 
     dinv = args['func'](args)
 
-    if not args['keep_missing']:
+    if args['discard_missing']:
         dinv._remove_records_with_any_missing_label()
 
     dinv.log_stats()

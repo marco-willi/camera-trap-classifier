@@ -1,4 +1,4 @@
-,id,image,species,standing,count
+id,image,species,standing,count
 cat0.jpg,./test/test_images/Cats/cat0.jpg,cat,1,14
 cat10.jpg,./test/test_images/Cats/cat10.jpg,cat,0,3
 cat13.jpg,./test/test_images/Cats/cat13.jpg,cat,0,14
