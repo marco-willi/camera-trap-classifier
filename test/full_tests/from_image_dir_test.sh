@@ -125,6 +125,7 @@ python train.py \
 -transfer_learning_type all_layers \
 -model_to_load ${run_outputs_path}
 
+
 # Deploy model
 python export.py -model ${model_save_dir}best_model.hdf5 \
 -class_mapping_json ${model_save_dir}label_mappings.json \

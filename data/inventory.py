@@ -19,7 +19,6 @@ class DatasetInventory(object):
         Record
     """
 
-    # changing this could have unexpected consequences
     missing_label_value = '-1'
     missing_label_value_num = -1
 
@@ -321,6 +320,22 @@ class DatasetInventoryMaster(DatasetInventory):
                         if label_value == l_val:
                             ids_to_keep.add(record_id)
         return ids_to_keep
+
+    def _remove_records_with_any_missing_label(self):
+        """ Remove any records with the default missing value of -1 """
+        ids_to_remove = set()
+        for record_id, record_value in self.data_inventory.items():
+            labels_list = record_value['labels']
+            for label in labels_list:
+                for l_vals in label.values():
+                    if l_vals == type(self).missing_label_value:
+                        ids_to_remove.add(record_id)
+
+        logger.info("Removing %s records with missing labels" %
+                    len(ids_to_remove))
+
+        for id_to_remove in ids_to_remove:
+            self.remove_record(id_to_remove)
 
     def split_inventory_by_random_splits_with_balanced_sample(
             self,

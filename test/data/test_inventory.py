@@ -59,6 +59,12 @@ class DataInventoryTests(unittest.TestCase):
         self.assertEqual(tfr_dict["label/color_white"], ['0'])
         self.assertEqual(tfr_dict["label/counts"], ['1'])
 
+    def testRemoveMissingLabelRecords(self):
+        self.assertIn("missing_counts_label",  self.inventory)
+        self.assertIn("counts_is_12",  self.inventory)
+        self.dinv._remove_records_with_any_missing_label()
+        self.assertNotIn("missing_counts_label",  self.inventory)
+        self.assertIn("counts_is_12",  self.inventory)
 
 #    def testTFRecordFormat(self):
 #         self.dinv._get_tfr_record_format('single_species_standard')

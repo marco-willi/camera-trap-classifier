@@ -152,5 +152,11 @@
                ],
     "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
 
+  },
+  "missing_counts_label":{
+    "labels": [
+                {"class": "cat", "color_brown": "1", "color_white": "0", "counts": "-1"}
+               ],
+    "images": ["\\images\\4715\\all\\dog\\10300788_0.jpeg"]
   }
 }
