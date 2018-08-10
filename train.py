@@ -45,7 +45,7 @@ from data.reader import DatasetReader
 from data.image import preprocess_image
 from data.utils import (
     calc_n_batches_per_epoch, export_dict_to_json, read_json,
-    n_records_in_tfr, n_records_in_tfr_parallel, find_files_with_ending,
+    n_records_in_tfr_parallel, find_files_with_ending,
     get_most_recent_file_from_files, find_tfr_files_pattern_subdir)
 
 
@@ -166,7 +166,8 @@ if __name__ == '__main__':
               [None, 'little', 'full_fast', 'full_randomized']. \
               This can slow down the pre-processing speed and starve the \
               GPU of data. Use None or little/full_fast options if input \
-              pipeline is slow. Else full_randomized is recommended.")
+              pipeline is slow. Generally full_randomized is recommended \
+              and is usually more than fast enough.")
     parser.add_argument(
         "-ignore_aspect_ratio", default=False, action='store_true',
         help="Wheter to ignore the aspect ratio of the images during model \
