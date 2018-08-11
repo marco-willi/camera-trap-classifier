@@ -32,6 +32,26 @@ cd /host/code/camera-trap-classifier
 
 9. Run the codes below.
 
+10. Detach from Docker with CTRL + P Q
+
+11. Various server commands:
+```
+# list drives
+lsblk -o KNAME,TYPE,SIZE,MODEL
+
+# attach ssd
+sudo mount /dev/xvdf ~/data_hdd
+
+# run docker
+sudo nvidia-docker run -it -v ~/:/host root/tensorflow:latest-devel-gpu-py3 bash
+
+# Monitor GPU utilization
+nvidia-smi -l 1
+
+# fix multi gpu driver on host
+sudo nvidia-modprobe -u -c=0
+```
+
 ## Data Organization on the EC2 instance
 
 The data was organized in the following way:
@@ -245,4 +265,45 @@ Use the following additional option if the model crashes (this can happen if dif
 Alternatively, use '-transfer_learning' instead of '-continue_training'.
 ```
 -rebuild_model
+-learning_rate 0.001
+```
+
+Additionally, to avoid overfitting if the new dataset is not that large: mix in tfrecord files
+from other locations.
+
+
+
+### 7) Continue Training After Server Crash
+
+This is an example of continuing to train the species model after the server crashed after completing
+10 epochs (the lastest model in 'outputs_all_labels' was model_epoch_10_loss_4.41.hdf5). Note that we start the
+training with 'starting_epoch' equals 10 (0-based index, thus actually the 11th epoch). The path in 'model_to_load'
+specifies the location to search for the most recent model to load and to continue training from. Note also that
+we had to specify '-rebuild_model' because it would crash with an out of memory error (using a 4 GPU instance).
+
+
+```
+python3 train.py \
+-train_tfr_path /host/data_hdd/data/tfr_files/species/ \
+-train_tfr_pattern train \
+-val_tfr_path /host/data_hdd/data/tfr_files/species/ \
+-val_tfr_pattern val \
+-test_tfr_path /host/data_hdd/data/tfr_files/species/ \
+-test_tfr_pattern test \
+-class_mapping_json /host/data_hdd/data/common_label_mappings/species/label_mapping.json \
+-run_outputs_dir /host/data_hdd/runs/species/sa_and_ss/outputs_all_labels/ \
+-model_save_dir /host/data_hdd/runs/species/sa_and_ss/saves_all_labels/ \
+-model InceptionResNetV2 \
+-labels species count standing resting moving eating interacting babies \
+-batch_size 128 \
+-n_cpus 32 \
+-n_gpus 4 \
+-buffer_size 32768 \
+-max_epochs 50 \
+-starting_epoch 10 \
+-color_augmentation full_randomized \
+-continue_training \
+-rebuild_model \
+-model_to_load /host/data_hdd/runs/species/sa_and_ss/outputs_all_labels/ \
+-ignore_aspect_ratio
 ```
