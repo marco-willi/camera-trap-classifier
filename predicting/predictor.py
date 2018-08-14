@@ -162,7 +162,9 @@ class Predictor(object):
                         output_pretty = output.strip('label/')
                         id_output_preds = id_preds[o]
                         # fix class_preds
-                        output_ids = list(id_to_class_mapping_clean[output].keys()).sort()
+                        # TODO: check this hack
+                        output_ids = list(id_to_class_mapping_clean[output].keys())
+                        output_ids.sort()
                         class_preds = {id_to_class_mapping_clean[output][ii]: id_output_preds[ii]
                                        for ii in output_ids}
                         # class_preds = {id_to_class_mapping_clean[output][ii]: y
