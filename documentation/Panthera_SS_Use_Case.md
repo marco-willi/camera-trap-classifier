@@ -307,3 +307,36 @@ python3 train.py \
 -model_to_load /host/data_hdd/runs/species/sa_and_ss/outputs_all_labels/ \
 -ignore_aspect_ratio
 ```
+
+
+### 8) Continue Training after collecting new / more data.
+
+This is an example for continuing to train the empty model on 1 GPU by choosing a separate output folder
+to distinguish between the two runs. The previous / first model trained for 30 epochs and that is where we
+pick up.
+
+```
+python3 train.py \
+-train_tfr_path /host/data_hdd/data/tfr_files/empty_or_not/ \
+-train_tfr_pattern train \
+-val_tfr_path /host/data_hdd/data/tfr_files/empty_or_not/ \
+-val_tfr_pattern val \
+-test_tfr_path /host/data_hdd/data/tfr_files/empty_or_not/ \
+-test_tfr_pattern test \
+-class_mapping_json /host/data_hdd/data/common_label_mappings/empty_or_not/label_mapping.json \
+-run_outputs_dir /host/data_hdd/runs/empty_or_not/sa_and_ss/outputs_continue/ \
+-model_save_dir /host/data_hdd/runs/empty_or_not/sa_and_ss/saves_continue/ \
+-model ResNet18 \
+-labels empty \
+-batch_size 256 \
+-starting_epoch 30 \
+-initial_learning_rate 0.001 \
+-n_cpus 8 \
+-n_gpus 1 \
+-buffer_size 32768 \
+-max_epochs 50 \
+-color_augmentation full_randomized \
+-ignore_aspect_ratio \
+-continue_training \
+-model_to_load /host/data_hdd/runs/empty_or_not/sa_and_ss/outputs/ > out_empty_continue.log &
+```

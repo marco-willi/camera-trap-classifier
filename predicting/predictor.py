@@ -161,8 +161,12 @@ class Predictor(object):
                     for o, output in enumerate(output_names):
                         output_pretty = output.strip('label/')
                         id_output_preds = id_preds[o]
-                        class_preds = {id_to_class_mapping_clean[output][ii]: y
-                                       for ii, y in enumerate(id_output_preds)}
+                        # fix class_preds
+                        output_ids = list(id_to_class_mapping_clean[output].keys()).sort()
+                        class_preds = {id_to_class_mapping_clean[output][ii]: id_output_preds[ii]
+                                       for ii in output_ids}
+                        # class_preds = {id_to_class_mapping_clean[output][ii]: y
+                        #                for ii, y in enumerate(id_output_preds)}
 
                         ordered_classes = sorted(class_preds,
                                                  key=class_preds.get,
