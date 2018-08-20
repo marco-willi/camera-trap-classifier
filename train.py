@@ -214,7 +214,8 @@ if __name__ == '__main__':
     # Class to numeric mappings and number of classes per label
     class_mapping = read_json(args['class_mapping_json'])
     # TODO: fix num classes per label for a:0, b:0 cases
-    n_classes_per_label_dict = {c: len(class_mapping[o]) for o, c in
+    n_classes_per_label_dict = {c: len(set(class_mapping[o].values()))
+                                for o, c in
                                 zip(output_labels, output_labels_clean)}
     n_classes_per_label = [n_classes_per_label_dict[x]
                            for x in output_labels_clean]

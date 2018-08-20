@@ -159,7 +159,7 @@ class Predictor(object):
                     id_preds = [x[i, :] for x in preds_list]
                     result = dict()
                     for o, output in enumerate(output_names):
-                        output_pretty = output.strip('label/')
+                        output_pretty = output.split('label/')[-1]
                         id_output_preds = id_preds[o]
                         # fix class_preds
                         # TODO: check this hack
