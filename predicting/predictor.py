@@ -118,12 +118,9 @@ class Predictor(object):
 
         # Create Dataset Iterator
         iterator = dataset.make_one_shot_iterator()
-        #iterator = dataset.make_initializable_iterator()
         batch_data = iterator.get_next()
 
         with K.get_session() as sess:
-            #tf.tables_initializer().run()
-            #sess.run(iterator.initializer)
             batch_counter = 1
             while True:
                 try:
@@ -167,9 +164,6 @@ class Predictor(object):
                         output_ids.sort()
                         class_preds = {id_to_class_mapping_clean[output][ii]: id_output_preds[ii]
                                        for ii in output_ids}
-                        # class_preds = {id_to_class_mapping_clean[output][ii]: y
-                        #                for ii, y in enumerate(id_output_preds)}
-
                         ordered_classes = sorted(class_preds,
                                                  key=class_preds.get,
                                                  reverse=True)
