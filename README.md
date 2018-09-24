@@ -206,7 +206,7 @@ to use a disk image that contains all required installations and use that to set
 
 
 ### Tensorflow GPU Docker installation on AWS
-We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in /setup/Part_* provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
+We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in [/setup/Part_*](setup/) provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
 Tensorflow can be found at https://www.tensorflow.org/install/.
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/server_config.png"/>
