@@ -175,7 +175,7 @@ We have used python 3.5 (newer versions should work) and Tensorflow 1.9 (older v
 ### Installing from Requirements
 
 The most common way to install all required packages is to create a virtual environment and to use a
-requirements.txt file as provided in [setup/](setup/).
+requirements.txt file as provided in [setup/](setup/). Note that this requirements.txt exactly reproduces the environment we've been using on Ubuntu and may is incompatible with other operating systems.
 
 ```
 python3 -m virtualenv ctc
@@ -183,21 +183,20 @@ source ctc/bin/activate
 pip install -r ./setup/requirements.txt
 ```
 
-### Windows users with Anaconda
+### Anaconda Users
 
-For testing and to use a model for predictions, a local Windows installation can be sufficient. The following
-commands allow for a full installation using Anaconda (https://conda.io/docs/user-guide/install/windows.html).
-The commands can be executed using, for example, Git BASH (https://gitforwindows.org).
+The following commands allow for a full installation using Anaconda (https://conda.io/docs/user-guide/install/index.html).
+The commands can be executed, for example on Windows, using Git BASH (https://gitforwindows.org) or using the terminal on Unix systems.
 
 ```
 # create a new conda environment with name 'ctc'
 conda create --no-default-packages -n ctc python=3.5
 # activate the environment
 source activate ctc
-# install tensorflow (according to official documentation)
-pip install --upgrade tensorflow
-# alternatively: conda install tensorflow
-conda install jupyter yaml pyyaml nb_conda pillow h5py
+# install tensorflow (non-GPU or GPU version)
+conda install tensorflow=1.9.0
+# conda install tensorflow-gpu=1.9.0
+conda install jupyter pyyaml yaml nb_conda pillow h5py
 ```
 
 ### Using a GPU
