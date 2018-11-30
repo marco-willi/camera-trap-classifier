@@ -1,6 +1,6 @@
 import unittest
 from data.inventory import (
-    DatasetInventory, DatasetInventoryMaster)
+    DatasetInventoryMaster)
 
 
 class DataInventoryTests(unittest.TestCase):
