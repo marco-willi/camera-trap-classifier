@@ -32,12 +32,13 @@ import os
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import (
-    TensorBoard, EarlyStopping, CSVLogger,  ReduceLROnPlateau)
+    TensorBoard, EarlyStopping, CSVLogger,  ReduceLROnPlateau,
+    ModelCheckpoint)
 
 from config.config import ConfigLoader
 from config.config_logging import setup_logging
 from training.utils import copy_models_and_config_files
-from training.hooks import ModelCheckpoint, TableInitializerCallback
+from training.hooks import TableInitializerCallback
 from training.prepare_model import create_model
 from predicting.predictor import Predictor
 from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
