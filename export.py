@@ -87,7 +87,7 @@ if __name__ == '__main__':
         dataset = tf.data.Dataset.from_tensor_slices(image_list)
         dataset = dataset.map(decode_and_process_image)
         dataset = dataset.batch(128)
-        next_example = tf.contrib.data.get_single_element(dataset)
+        next_example = tf.data.experimental.get_single_element(dataset)
         return next_example
 
     def serving_input_receiver_fn():

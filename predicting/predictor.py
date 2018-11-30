@@ -228,7 +228,7 @@ class Predictor(object):
         dataset = tf.data.Dataset.from_tensor_slices(image_paths)
         dataset = dataset.map(lambda x: self._get_and_transform_image(
                               x, self.pre_processing))
-        dataset = dataset.apply(tf.contrib.data.ignore_errors())
+        dataset = dataset.apply(tf.data.experimental.ignore_errors())
         dataset = dataset.batch(batch_size)
         dataset = dataset.repeat(1)
         return dataset

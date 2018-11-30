@@ -36,7 +36,7 @@ class DatasetReader(object):
             dataset = dataset.shuffle(buffer_size=len(tfr_files))
 
         dataset = dataset.apply(
-            tf.contrib.data.parallel_interleave(
+            tf.data.experimental.parallel_interleave(
                 lambda filename: tf.data.TFRecordDataset(filename),
                 sloppy=is_train,
                 cycle_length=12))
@@ -46,12 +46,12 @@ class DatasetReader(object):
         # shuffle records only for training
         if is_train:
             dataset = dataset.apply(
-                tf.contrib.data.shuffle_and_repeat(
+                tf.data.experimental.shuffle_and_repeat(
                     buffer_size=buffer_size,
                     count=n_repeats))
 
         dataset = dataset.apply(
-              tf.contrib.data.map_and_batch(
+              tf.data.experimental.map_and_batch(
                   lambda x: self.tfr_decoder(
                           serialized_example=x,
                           output_labels=output_labels,
