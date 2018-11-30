@@ -4,17 +4,14 @@ import logging
 import tensorflow as tf
 from tensorflow.python.keras.models import Model, Sequential, load_model
 from tensorflow.python.keras.layers import Input, Dense
-from tensorflow.python.keras.optimizers import SGD, RMSprop
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
-from tensorflow.python.keras.utils import multi_gpu_model
 from tensorflow.python.keras import backend as K
 
 from models.resnet import ResnetBuilder
 from models.small_cnn import architecture as small_cnn
 from training.utils import (
-    build_masked_loss, accuracy, top_k_accuracy,
-    is_multi_gpu_model, get_gpu_base_model)
+    build_masked_loss, accuracy, top_k_accuracy)
 
 
 def load_model_from_disk(path_to_model_on_disk):
@@ -236,73 +233,50 @@ def create_model(model_name,
                                         name=target_name)(output_flat))
     # Define model optimizer
     if optimizer == 'sgd':
-        opt = SGD(lr=initial_learning_rate, momentum=0.9, decay=1e-4)
+        opt = tf.train.MomentumOptimizer(
+            learning_rate=initial_learning_rate,
+            momentum=0.9)
     elif optimizer == 'rmsprop':
-        opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
+        opt = tf.train.RMSPropOptimizer(learning_rate=0.01)
     else:
         raise ValueError("optimizer %s not implemented" % optimizer)
 
-    if n_gpus > 1:
-        logging.debug("Preparing Multi-GPU Model")
-        with tf.device('/cpu:0'):
-            base_model = Model(inputs=model_input, outputs=all_target_outputs)
+    model = Model(inputs=model_input, outputs=all_target_outputs)
 
-            if continue_training and rebuild_model:
-                logging.debug("Preparing continue_training by \
-                               rebuilding model")
-                loaded_model = load_model_from_disk(path_of_model_to_load)
-                copy_model_weights(loaded_model, base_model, incl_last=True)
+    if continue_training and rebuild_model:
+        logging.debug("Preparing continue_training by \
+                       rebuilding model")
+        loaded_model = load_model_from_disk(path_of_model_to_load)
+        copy_model_weights(loaded_model, model, incl_last=True)
 
-            elif transfer_learning:
-                if transfer_learning_type == 'last_layer':
-                    logging.debug("Preparing transfer_learning with freezing \
-                                   all but the last layer")
-                    loaded_model = load_model_from_disk(path_of_model_to_load)
-                    copy_model_weights(loaded_model, base_model, incl_last=False)
-                    non_output_layers = get_non_output_layer_ids(base_model)
-                    base_model = set_layers_to_non_trainable(base_model, non_output_layers)
-
-                elif transfer_learning_type == 'all_layers':
-                    logging.debug("Preparing transfer_learning with freezing \
-                                   no layers")
-                    loaded_model = load_model_from_disk(path_of_model_to_load)
-                    copy_model_weights(loaded_model, base_model, incl_last=False)
-                else:
-                    raise ValueError("transfer_learning_type option %s not \
-                                      recognized" % transfer_learning)
-
-        model = multi_gpu_model(base_model, gpus=n_gpus)
-
-    else:
-        model = Model(inputs=model_input, outputs=all_target_outputs)
-
-        if continue_training and rebuild_model:
-            logging.debug("Preparing continue_training by \
-                           rebuilding model")
+    elif transfer_learning:
+        if transfer_learning_type == 'last_layer':
+            logging.debug("Preparing transfer_learning with freezing \
+                           all but the last layer")
             loaded_model = load_model_from_disk(path_of_model_to_load)
-            copy_model_weights(loaded_model, model, incl_last=True)
+            copy_model_weights(loaded_model, model, incl_last=False)
+            non_output_layers = get_non_output_layer_ids(model)
+            model = set_layers_to_non_trainable(model, non_output_layers)
 
-        elif transfer_learning:
-            if transfer_learning_type == 'last_layer':
-                logging.debug("Preparing transfer_learning with freezing \
-                               all but the last layer")
-                loaded_model = load_model_from_disk(path_of_model_to_load)
-                copy_model_weights(loaded_model, model, incl_last=False)
-                non_output_layers = get_non_output_layer_ids(model)
-                model = set_layers_to_non_trainable(model, non_output_layers)
+        elif transfer_learning_type == 'all_layers':
+            logging.debug("Preparing transfer_learning with freezing \
+                           no layers")
+            loaded_model = load_model_from_disk(path_of_model_to_load)
+            copy_model_weights(loaded_model, model, incl_last=False)
+        else:
+            raise ValueError("transfer_learning_type option %s not \
+                              recognized" % transfer_learning)
 
-            elif transfer_learning_type == 'all_layers':
-                logging.debug("Preparing transfer_learning with freezing \
-                               no layers")
-                loaded_model = load_model_from_disk(path_of_model_to_load)
-                copy_model_weights(loaded_model, model, incl_last=False)
-            else:
-                raise ValueError("transfer_learning_type option %s not \
-                                  recognized" % transfer_learning)
+    # Define distribution strategy for multi-gpu training
+    if n_gpus > 1:
+        dist = tf.contrib.distribute.MirroredStrategy(num_gpus=n_gpus)
+    else:
+        dist = None
 
     model.compile(loss=build_masked_loss(K.sparse_categorical_crossentropy),
                   optimizer=opt,
                   loss_weights=output_loss_weights,
-                  metrics=[accuracy, top_k_accuracy])
+                  metrics=[accuracy, top_k_accuracy],
+                  distribute=dist)
 
     return model
