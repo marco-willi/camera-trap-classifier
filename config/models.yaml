@@ -42,6 +42,12 @@ models:
       output_width: 299
       resize_side_min: 299
       resize_side_max: 329
+  Xception:
+    image_processing:
+      output_height: 299
+      output_width: 299
+      resize_side_min: 299
+      resize_side_max: 329
   small_cnn:
     image_processing:
       output_height: 50

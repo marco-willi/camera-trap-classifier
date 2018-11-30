@@ -6,6 +6,7 @@ from tensorflow.python.keras.models import Model, Sequential, load_model
 from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
+from tensorflow.python.keras.applications.xception import Xception
 from tensorflow.python.keras import backend as K
 
 from models.resnet import ResnetBuilder
@@ -221,6 +222,20 @@ def create_model(model_name,
     elif model_name == 'small_cnn':
 
         output_flat = small_cnn(model_input)
+
+    elif model_name == 'Xception':
+
+        keras_model = Xception(
+            include_top=False,
+            weights=None,
+            input_tensor=model_input,
+            input_shape=None,
+            pooling='avg'
+        )
+
+        output_flat = keras_model.output
+        model_input = keras_model.input
+
     else:
         raise ValueError("Model: %s not implemented" % model_name)
 
