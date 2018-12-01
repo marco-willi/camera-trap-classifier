@@ -35,8 +35,6 @@ class DatasetImporter(object):
                   ]
       }
     """
-    missing_value = '-1'
-
     # changing this could have unexpected consequences
     missing_value = '-1'
 

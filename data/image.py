@@ -448,7 +448,7 @@ def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
     ValueError: if color_ordering not in [0, 3]
   """
   with tf.name_scope(scope, 'distort_color', [image]):
-    hue_delta = 0.1
+    hue_delta = 0.05
     upper_contrast = 1.3
     if fast_mode:
       if color_ordering == 0:
