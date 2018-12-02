@@ -1,7 +1,7 @@
 # Test Multi-Image Captures
 # ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 image_root_path=D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all
-export_root_path=./test_big//cats_vs_dogs_multi/
+export_root_path=./test_big/cats_vs_dogs_multi/
 image_root_path=./test/test_images/
 tfr_files_path=${export_root_path}tfr_files/
 run_outputs_path=${export_root_path}run_outputs/
@@ -10,10 +10,10 @@ run_outputs_tl_path=${export_root_path}run_outputs_tl/
 model_save_tl_dir=${export_root_path}model_save_dir_tl/
 
 # delete files
-rm $tfr_files_path/*
-rm $model_save_dir/*.hdf5
-rm $run_outputs_path/*
-rm $run_outputs_tl_path/*
+rm $tfr_files_path*
+rm $model_save_dir*.hdf5
+rm $run_outputs_path*
+rm $run_outputs_tl_path*
 
 # Read from csv
 python create_dataset_inventory.py csv -path ./test/test_files/cats_vs_dogs_multi.csv \

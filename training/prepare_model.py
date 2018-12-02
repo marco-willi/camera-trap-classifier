@@ -1,12 +1,14 @@
 """ Prepare Model """
 import logging
 
-import tensorflow as tf
+from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 from tensorflow.python.keras.models import Model, Sequential, load_model
 from tensorflow.python.keras.layers import Input, Dense
 from tensorflow.python.keras.applications.inception_resnet_v2 import (
     InceptionResNetV2)
 from tensorflow.python.keras.applications.xception import Xception
+from tensorflow.python.keras.optimizers import RMSprop, SGD
+# from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD as SGD2
 from tensorflow.python.keras import backend as K
 
 from models.resnet import ResnetBuilder
@@ -248,11 +250,9 @@ def create_model(model_name,
                                         name=target_name)(output_flat))
     # Define model optimizer
     if optimizer == 'sgd':
-        opt = tf.train.MomentumOptimizer(
-            learning_rate=initial_learning_rate,
-            momentum=0.9)
+        opt = SGD(lr=initial_learning_rate, momentum=0.9, decay=1e-4)
     elif optimizer == 'rmsprop':
-        opt = tf.train.RMSPropOptimizer(learning_rate=0.01)
+        opt = RMSprop(lr=0.01, rho=0.9, epsilon=1e-08, decay=0.0)
     else:
         raise ValueError("optimizer %s not implemented" % optimizer)
 
@@ -284,14 +284,13 @@ def create_model(model_name,
 
     # Define distribution strategy for multi-gpu training
     if n_gpus > 1:
-        dist = tf.contrib.distribute.MirroredStrategy(num_gpus=n_gpus)
-    else:
-        dist = None
+        logging.debug("Creating Multi-GPU Model")
+        model = multi_gpu_model(model, gpus=n_gpus, cpu_relocation=True)
+        # TODO: dist = tf.contrib.distribute.MirroredStrategy(num_gpus=n_gpus)
 
     model.compile(loss=build_masked_loss(K.sparse_categorical_crossentropy),
                   optimizer=opt,
                   loss_weights=output_loss_weights,
-                  metrics=[accuracy, top_k_accuracy],
-                  distribute=dist)
+                  metrics=[accuracy, top_k_accuracy])
 
     return model
