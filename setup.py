@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='camera-trap-classifier',
+    name='camera_trap_classifier',
     url='https://github.com/marco-willi/camera-trap-classifier',
     author='Marco Willi',
     version='2.0.1',

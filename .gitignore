@@ -1,4 +1,4 @@
-sandbox/*
+*/sandbox/*
 __pycache__/*
 */__pycache__/*
 .spyproject/*
@@ -7,11 +7,11 @@ __pycache__/*
 *.Rhistory
 *.pyc
 *.DS_Store
-documentation/*.docx
-test_big/*
+*/documentation/*.docx
+*/test_big/*
 *.log
-*/old/*
-test/training/old/*
-experiments/*
-setup/server_cmds.sh
-setup/server_commands.sh
+**/old/*
+*/test/training/old/*
+*/experiments/*
+*/setup/server_cmds.sh
+*/setup/server_commands.sh

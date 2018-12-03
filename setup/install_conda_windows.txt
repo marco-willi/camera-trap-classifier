@@ -1,5 +1,0 @@
-conda create --no-default-packages -n ctc python=3.5
-source activate ctc
-pip install --upgrade tensorflow
-conda install jupyter pyyaml yaml nb_conda pillow h5py
-#conda install spyder matplotlib

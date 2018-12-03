@@ -1,10 +1,13 @@
 import unittest
+import tensorflow as tf
 from data.utils import (
     hash_string,
     assign_hash_to_zero_one,
     calc_n_batches_per_epoch,
     clean_input_path,
-    randomly_split_dataset
+    randomly_split_dataset,
+    generate_synthetic_data,
+    generate_synthetic_batch
 )
 import random
 import os
@@ -146,3 +149,40 @@ class PathCleaningTests(unittest.TestCase):
         """ Check good case """
         self.assertEqual(self.normal_path,
                          clean_input_path(self.no_path_sep_at_end))
+
+
+class GenerateSyntheticDataTests(tf.test.TestCase):
+    """ Test Synthetic Data Generation """
+
+    def setUp(self):
+        self.image_shape = (224, 224, 3)
+        self.labels = ['label/species', 'label/counts']
+        self.n_classes = [10, 3]
+        self.n_images = 1
+        self.batch_size = 64
+
+    def testSyntheticRecordGeneration(self):
+        record = generate_synthetic_batch(
+            batch_size=self.batch_size,
+            image_shape=self.image_shape,
+            labels=self.labels,
+            n_classes=self.n_classes,
+            n_images=self.n_images)
+
+        self.assertIsInstance(record, tuple)
+        self.assertIsInstance(record[0], dict)
+        self.assertEqual(record[0]['images'].shape, (self.batch_size, ) + self.image_shape)
+        for label in self.labels:
+            self.assertEqual(record[1][label].shape, (self.batch_size, ))
+
+    def testSyntheticDatasetGeneration(self):
+        dataset = generate_synthetic_data(
+            batch_size=self.batch_size,
+            image_shape=self.image_shape,
+            labels=self.labels,
+            n_classes=self.n_classes,
+            n_images=self.n_images)
+
+        self.assertIsInstance(dataset, tf.data.Dataset)
+        # self.assertEqual(dataset.output_shapes[0]['images'],
+        # (None,) + self.image_shape)

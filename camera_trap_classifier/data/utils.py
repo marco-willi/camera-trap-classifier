@@ -14,6 +14,38 @@ import tensorflow as tf
 import numpy as np
 
 
+def generate_synthetic_data(**kwargs):
+    """ Generate Synthetic Data """
+    record = generate_synthetic_batch(**kwargs)
+    dataset = tf.data.Dataset.from_tensors(record)
+    dataset = dataset.repeat()
+    return dataset
+
+
+def generate_synthetic_batch(batch_size, image_shape, labels, n_classes,
+                             n_images):
+    """ Generate a synthetic data batch """
+    label_dict = dict()
+    # Choose a random class for each label
+    for label, n_class in zip(labels, n_classes):
+        random_class = tf.random.uniform(
+            shape=(batch_size,), minval=0, maxval=n_class-1,
+            dtype=tf.int32, name='random_label')
+        label_dict[label] = random_class
+
+    images = list()
+    for i in range(n_images):
+        random_image = tf.random.uniform(
+            shape=(batch_size,) + image_shape,
+            minval=0, maxval=255,
+            dtype=tf.int32, name='random_image')
+        random_image = tf.divide(random_image, 255)
+        random_image = random_image - 0.5
+        images.append(random_image)
+
+    return ({'images': images[0]}, label_dict)
+
+
 def map_label_list_to_numeric_dict(label_list):
     """ Map a list of labels to numeric values alphabetically
         Input: ['b', 'c', 'd', 'a']
