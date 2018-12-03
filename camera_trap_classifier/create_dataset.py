@@ -25,8 +25,7 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 
-if __name__ == '__main__':
-
+def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(prog='CREATE DATASET')
     parser.add_argument("-inventory", type=str, required=True,
@@ -237,3 +236,7 @@ if __name__ == '__main__':
             processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']
             )
     logging.info("Finished writing TFRecords")
+
+
+if __name__ == '__main__':
+    main()

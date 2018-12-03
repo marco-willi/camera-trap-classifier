@@ -32,8 +32,8 @@ import argparse
 
 from predicting.predictor import Predictor
 
-if __name__ == '__main__':
 
+def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -78,3 +78,7 @@ if __name__ == '__main__':
         image_dir=args['image_dir'],
         export_type=args['export_file_type'],
         output_file=args['results_file'])
+
+
+if __name__ == '__main__':
+    main()

@@ -56,8 +56,7 @@ def panthera(args):
     return dinv
 
 
-if __name__ == '__main__':
-
+def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser(prog='CREATE DATSET INVENTORY')
     parser.add_argument(
@@ -150,3 +149,7 @@ if __name__ == '__main__':
     dinv.log_stats()
 
     dinv.export_to_json(json_path=args['export_path'])
+
+
+if __name__ == '__main__':
+    main()

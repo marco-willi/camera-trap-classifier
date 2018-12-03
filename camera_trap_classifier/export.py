@@ -25,8 +25,7 @@ from data.utils import read_json
 from config.config_logging import setup_logging
 
 
-if __name__ == '__main__':
-
+def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("-model", type=str, required=True,
@@ -116,3 +115,7 @@ if __name__ == '__main__':
         args['output_dir'],
         serving_input_receiver_fn=serving_input_receiver_fn,
         assets_extra={'label_mappings.json': args['class_mapping_json']})
+
+
+if __name__ == '__main__':
+    main()

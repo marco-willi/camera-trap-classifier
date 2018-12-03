@@ -28,6 +28,7 @@ python train.py \
 import argparse
 import logging
 import os
+import sys
 
 import tensorflow as tf
 import numpy as np
@@ -50,8 +51,7 @@ from data.utils import (
     get_most_recent_file_from_files, find_tfr_files_pattern_subdir)
 
 
-if __name__ == '__main__':
-
+def main():
     # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -503,3 +503,7 @@ if __name__ == '__main__':
 
         logger.info("Finished predicting on test data, saved to: %s" %
                     pred_output_json)
+
+
+if __name__ == '__main__':
+    main()
