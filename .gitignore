@@ -11,6 +11,7 @@ documentation/*.docx
 test_big/*
 *.log
 */old/*
+test/training/old/*
 experiments/*
 setup/server_cmds.sh
 setup/server_commands.sh
