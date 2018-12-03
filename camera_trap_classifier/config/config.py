@@ -6,7 +6,8 @@ import logging
 import sys
 from datetime import datetime
 
-from data.utils import create_path, get_most_rescent_file_with_string
+from camera_trap_classifier.data.utils import (
+    create_path, get_most_rescent_file_with_string)
 
 
 ##############################

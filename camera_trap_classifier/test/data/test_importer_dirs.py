@@ -1,5 +1,5 @@
 import unittest
-from data.importer import DatasetImporter
+from camera_trap_classifier.data.importer import DatasetImporter
 
 
 class ImportFromImageDirsTester(unittest.TestCase):

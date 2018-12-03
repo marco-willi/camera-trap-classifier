@@ -11,9 +11,9 @@ from tensorflow.python.keras.optimizers import RMSprop, SGD
 # from tensorflow.python.keras.optimizer_v2.gradient_descent import SGD as SGD2
 from tensorflow.python.keras import backend as K
 
-from models.resnet import ResnetBuilder
-from models.small_cnn import architecture as small_cnn
-from training.utils import (
+from camera_trap_classifier.models.resnet import ResnetBuilder
+from camera_trap_classifier.models.small_cnn import architecture as small_cnn
+from camera_trap_classifier.training.utils import (
     build_masked_loss, accuracy, top_k_accuracy)
 
 

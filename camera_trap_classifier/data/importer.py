@@ -4,7 +4,7 @@ import json
 import csv
 import logging
 
-from data.utils import clean_input_path
+from camera_trap_classifier.data.utils import clean_input_path
 
 
 logger = logging.getLogger(__name__)

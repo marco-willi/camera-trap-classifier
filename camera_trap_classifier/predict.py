@@ -30,7 +30,7 @@
 """
 import argparse
 
-from predicting.predictor import Predictor
+from camera_trap_classifier.predicting.predictor import Predictor
 
 
 def main():

@@ -1,6 +1,6 @@
 import unittest
 import tensorflow as tf
-from data.utils import (
+from camera_trap_classifier.data.utils import (
     hash_string,
     assign_hash_to_zero_one,
     calc_n_batches_per_epoch,

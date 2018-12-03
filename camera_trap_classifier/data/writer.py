@@ -8,8 +8,9 @@ from multiprocessing import Process, Manager
 
 import tensorflow as tf
 
-from data.image import read_jpeg
-from data.utils import slice_generator, estimate_remaining_time
+from camera_trap_classifier.data.image import read_jpeg
+from camera_trap_classifier.data.utils import (
+    slice_generator, estimate_remaining_time)
 
 logger = logging.getLogger(__name__)
 

@@ -8,7 +8,7 @@ from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.metrics import (
     sparse_categorical_accuracy, sparse_top_k_categorical_accuracy)
 
-from data.utils import copy_file
+from camera_trap_classifier.data.utils import copy_file
 
 
 def find_the_best_id_in_log(log_file_path, metric, id='epoch', offset=-1):

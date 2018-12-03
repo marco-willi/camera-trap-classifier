@@ -3,7 +3,7 @@ import logging
 
 import tensorflow as tf
 
-from data.utils import (
+from camera_trap_classifier.data.utils import (
         wrap_int64, wrap_bytes, wrap_dict_bytes_list, wrap_dict_int64_list,
         _bytes_feature_list,
         _bytes_feature_list_str)

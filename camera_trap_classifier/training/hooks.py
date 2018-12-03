@@ -9,7 +9,8 @@ import tensorflow as tf
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.callbacks import Callback
 
-from training.utils import is_multi_gpu_model, get_gpu_base_model
+from camera_trap_classifier.training.utils import (
+    is_multi_gpu_model, get_gpu_base_model)
 
 
 class ModelCheckpoint(Callback):

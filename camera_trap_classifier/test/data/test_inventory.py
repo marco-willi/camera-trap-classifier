@@ -1,5 +1,5 @@
 import unittest
-from data.inventory import (
+from camera_trap_classifier.data.inventory import (
     DatasetInventoryMaster)
 
 

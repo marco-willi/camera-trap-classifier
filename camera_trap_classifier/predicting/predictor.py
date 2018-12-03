@@ -8,9 +8,9 @@ import traceback
 import tensorflow as tf
 from tensorflow.python.keras import backend as K
 
-from training.prepare_model import load_model_from_disk
-from data.image import preprocess_image
-from data.utils import (
+from camera_trap_classifier.training.prepare_model import load_model_from_disk
+from camera_trap_classifier.data.image import preprocess_image
+from camera_trap_classifier.data.utils import (
     print_progress, export_dict_to_json, list_pictures,
     clean_input_path)
 

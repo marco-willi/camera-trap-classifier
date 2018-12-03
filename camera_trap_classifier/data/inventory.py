@@ -5,10 +5,10 @@ import logging
 import copy
 
 
-from data.utils import (
+from camera_trap_classifier.data.utils import (
     randomly_split_dataset, map_label_list_to_numeric_dict,
     export_dict_to_json, _balanced_sampling)
-from data.importer import DatasetImporter
+from camera_trap_classifier.data.importer import DatasetImporter
 
 
 logger = logging.getLogger(__name__)
