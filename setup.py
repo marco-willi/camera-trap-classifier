@@ -13,12 +13,13 @@ setup(
         'pillow'
     ],
     entry_points={
-    'console_scripts': [
-        'ctc.create_dataset_inventory = camera_trap_classifier.create_dataset_inventory:main',
-        'ctc.create_dataset = camera_trap_classifier.create_dataset:main',
-        'ctc.train = camera_trap_classifier.train:main',
-        'ctc.predict = camera_trap_classifier.predict:main',
-        'ctc.export = camera_trap_classifier.export:main'
-    ],
+        'console_scripts': [
+            'ctc.create_dataset_inventory = camera_trap_classifier.create_dataset_inventory:main',
+            'ctc.create_dataset = camera_trap_classifier.create_dataset:main',
+            'ctc.train = camera_trap_classifier.train:main',
+            'ctc.predict = camera_trap_classifier.predict:main',
+            'ctc.export = camera_trap_classifier.export:main'
+            ]
+    },
     python_requires='>=3.5'
 )
