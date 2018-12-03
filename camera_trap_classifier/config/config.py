@@ -31,11 +31,12 @@ class ConfigLoader(object):
 # Config Class
 ##############################
 
+
 class Config(object):
     def __init__(self, filename='config.yaml'):
         self.filename = filename
         self.ts = datetime.now().strftime('%Y%m%d%H%m')
-        self.run_id= 'run_' + self.ts
+        self.run_id = 'run_' + self.ts
 
     def load_config(self):
         self._load_from_disk()

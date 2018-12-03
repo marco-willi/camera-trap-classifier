@@ -15,8 +15,8 @@ import os
 import argparse
 import logging
 
-from config.config_logging import setup_logging
-from data.inventory import DatasetInventoryMaster
+from camera_trap_classifier.config.config_logging import setup_logging
+from camera_trap_classifier.data.inventory import DatasetInventoryMaster
 
 
 # Different functions depending on input values

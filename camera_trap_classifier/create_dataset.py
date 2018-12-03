@@ -14,11 +14,11 @@ python create_dataset.py -inventory ./test_big/cat_dog_dir_test.json \
 import argparse
 import logging
 
-from config.config_logging import setup_logging
-from data.inventory import DatasetInventoryMaster
-from data.writer import DatasetWriter
-from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from data.image import resize_jpeg
+from camera_trap_classifier.config.config_logging import setup_logging
+from camera_trap_classifier.data.inventory import DatasetInventoryMaster
+from camera_trap_classifier.data.writer import DatasetWriter
+from camera_trap_classifier.data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from camera_trap_classifier.data.image import resize_jpeg
 
 # Configure Logging
 setup_logging()

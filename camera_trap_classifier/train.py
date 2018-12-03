@@ -28,7 +28,6 @@ python train.py \
 import argparse
 import logging
 import os
-import sys
 
 import tensorflow as tf
 import numpy as np
@@ -36,16 +35,16 @@ from tensorflow.python.keras.callbacks import (
     TensorBoard, EarlyStopping, CSVLogger,  ReduceLROnPlateau,
     ModelCheckpoint)
 
-from config.config import ConfigLoader
-from config.config_logging import setup_logging
-from training.utils import copy_models_and_config_files
-from training.hooks import TableInitializerCallback
-from training.prepare_model import create_model
-from predicting.predictor import Predictor
-from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from data.reader import DatasetReader
-from data.image import preprocess_image
-from data.utils import (
+from camera_trap_classifier.config.config import ConfigLoader
+from camera_trap_classifier.config.config_logging import setup_logging
+from camera_trap_classifier.training.utils import copy_models_and_config_files
+from camera_trap_classifier.training.hooks import TableInitializerCallback
+from camera_trap_classifier.training.prepare_model import create_model
+from camera_trap_classifier.predicting.predictor import Predictor
+from camera_trap_classifier.data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from camera_trap_classifier.data.reader import DatasetReader
+from camera_trap_classifier.data.image import preprocess_image
+from camera_trap_classifier.data.utils import (
     calc_n_batches_per_epoch, export_dict_to_json, read_json,
     n_records_in_tfr_parallel, find_files_with_ending,
     get_most_recent_file_from_files, find_tfr_files_pattern_subdir)
@@ -372,11 +371,6 @@ def main():
     n_records_val = n_records_in_tfr_parallel(tfr_val, args['n_cpus'])
     n_batches_per_epoch_val = calc_n_batches_per_epoch(
         n_records_val, args['batch_size'])
-
-    if TEST_SET:
-        n_records_test = n_records_in_tfr_parallel(tfr_test, args['n_cpus'])
-        n_batches_per_epoch_test = calc_n_batches_per_epoch(
-            n_records_test, args['batch_size'], drop_remainder=False)
 
     ###########################################
     # CREATE MODEL ###########

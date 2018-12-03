@@ -19,10 +19,10 @@ import logging
 import tensorflow as tf
 from tensorflow.keras.estimator import model_to_estimator
 
-from training.prepare_model import load_model_from_disk
-from data.image import preprocess_image
-from data.utils import read_json
-from config.config_logging import setup_logging
+from camera_trap_classifier.training.prepare_model import load_model_from_disk
+from camera_trap_classifier.data.image import preprocess_image
+from camera_trap_classifier.data.utils import read_json
+from camera_trap_classifier.config.config_logging import setup_logging
 
 
 def main():
