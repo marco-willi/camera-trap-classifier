@@ -8,7 +8,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        'tensorflow==1.13',
+        'tensorflow==1.12',
         'pyyaml',
         'pillow'
     ],
