@@ -32,13 +32,13 @@ import os
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import (
-    TensorBoard, EarlyStopping, CSVLogger, ReduceLROnPlateau,
-    ModelCheckpoint)
+    TensorBoard, EarlyStopping, CSVLogger, ReduceLROnPlateau)
 
 from camera_trap_classifier.config.config import ConfigLoader
 from camera_trap_classifier.config.config_logging import setup_logging
 from camera_trap_classifier.training.utils import copy_models_and_config_files
-from camera_trap_classifier.training.hooks import TableInitializerCallback
+from camera_trap_classifier.training.hooks import (
+    TableInitializerCallback, ModelCheckpoint)
 from camera_trap_classifier.training.prepare_model import create_model
 from camera_trap_classifier.predicting.predictor import Predictor
 from camera_trap_classifier.data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
