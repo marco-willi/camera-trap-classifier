@@ -78,8 +78,9 @@ docker build . -f Dockerfile.cpu -t camera_trap_classifier
 
 To run commands inside the container:
 ```
-docker run -it ctc.train --help
-docker run -it ctc.predict --help
+docker run --name ctc -v /my_data/:/data/ -itd camera_trap_classifier
+docker exec ctc ctc.train --help
+docker exec ctc ctc.train --predict
 ```
 
 A detailed example on how to install Docker and run scripts can be found here:

@@ -12,6 +12,7 @@ __pycache__/*
 *.log
 **/old/*
 */test/training/old/*
+**/test/manual_tests/*
 */experiments/*
 */setup/server_cmds.sh
 */setup/server_commands.sh
