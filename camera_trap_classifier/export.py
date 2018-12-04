@@ -77,7 +77,7 @@ def main():
         model_dir=args['estimator_save_dir'])
 
     def decode_and_process_image(image):
-        image = tf.image.decode_jpeg(image, channels=3)
+        image = tf.image.decode_image(image, channels=3)
         image = preprocess_image(image, **pre_processing)
         return image
 

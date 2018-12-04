@@ -93,7 +93,8 @@ class Predictor(object):
         """
         # from Image List
         path_to_image_dir = clean_input_path(image_dir)
-        image_paths = list_pictures(path_to_image_dir,  ext='jpg|jpeg')
+        image_paths = list_pictures(path_to_image_dir,
+                                    ext='jpg|jpeg|bmp|png')
         n_total = len(image_paths)
 
         print("Found %s images in %s" %
@@ -236,8 +237,7 @@ class Predictor(object):
     def _get_and_transform_image(self, image_path, pre_proc_args):
         """ Returns a processed image """
         image_raw = tf.read_file(image_path)
-        image_decoded = tf.image.decode_jpeg(image_raw, channels=3,
-                                             try_recover_truncated=True)
+        image_decoded = tf.image.decode_image(image_raw, channels=3)
         image_processed = preprocess_image(image_decoded, **pre_proc_args)
         return {'images': image_processed}, {'file_paths': image_path}
 

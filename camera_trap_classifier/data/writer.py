@@ -8,7 +8,7 @@ from multiprocessing import Process, Manager
 
 import tensorflow as tf
 
-from camera_trap_classifier.data.image import read_jpeg
+from camera_trap_classifier.data.image import read_convert_to_jpeg
 from camera_trap_classifier.data.utils import (
     slice_generator, estimate_remaining_time)
 
@@ -137,7 +137,7 @@ class DatasetWriter(object):
                     image_raw = self.image_pre_processing_fun(
                          **self.image_pre_processing_args)
                 else:
-                    image_raw = read_jpeg(image_path_full)
+                    image_raw = read_convert_to_jpeg(image_path_full)
 
             except Exception as e:
                 logger.debug("Failed to read image: %s , error %s" %

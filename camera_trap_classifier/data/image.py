@@ -18,6 +18,27 @@ def resize_image(image, target_size):
     return image
 
 
+def read_resize_convert_to_jpeg(image,  max_side):
+    """ Read image from disk and resize with aspect ratio preservation
+         and return bytes
+    """
+    img = Image.open(image)
+    img.thumbnail([max_side, max_side], Image.ANTIALIAS)
+    b = io.BytesIO()
+    img.save(b, 'JPEG')
+    image_bytes = b.getvalue()
+    return image_bytes
+
+
+def read_convert_to_jpeg(image):
+    """ Reads jpeg and returns Bytes """
+    img = Image.open(image)
+    b = io.BytesIO()
+    img.save(b, 'JPEG')
+    image_bytes = b.getvalue()
+    return image_bytes
+
+
 def _crop(image, offset_height, offset_width, crop_height, crop_width):
     """Crops the given image using the provided offsets and sizes.
     Note that the method doesn't assume we know the input image size but it does
@@ -407,27 +428,6 @@ def preprocess_image(image, output_height, output_width,
                                    image_means, image_stdevs,
                                    resize_side_min,
                                    ignore_aspect_ratio)
-
-
-def resize_jpeg(image,  max_side):
-    """ Take Raw JPEG resize with aspect ratio preservation
-         and return bytes
-    """
-    img = Image.open(image)
-    img.thumbnail([max_side, max_side], Image.ANTIALIAS)
-    b = io.BytesIO()
-    img.save(b, 'JPEG')
-    image_bytes = b.getvalue()
-    return image_bytes
-
-
-def read_jpeg(image):
-    """ Reads jpeg and returns Bytes """
-    img = Image.open(image)
-    b = io.BytesIO()
-    img.save(b, 'JPEG')
-    image_bytes = b.getvalue()
-    return image_bytes
 
 
 # https://github.com/tensorflow/tpu/blob/master/models/experimental/inception/

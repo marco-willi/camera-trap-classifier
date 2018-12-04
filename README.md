@@ -7,11 +7,11 @@ This repository contains code and documentation to train and apply a convolution
 
 ## Example Camera Trap Images and Model Predictions
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions.png"/>
 
 *This figure shows examples of correctly classified camera trap images.*
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions_wrong.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions_wrong.png"/>
 
 *This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
 
@@ -19,7 +19,7 @@ This repository contains code and documentation to train and apply a convolution
 
 To use this code following pre-requisites must be met:
 
-1. Camera trap images (jpeg / jpg) with labels
+1. Camera trap images (jpeg / jpg / png /bmp) with labels
 2. Server with graphics processing units (GPUs) for model training (e.g. AWS account, supercomputing institute)
 3. Some Unix knowledge
 
@@ -82,6 +82,9 @@ docker run -it ctc.train --help
 docker run -it ctc.predict --help
 ```
 
+A detailed example on how to install Docker and run scripts can be found here:
+[Install and use CPU Docker](docs/Docker_CPU.md)
+
 ### Using a GPU
 
 To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU. More details can be found here: https://www.tensorflow.org/install/gpu
@@ -99,7 +102,7 @@ The following steps are required to train a model:
 4. Train a model.
 5. Apply a model on new data.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/general_workflow.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/general_workflow.png"/>
 
 *Overview of the process*
 
@@ -227,7 +230,7 @@ stored in '/my_images/new_images/', including subdirectories.
 ```
 ctc.predict -image_dir /my_images/new_images/ \
   -results_file /my_predictions/output.csv \
-  -model_path /my_model/save1/pred_model.hdf5 \
+  -model_path /my_model/save1/best_model.hdf5 \
   -class_mapping_json /my_model/save1/label_mappings.json \
   -pre_processing_json /my_model/save1/image_processing.json
 ```
@@ -282,7 +285,7 @@ ctc.export -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 ## Deploying a Model
 
 To deploy a model on a server we refer to this documentation:
-[How to deploy a model](deploy/README.md)
+[How to deploy a model](docs/deploy/README.md)
 
 
 ## Acknowledgements

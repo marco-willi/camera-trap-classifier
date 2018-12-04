@@ -32,7 +32,7 @@ import os
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.keras.callbacks import (
-    TensorBoard, EarlyStopping, CSVLogger,  ReduceLROnPlateau,
+    TensorBoard, EarlyStopping, CSVLogger, ReduceLROnPlateau,
     ModelCheckpoint)
 
 from camera_trap_classifier.config.config import ConfigLoader

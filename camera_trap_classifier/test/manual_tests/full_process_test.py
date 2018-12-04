@@ -9,7 +9,7 @@ from data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
 from data.reader import DatasetReader
 from data.image import (
         preprocess_image,
-        resize_jpeg)
+        read_resize_convert_to_jpeg)
 
 # Configure Logging
 setup_logging()
@@ -37,7 +37,7 @@ tfr = {k: v.export_to_tfrecord(
         tfr_writer,
         './test_big/temp_data/',
         file_prefix=k,
-        image_pre_processing_fun=resize_jpeg,
+        image_pre_processing_fun=read_resize_convert_to_jpeg,
         image_pre_processing_args={"max_side": 150},
         random_shuffle_before_save=True,
         overwrite_existing_files=True,

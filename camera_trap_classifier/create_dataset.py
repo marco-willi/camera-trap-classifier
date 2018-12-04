@@ -18,7 +18,7 @@ from camera_trap_classifier.config.config_logging import setup_logging
 from camera_trap_classifier.data.inventory import DatasetInventoryMaster
 from camera_trap_classifier.data.writer import DatasetWriter
 from camera_trap_classifier.data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from camera_trap_classifier.data.image import resize_jpeg
+from camera_trap_classifier.data.image import read_resize_convert_to_jpeg
 
 # Configure Logging
 setup_logging()
@@ -223,7 +223,7 @@ def main():
             args['output_dir'],
             file_prefix=split_name,
             image_root_path=args['image_root_path'],
-            image_pre_processing_fun=resize_jpeg,
+            image_pre_processing_fun=read_resize_convert_to_jpeg,
             image_pre_processing_args={"max_side":
                                        args['image_save_side_max']},
             random_shuffle_before_save=True,
