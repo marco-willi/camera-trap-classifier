@@ -286,7 +286,7 @@ def create_model(model_name,
                     raise ValueError("transfer_learning_type option %s not \
                                       recognized" % transfer_learning)
 
-        model = multi_gpu_model(base_model, gpus=n_gpus, cpu_relocation=True)
+        model = multi_gpu_model(base_model, gpus=n_gpus)
 
     else:
         model = Model(inputs=model_input, outputs=all_target_outputs)
@@ -314,7 +314,6 @@ def create_model(model_name,
             else:
                 raise ValueError("transfer_learning_type option %s not \
                                   recognized" % transfer_learning)
-
 
     model.compile(loss=build_masked_loss(K.sparse_categorical_crossentropy),
                   optimizer=opt,
