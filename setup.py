@@ -14,7 +14,7 @@ setup(
     extra_requires={
         'tf': ['tensorflow==1.12'],
         'tf-gpu': ['tensorflow-gpu==1.12']
-    }
+    },
     entry_points={
         'console_scripts': [
             'ctc.create_dataset_inventory = camera_trap_classifier.create_dataset_inventory:main',
