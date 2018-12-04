@@ -14,7 +14,7 @@ handlers:
         stream: ext://sys.stdout
 
     debug_file_handler:
-        () : config.config_logging.logmaker
+        () : camera_trap_classifier.config.config_logging.logmaker
         logname: run_debug.log
         path: ./
         level: DEBUG
@@ -22,7 +22,7 @@ handlers:
         encoding: utf8
 
     info_file_handler:
-        () : config.config_logging.logmaker
+        () : camera_trap_classifier.config.config_logging.logmaker
         logname: run_info.log
         path: ./
         level: INFO
