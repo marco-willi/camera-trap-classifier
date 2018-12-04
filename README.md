@@ -36,16 +36,16 @@ pip install git+git://github.com/marco-willi/camera-trap-classifier.git#egg=came
 
 To install the GPU version use this command:
 ```
-pip install git+git://github.com/marco-willi/camera-trap-classifier.git[tf-gpu]
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git#egg=camera_trap_classifier[tf-gpu]
 ```
 
-The software can then be used from the commandline:
+The software can then be used from the command line (see below for more details):
 ```
-ctc.create_dataset_inventory
-ctc.create_dataset
-ctc.train
-ctc.predict
-ctc.export
+ctc.create_dataset_inventory --help
+ctc.create_dataset --help
+ctc.train --help
+ctc.predict --help
+ctc.export --help
 ```
 
 
@@ -160,7 +160,7 @@ id,image,species,count
 In this step a common data structure is created regardless of how the data preparation was done. The following code snippet shows how to create a dataset inventory based on a csv file.
 
 ```
-python create_dataset_inventory.py csv -path /my_data/dataset_info.csv \
+ctc.create_dataset_inventory csv -path /my_data/dataset_info.csv \
 -export_path /my_data/dataset_inventory.json \
 -capture_id_field id \
 -image_fields image \
@@ -169,7 +169,7 @@ python create_dataset_inventory.py csv -path /my_data/dataset_info.csv \
 
 The following code snippet shows how to create a dataset inventory from class directories:
 ```
-python create_dataset_inventory.py dir -path /my_images/all_classes/ \
+ctc.create_dataset_inventory dir -path /my_images/all_classes/ \
 -export_path /my_data/dataset_inventory.json
 ```
 
@@ -181,7 +181,7 @@ In this step we save all images into large binary '.tfrecord' files which makes 
 The following code snippet shows how that works:
 
 ```
-python create_dataset.py -inventory /my_data/dataset_inventory.json \
+ctc.create_dataset -inventory /my_data/dataset_inventory.json \
 -output_dir /my_data/tfr_files/ \
 -image_save_side_max 200 \
 -split_percent 0.9 0.05 0.05 \
@@ -196,7 +196,7 @@ the processing for large datasets.
 In the next step we train our model. The following code snippet shows an example:
 
 ```
-python train.py \
+ctc.train \
 -train_tfr_path /my_data/tfr_files/ \
 -val_tfr_path /my_data/tfr_files/ \
 -test_tfr_path /my_data/tfr_files/ \
@@ -216,7 +216,7 @@ python train.py \
 
 Use the following command for more help about all the options:
 ```
- python train.py --help
+ctc.train --help
 ```
 
 ### 5) Model Use
@@ -225,7 +225,7 @@ Finally, we can apply our model on new data. In the following code snippet the p
 stored in '/my_images/new_images/', including subdirectories.
 
 ```
-python predict.py -image_dir /my_images/new_images/ \
+ctc.predict -image_dir /my_images/new_images/ \
   -results_file /my_predictions/output.csv \
   -model_path /my_model/save1/pred_model.hdf5 \
   -class_mapping_json /my_model/save1/label_mappings.json \
@@ -238,6 +238,7 @@ python predict.py -image_dir /my_images/new_images/ \
 Following commands should run without error and test a part of the code:
 
 ```
+cd camera_trap_classifier
 python -m unittest discover test/data
 python -m unittest discover test/training
 ```
@@ -248,6 +249,7 @@ The following script tests all components of the code end-to-end using images fr
 # 1) adapt the parameters in ./test/full_tests/from_image_dir_test.sh
 # 2) create all the directories as referenced in the script
 # 3) run the script
+cd camera_trap_classifier
 ./test/full_tests/from_image_dir_test.sh
 ```
 
@@ -257,6 +259,7 @@ The following script tests training from data with multiple images per capture e
 # 1) adapt the parameters in ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 # 2) create all the directories as referenced in the script
 # 3) run the script
+cd camera_trap_classifier
 ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 ```
 
@@ -269,7 +272,7 @@ There are some manual tests in 'test/manual_tests' for different components that
 To export a model for later deployment we can use the following code:
 
 ```
-python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
+ctc.export -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 -class_mapping_json /my_experiment/model_save_dir/label_mappings.json \
 -pre_processing_json /my_experiment/model_save_dir/pre_processing.json \
 -output_dir /my_experiment/my_model_exports/ \
@@ -286,7 +289,7 @@ To deploy a model on a server we refer to this documentation:
 
 This code is based on work conducted in the following study:
 
-*Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, submitted*
+*Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, Methods in Ecology and Evolution*
 
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 
