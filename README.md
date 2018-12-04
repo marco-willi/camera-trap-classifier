@@ -31,7 +31,7 @@ The code and the models are based on TensorFlow (https://www.tensorflow.org), a 
 
 The software and all dependencies can be installed with this command:
 ```
-pip install git+git://github.com/marco-willi/camera-trap-classifier.git[tf]
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git#egg=camera_trap_classifier[tf]
 ```
 
 To install the GPU version use this command:

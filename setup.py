@@ -11,7 +11,7 @@ setup(
         'pyyaml',
         'pillow'
     ],
-    extra_requires={
+    extras_require={
         'tf': ['tensorflow==1.12'],
         'tf-gpu': ['tensorflow-gpu==1.12']
     },
