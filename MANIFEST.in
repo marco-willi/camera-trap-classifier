@@ -1,3 +1,4 @@
 include camera_trap_classifier/test/test_files/*
-include camera_trap_classifier/test/test_images/*
+include camera_trap_classifier/test/test_images/Cats/*
+include camera_trap_classifier/test/test_images/Dogs/*
 include camera_trap_classifier/test/full_tests/*
