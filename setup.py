@@ -6,6 +6,7 @@ setup(
     author='Marco Willi',
     version='2.0.1',
     packages=find_packages(),
+    package_data={'': ['*.yaml']},
     include_package_data=True,
     install_requires=[
         'pyyaml',
