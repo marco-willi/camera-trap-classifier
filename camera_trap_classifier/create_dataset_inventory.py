@@ -13,7 +13,6 @@ python create_dataset_inventory.py dir -path /my_images/ \
 """
 import os
 import argparse
-import logging
 
 from camera_trap_classifier.config.config_logging import setup_logging
 from camera_trap_classifier.data.inventory import DatasetInventoryMaster
@@ -135,7 +134,7 @@ def main():
     if args['log_outdir'] is None:
         args['log_outdir'] = os.path.split(args['export_path'])[0]
     setup_logging(log_output_path=args['log_outdir'])
-    logger = logging.getLogger(__name__)
+
 
     print("Using arguments:")
     for k, v in args.items():

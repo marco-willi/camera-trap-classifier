@@ -196,7 +196,10 @@ def main():
     ###########################################
 
     # Load model config
-    model_cfg = ConfigLoader('./config/models.yaml')
+    models_cfg_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 'config', 'models.yaml')
+
+    model_cfg = ConfigLoader(models_cfg_path)
 
     assert args['model'] in model_cfg.cfg['models'], \
         "model %s not found in config/models.yaml" % args['model']

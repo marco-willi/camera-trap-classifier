@@ -167,12 +167,12 @@ def main():
 
     # Determine if Meta-Column has been specified
     if args['split_by_meta'] is not None:
-        logging.debug("Splitting by metadata %s" % args['split_by_meta'])
+        logger.debug("Splitting by metadata %s" % args['split_by_meta'])
         if args['balanced_sampling_min']:
             splitted = dinv.split_inventory_by_meta_data_column_and_balanced_sampling(
                 meta_colum=args['split_by_meta'],
                 split_label_min=args['balanced_sampling_label'])
-            logging.debug("Balanced sampling using %s" % args['split_by_meta'])
+            logger.debug("Balanced sampling using %s" % args['split_by_meta'])
         else:
             splitted = dinv.split_inventory_by_meta_data_column(
                     meta_colum=args['split_by_meta'])
@@ -182,7 +182,7 @@ def main():
         if args['balanced_sampling_label'] is None:
             raise ValueError("balanced_sampling_label must be specified if \
                               balanced_sampling_min is set to true")
-        logging.debug("Splitting by random balanced sampling")
+        logger.debug("Splitting by random balanced sampling")
         splitted = dinv.split_inventory_by_random_splits_with_balanced_sample(
                 split_label_min=args['balanced_sampling_label'],
                 split_names=args['split_names'],
@@ -190,18 +190,18 @@ def main():
 
     # Split without balanced sampling
     else:
-        logging.debug("Splitting randomly")
+        logger.debug("Splitting randomly")
         splitted = dinv.split_inventory_by_random_splits(
                 split_names=args['split_names'],
                 split_percent=args['split_percent'])
 
     # Log all the splits to create
     for i, split_name in enumerate(splitted.keys()):
-        logging.info("Created split %s - %s" % (i, split_name))
+        logger.info("Created split %s - %s" % (i, split_name))
 
     # Log Statistics for different splits
     for split_name, split_data in splitted.items():
-        logging.debug("Stats for Split %s" % split_name)
+        logger.debug("Stats for Split %s" % split_name)
         split_data.log_stats(debug_only=True)
 
     # Write Label Mappings
@@ -216,9 +216,8 @@ def main():
     n_splits = len(splitted.keys())
     for split_name, split_data in splitted.items():
         counter += 1
-        logging.info("Starting to process %s (%s / %s)" %
+        logger.info("Starting to process %s (%s / %s)" %
                      (split_name, counter, n_splits))
-        out_name = args['output_dir'] + split_name + '.tfrecord'
         split_data.export_to_tfrecord(
             tfr_writer,
             args['output_dir'],
@@ -235,7 +234,7 @@ def main():
             process_images_in_parallel_size=args['process_images_in_parallel_size'],
             processes_images_in_parallel_n_processes=args['processes_images_in_parallel_n_processes']
             )
-    logging.info("Finished writing TFRecords")
+    logger.info("Finished writing TFRecords")
 
 
 if __name__ == '__main__':
