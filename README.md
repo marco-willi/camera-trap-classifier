@@ -20,8 +20,74 @@ This repository contains code and documentation to train and apply a convolution
 To use this code following pre-requisites must be met:
 
 1. Camera trap images (jpeg / jpg) with labels
-2. Access to computer/server with graphics processing units (GPUs) for model training (e.g. AWS account)
-3. Some (little) knowledge of Unix
+2. Server with graphics processing units (GPUs) for model training (e.g. AWS account, supercomputing institute)
+3. Some Unix knowledge
+
+## Installation
+
+The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required.
+
+### Installation from GitHub
+
+The software and all dependencies can be installed with this command:
+```
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git[tf]
+```
+
+To install the GPU version use this command:
+```
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git[tf-gpu]
+```
+
+The software can then be used from the commandline:
+```
+ctc.create_dataset_inventory
+ctc.create_dataset
+ctc.train
+ctc.predict
+ctc.export
+```
+
+
+### Anaconda Users
+
+The following commands allow for a full installation using Anaconda (https://conda.io/docs/user-guide/install/index.html).
+The commands can be executed, for example on Windows, using Git BASH (https://gitforwindows.org) or using the terminal on Unix systems.
+
+```
+# create a new conda environment with name 'ctc'
+conda create --no-default-packages -n ctc python=3.5
+# activate the environment
+source activate ctc
+# install tensorflow (non-GPU or GPU version)
+conda install tensorflow=1.12.0
+# conda install tensorflow-gpu=1.12.0
+conda install pyyaml pillow
+```
+
+### Docker
+
+The software can also be installed using Docker. There are two versions, a CPU and a GPU Tensorflow installation.
+
+https://docs.docker.com/get-started/
+
+To build the container:
+```
+docker build . -f Dockerfile.cpu -t camera_trap_classifier
+```
+
+To run commands inside the container:
+```
+docker run -it ctc.train --help
+docker run -it ctc.predict --help
+```
+
+### Using a GPU
+
+To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU. More details can be found here: https://www.tensorflow.org/install/gpu
+
+Alternatively, cloud providers often provide pre-configured servers with all installations.
+
 
 ## General Process
 
@@ -36,6 +102,7 @@ The following steps are required to train a model:
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/general_workflow.png"/>
 
 *Overview of the process*
+
 
 ### 1) Data Preparation
 
@@ -165,53 +232,6 @@ python predict.py -image_dir /my_images/new_images/ \
   -pre_processing_json /my_model/save1/image_processing.json
 ```
 
-## Installation
-
-The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required.
-
-We have used python 3.5 (newer versions should work) and Tensorflow 1.9 (older versions don't work).
-
-
-### Installing from Requirements
-
-The most common way to install all required packages is to create a virtual environment and to use a
-requirements.txt file as provided in [setup/](setup/). Note that this requirements.txt exactly reproduces the environment we've been using on Ubuntu and may is incompatible with other operating systems.
-
-```
-python3 -m virtualenv ctc
-source ctc/bin/activate
-pip install -r ./setup/requirements.txt
-```
-
-### Anaconda Users
-
-The following commands allow for a full installation using Anaconda (https://conda.io/docs/user-guide/install/index.html).
-The commands can be executed, for example on Windows, using Git BASH (https://gitforwindows.org) or using the terminal on Unix systems.
-
-```
-# create a new conda environment with name 'ctc'
-conda create --no-default-packages -n ctc python=3.5
-# activate the environment
-source activate ctc
-# install tensorflow (non-GPU or GPU version)
-conda install tensorflow=1.9.0
-# conda install tensorflow-gpu=1.9.0
-conda install jupyter pyyaml yaml nb_conda pillow h5py
-```
-
-### Using a GPU
-
-To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU (see https://developer.nvidia.com/cuda-downloads and https://developer.nvidia.com/cudnn). An easy option is
-to use a disk image that contains all required installations and use that to set up a GPU instance of a cloud provider. Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
-
-
-### Tensorflow GPU Docker installation on AWS
-We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in [/setup/Part_*](setup/) provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
-Tensorflow can be found at https://www.tensorflow.org/install/.
-
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/server_config.png"/>
-
-*Overview of the AWS setup we used*
 
 ## Testing the Code
 

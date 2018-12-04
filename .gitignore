@@ -15,3 +15,4 @@ __pycache__/*
 */experiments/*
 */setup/server_cmds.sh
 */setup/server_commands.sh
+*/setup/*
