@@ -34,14 +34,15 @@ import numpy as np
 from tensorflow.python.keras.callbacks import (
     TensorBoard, EarlyStopping, CSVLogger, ReduceLROnPlateau)
 
+from camera_trap_classifier.training.hooks import (
+    TableInitializerCallback, ModelCheckpoint)
 from camera_trap_classifier.config.config import ConfigLoader
 from camera_trap_classifier.config.config_logging import setup_logging
 from camera_trap_classifier.training.utils import copy_models_and_config_files
-from camera_trap_classifier.training.hooks import (
-    TableInitializerCallback, ModelCheckpoint)
 from camera_trap_classifier.training.prepare_model import create_model
 from camera_trap_classifier.predicting.predictor import Predictor
-from camera_trap_classifier.data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
+from camera_trap_classifier.data.tfr_encoder_decoder import (
+    DefaultTFRecordEncoderDecoder)
 from camera_trap_classifier.data.reader import DatasetReader
 from camera_trap_classifier.data.image import preprocess_image
 from camera_trap_classifier.data.utils import (
@@ -204,7 +205,8 @@ def main():
     assert args['model'] in model_cfg.cfg['models'], \
         "model %s not found in config/models.yaml" % args['model']
 
-    image_processing = model_cfg.cfg['models'][args['model']]['image_processing']
+    image_processing = \
+        model_cfg.cfg['models'][args['model']]['image_processing']
     image_processing['ignore_aspect_ratio'] = args['ignore_aspect_ratio']
 
     input_shape = (image_processing['output_height'],
@@ -254,8 +256,10 @@ def main():
     if args['model_to_load'] is not None:
         if not args['model_to_load'].endswith('.hdf5'):
             if os.path.isdir(args['model_to_load']):
-                model_files = find_files_with_ending(args['model_to_load'], '.hdf5')
-                most_recent_model = get_most_recent_file_from_files(model_files)
+                model_files = \
+                    find_files_with_ending(args['model_to_load'], '.hdf5')
+                most_recent_model = \
+                    get_most_recent_file_from_files(model_files)
                 args['model_to_load'] = most_recent_model
                 logging.debug("Loading most recent model file %s:"
                               % most_recent_model)
@@ -458,7 +462,7 @@ def main():
 
     logger.info("Start Model Training")
 
-    history = model.fit(
+    model.fit(
         input_feeder_train(),
         epochs=args['max_epochs'],
         steps_per_epoch=n_batches_per_epoch_train,
