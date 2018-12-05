@@ -25,11 +25,11 @@ To use this code following pre-requisites must be met:
 
 ## Installation
 
-The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required.
+The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
 
 ### Installation from GitHub
 
-The software and all dependencies can be installed with this command:
+The software and all dependencies can be installed with this command (CPU version):
 ```
 pip install git+git://github.com/marco-willi/camera-trap-classifier.git#egg=camera_trap_classifier[tf]
 ```
@@ -62,36 +62,42 @@ source activate ctc
 # install tensorflow (non-GPU or GPU version)
 conda install tensorflow=1.12.0
 # conda install tensorflow-gpu=1.12.0
-conda install pyyaml pillow
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git
 ```
+
 
 ### Docker
 
-The software can also be installed using Docker. There are two versions, a CPU and a GPU Tensorflow installation.
+The software can also be installed using Docker (https://docs.docker.com/get-started/). There are two versions, a CPU and a GPU Tensorflow installation.
 
-https://docs.docker.com/get-started/
-
-To build the container:
+To build the (CPU) container:
 ```
 docker build . -f Dockerfile.cpu -t camera_trap_classifier
 ```
 
-To run commands inside the container:
+To start the container:
 ```
 docker run --name ctc -v /my_data/:/data/ -itd camera_trap_classifier
+```
+
+To run commands inside the container:
+```
 docker exec ctc ctc.train --help
 docker exec ctc ctc.train --predict
 ```
 
-A detailed example on how to install Docker and run scripts can be found here:
+#### Example for using Docker on AWS
+
+We have run our models on AWS EC2 instances using Docker. A detailed example on how to install Docker and run scripts can be found here:
+
 [Install and use CPU Docker](docs/Docker_CPU.md)
+[Install and use GPU Docker](docs/Docker_GPU.md)
 
 ### Using a GPU
 
 To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU. More details can be found here: https://www.tensorflow.org/install/gpu
 
-Alternatively, cloud providers often provide pre-configured servers with all installations.
-
+Alternatively, cloud providers often provide pre-configured servers with all installations. [The Docker installation with GPU on AWS](docs/Docker_GPU.md) provides straight forward instructions (see the example with Cats vs Dogs).
 
 ## General Process
 
@@ -271,7 +277,7 @@ There are some manual tests in 'test/manual_tests' for different components that
 
 ## Exporting a Model
 
-**WARNING**: The following is only possible with Tensorflow 1.9.
+Experimental - Needs update.
 
 To export a model for later deployment we can use the following code:
 
@@ -285,6 +291,8 @@ ctc.export -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 
 ## Deploying a Model
 
+Experimental - Needs update.
+
 To deploy a model on a server we refer to this documentation:
 [How to deploy a model](docs/deploy/README.md)
 
@@ -297,6 +305,13 @@ This code is based on work conducted in the following study:
 
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 
+Please cite as:
+```
+Willi M, Pitman RT, Cardoso AW, et al. Identifying animal species in camera trap images using deep learning and citizen science. Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099
+```
+
+The camera-trap images (330x330 pixels only) used in the study can be downloaded here:
+https://doi.org/10.13020/D6T11K
 
 The ResNet models are based on the implementation provided here:
 https://github.com/raghakot/keras-resnet

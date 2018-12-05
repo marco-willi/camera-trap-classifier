@@ -2,6 +2,7 @@
 
 This document describes how data for Panthera and Snapshot Safari were modeled on AWS EC2 instances.
 
+DEPRECATED: Warning this guide may not be up-to-date anymore.
 
 ## AWS EC2 Instance Preparation
 

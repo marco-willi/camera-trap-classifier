@@ -1,12 +1,26 @@
-# Docker Usage
+# Docker Usage (CPU version)
 
 This document describes how to setup and use Docker. The following commands were executed on an Ubuntu 16.04 base installation on an EC2 instance on AWS.
+
+
+## Install general programs
+
+```
+# update
+sudo apt-get update
+
+# install some basics
+sudo apt-get install -y build-essential git python-pip libfreetype6-dev \
+ libxft-dev libncurses-dev libopenblas-dev gfortran \
+ libblas-dev liblapack-dev libatlas-base-dev \
+ linux-headers-generic linux-image-extra-virtual unzip \
+ swig unzip wget pkg-config zip g++ zlib1g-dev \
+ screen
+```
 
 ## Docker Installation
 
 ```
-sudo apt update
-
 sudo apt-get install \
     apt-transport-https \
     ca-certificates \
