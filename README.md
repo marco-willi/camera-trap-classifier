@@ -93,6 +93,13 @@ We have run our models on AWS EC2 instances using Docker. A detailed example on 
 [Install and use CPU Docker](docs/Docker_CPU.md)
 [Install and use GPU Docker](docs/Docker_GPU.md)
 
+
+#### Singularity Containers
+
+Some environments may not allow the use of Docker (e.g. super computing institutes). Sometimes, Singularity containers are available. Here is an example:
+
+[Singularity Example](docs/Singularity.md)
+
 ### Using a GPU
 
 To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU. More details can be found here: https://www.tensorflow.org/install/gpu
