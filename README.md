@@ -200,7 +200,7 @@ The following code snippet shows how that works:
 ```
 ctc.create_dataset -inventory /my_data/dataset_inventory.json \
 -output_dir /my_data/tfr_files/ \
--image_save_side_max 200 \
+-image_save_side_smallest 200 \
 -split_percent 0.9 0.05 0.05 \
 -overwrite
 ```

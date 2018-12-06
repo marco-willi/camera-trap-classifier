@@ -9,8 +9,7 @@ setup(
     package_data={'': ['*.yaml']},
     include_package_data=True,
     install_requires=[
-        'pyyaml',
-        'pillow'
+        'pyyaml'
     ],
     extras_require={
         'tf': ['tensorflow==1.12'],

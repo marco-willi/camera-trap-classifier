@@ -103,7 +103,7 @@ sudo mkdir /my_data/tfr_files
 # create tfr-files
 sudo docker exec ctc ctc.create_dataset -inventory /data/dataset_inventory.json \
 -output_dir /data/tfr_files/ \
--image_save_side_max 200 \
+-image_save_side_smallest 200 \
 -split_percent 0.5 0.25 0.25 \
 -overwrite
 
@@ -168,7 +168,7 @@ sudo mkdir /home/ubuntu/data/tfr_files
 # create tfr-files
 sudo docker exec ctc ctc.create_dataset -inventory /data/dataset_inventory.json \
 -output_dir /data/tfr_files/ \
--image_save_side_max 200 \
+-image_save_side_smallest 200 \
 -split_percent 0.9 0.05 0.05 \
 -overwrite
 

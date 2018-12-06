@@ -25,7 +25,7 @@ python create_dataset_inventory.py csv -path ./test/test_files/cats_vs_dogs_mult
 # Create TFRecord Files
 python create_dataset.py -inventory ${export_root_path}inventory.json \
 -output_dir ${tfr_files_path} \
--image_save_side_max 200 \
+-image_save_side_smallest 200 \
 -split_percent 0.7 0.15 0.15 \
 -overwrite
 
