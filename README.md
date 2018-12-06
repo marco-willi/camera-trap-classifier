@@ -7,11 +7,11 @@ This repository contains code and documentation to train and apply a convolution
 
 ## Example Camera Trap Images and Model Predictions
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions.png"/>
 
 *This figure shows examples of correctly classified camera trap images.*
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/sample_predictions_wrong.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions_wrong.png"/>
 
 *This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
 
@@ -19,9 +19,92 @@ This repository contains code and documentation to train and apply a convolution
 
 To use this code following pre-requisites must be met:
 
-1. Camera trap images (jpeg / jpg) with labels
-2. Access to computer/server with graphics processing units (GPUs) for model training (e.g. AWS account)
-3. Some (little) knowledge of Unix
+1. Camera trap images (jpeg / jpg / png /bmp) with labels
+2. Server with graphics processing units (GPUs) for model training (e.g. AWS account, supercomputing institute)
+3. Some Unix knowledge
+
+## Installation
+
+The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
+
+### Installation from GitHub
+
+The software and all dependencies can be installed with this command (CPU version):
+```
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git#egg=camera_trap_classifier[tf]
+```
+
+To install the GPU version use this command:
+```
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git#egg=camera_trap_classifier[tf-gpu]
+```
+
+The software can then be used from the command line (see below for more details):
+```
+ctc.create_dataset_inventory --help
+ctc.create_dataset --help
+ctc.train --help
+ctc.predict --help
+ctc.export --help
+```
+
+
+### Anaconda Users
+
+The following commands allow for a full installation using Anaconda (https://conda.io/docs/user-guide/install/index.html).
+The commands can be executed, for example on Windows, using Git BASH (https://gitforwindows.org) or using the terminal on Unix systems.
+
+```
+# create a new conda environment with name 'ctc'
+conda create --no-default-packages -n ctc python=3.5
+# activate the environment
+source activate ctc
+# install tensorflow (non-GPU or GPU version)
+conda install tensorflow=1.12.0
+# conda install tensorflow-gpu=1.12.0
+pip install git+git://github.com/marco-willi/camera-trap-classifier.git
+```
+
+
+### Docker
+
+The software can also be installed using Docker (https://docs.docker.com/get-started/). There are two versions, a CPU and a GPU Tensorflow installation.
+
+To build the (CPU) container:
+```
+docker build . -f Dockerfile.cpu -t camera_trap_classifier
+```
+
+To start the container:
+```
+docker run --name ctc -v /my_data/:/data/ -itd camera_trap_classifier
+```
+
+To run commands inside the container:
+```
+docker exec ctc ctc.train --help
+docker exec ctc ctc.train --predict
+```
+
+#### Example for using Docker on AWS
+
+We have run our models on AWS EC2 instances using Docker. A detailed example on how to install Docker and run scripts can be found here:
+
+[Install and use CPU Docker](docs/Docker_CPU.md)
+[Install and use GPU Docker](docs/Docker_GPU.md)
+
+
+#### Singularity Containers
+
+Some environments may not allow the use of Docker (e.g. super computing institutes). Sometimes, Singularity containers are available. Here is an example:
+
+[Singularity Example](docs/Singularity.md)
+
+### Using a GPU
+
+To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU. More details can be found here: https://www.tensorflow.org/install/gpu
+
+Alternatively, cloud providers often provide pre-configured servers with all installations. [The Docker installation with GPU on AWS](docs/Docker_GPU.md) provides straight forward instructions (see the example with Cats vs Dogs).
 
 ## General Process
 
@@ -33,9 +116,10 @@ The following steps are required to train a model:
 4. Train a model.
 5. Apply a model on new data.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/general_workflow.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/general_workflow.png"/>
 
 *Overview of the process*
+
 
 ### 1) Data Preparation
 
@@ -93,7 +177,7 @@ id,image,species,count
 In this step a common data structure is created regardless of how the data preparation was done. The following code snippet shows how to create a dataset inventory based on a csv file.
 
 ```
-python create_dataset_inventory.py csv -path /my_data/dataset_info.csv \
+ctc.create_dataset_inventory csv -path /my_data/dataset_info.csv \
 -export_path /my_data/dataset_inventory.json \
 -capture_id_field id \
 -image_fields image \
@@ -102,7 +186,7 @@ python create_dataset_inventory.py csv -path /my_data/dataset_info.csv \
 
 The following code snippet shows how to create a dataset inventory from class directories:
 ```
-python create_dataset_inventory.py dir -path /my_images/all_classes/ \
+ctc.create_dataset_inventory dir -path /my_images/all_classes/ \
 -export_path /my_data/dataset_inventory.json
 ```
 
@@ -114,7 +198,7 @@ In this step we save all images into large binary '.tfrecord' files which makes 
 The following code snippet shows how that works:
 
 ```
-python create_dataset.py -inventory /my_data/dataset_inventory.json \
+ctc.create_dataset -inventory /my_data/dataset_inventory.json \
 -output_dir /my_data/tfr_files/ \
 -image_save_side_max 200 \
 -split_percent 0.9 0.05 0.05 \
@@ -129,7 +213,7 @@ the processing for large datasets.
 In the next step we train our model. The following code snippet shows an example:
 
 ```
-python train.py \
+ctc.train \
 -train_tfr_path /my_data/tfr_files/ \
 -val_tfr_path /my_data/tfr_files/ \
 -test_tfr_path /my_data/tfr_files/ \
@@ -149,7 +233,7 @@ python train.py \
 
 Use the following command for more help about all the options:
 ```
- python train.py --help
+ctc.train --help
 ```
 
 ### 5) Model Use
@@ -158,66 +242,20 @@ Finally, we can apply our model on new data. In the following code snippet the p
 stored in '/my_images/new_images/', including subdirectories.
 
 ```
-python predict.py -image_dir /my_images/new_images/ \
+ctc.predict -image_dir /my_images/new_images/ \
   -results_file /my_predictions/output.csv \
-  -model_path /my_model/save1/pred_model.hdf5 \
+  -model_path /my_model/save1/best_model.hdf5 \
   -class_mapping_json /my_model/save1/label_mappings.json \
   -pre_processing_json /my_model/save1/image_processing.json
 ```
 
-## Installation
-
-The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required.
-
-We have used python 3.5 (newer versions should work) and Tensorflow 1.9 (older versions don't work).
-
-
-### Installing from Requirements
-
-The most common way to install all required packages is to create a virtual environment and to use a
-requirements.txt file as provided in [setup/](setup/). Note that this requirements.txt exactly reproduces the environment we've been using on Ubuntu and may is incompatible with other operating systems.
-
-```
-python3 -m virtualenv ctc
-source ctc/bin/activate
-pip install -r ./setup/requirements.txt
-```
-
-### Anaconda Users
-
-The following commands allow for a full installation using Anaconda (https://conda.io/docs/user-guide/install/index.html).
-The commands can be executed, for example on Windows, using Git BASH (https://gitforwindows.org) or using the terminal on Unix systems.
-
-```
-# create a new conda environment with name 'ctc'
-conda create --no-default-packages -n ctc python=3.5
-# activate the environment
-source activate ctc
-# install tensorflow (non-GPU or GPU version)
-conda install tensorflow=1.9.0
-# conda install tensorflow-gpu=1.9.0
-conda install jupyter pyyaml yaml nb_conda pillow h5py
-```
-
-### Using a GPU
-
-To train models on large camera trap datasets a GPU is necessary. Besides installing Python and all required modules, nvidia drivers have to be installed on the computer to make use of the GPU (see https://developer.nvidia.com/cuda-downloads and https://developer.nvidia.com/cudnn). An easy option is
-to use a disk image that contains all required installations and use that to set up a GPU instance of a cloud provider. Such images are widely available and may be provided by the cloud providers. We created our own image and used AWS to run our models (see below for details).
-
-
-### Tensorflow GPU Docker installation on AWS
-We used Docker (https://www.docker.com/) to run our models on Amazon Web Services (AWS) GPU EC2 instances (https://aws.amazon.com/). The files in [/setup/Part_*](setup/) provide detailled commands on how to install the Tensorflow GPU docker version on a plain Ubuntu base image. It is however not necessary to use Docker - simply installing all modules using the requirements.txt on the GPU server is enough to run all the models. Additional information on how to install
-Tensorflow can be found at https://www.tensorflow.org/install/.
-
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/documentation/figures/server_config.png"/>
-
-*Overview of the AWS setup we used*
 
 ## Testing the Code
 
 Following commands should run without error and test a part of the code:
 
 ```
+cd camera_trap_classifier
 python -m unittest discover test/data
 python -m unittest discover test/training
 ```
@@ -228,6 +266,7 @@ The following script tests all components of the code end-to-end using images fr
 # 1) adapt the parameters in ./test/full_tests/from_image_dir_test.sh
 # 2) create all the directories as referenced in the script
 # 3) run the script
+cd camera_trap_classifier
 ./test/full_tests/from_image_dir_test.sh
 ```
 
@@ -237,6 +276,7 @@ The following script tests training from data with multiple images per capture e
 # 1) adapt the parameters in ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 # 2) create all the directories as referenced in the script
 # 3) run the script
+cd camera_trap_classifier
 ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 ```
 
@@ -244,12 +284,12 @@ There are some manual tests in 'test/manual_tests' for different components that
 
 ## Exporting a Model
 
-**WARNING**: The following is only possible with Tensorflow 1.9.
+Experimental - Needs update.
 
 To export a model for later deployment we can use the following code:
 
 ```
-python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
+ctc.export -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 -class_mapping_json /my_experiment/model_save_dir/label_mappings.json \
 -pre_processing_json /my_experiment/model_save_dir/pre_processing.json \
 -output_dir /my_experiment/my_model_exports/ \
@@ -258,18 +298,27 @@ python export.py -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 
 ## Deploying a Model
 
+Experimental - Needs update.
+
 To deploy a model on a server we refer to this documentation:
-[How to deploy a model](deploy/README.md)
+[How to deploy a model](docs/deploy/README.md)
 
 
 ## Acknowledgements
 
 This code is based on work conducted in the following study:
 
-*Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, submitted*
+*Identifying Animal Species in Camera Trap Images using Deep Learning and Citizen Science, 2018, Methods in Ecology and Evolution*
 
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 
+Please cite as:
+```
+Willi M, Pitman RT, Cardoso AW, et al. Identifying animal species in camera trap images using deep learning and citizen science. Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099
+```
+
+The camera-trap images (330x330 pixels only) used in the study can be downloaded here:
+https://doi.org/10.13020/D6T11K
 
 The ResNet models are based on the implementation provided here:
 https://github.com/raghakot/keras-resnet

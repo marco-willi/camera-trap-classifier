@@ -1,5 +1,0 @@
-# Tested installation of Tensorflow GPU version on super computing cluster
-conda create --no-default-packages -n ctcgpu
-source activate ctcgpu
-conda install -c anaconda tensorflow-gpu
-conda install jupyter yaml nb_conda pillow h5py pyyaml
