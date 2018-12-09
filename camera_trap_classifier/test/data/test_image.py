@@ -4,6 +4,7 @@ import tensorflow as tf
 from camera_trap_classifier.data.image import (
     _mean_image_subtraction,
     _image_standardize,
+    gaussian_kernel_2D
     )
 
 
@@ -62,6 +63,31 @@ class ImageStandardizationTests(tf.test.TestCase):
             for e, s in zip(expected, std_to_test):
                 actual = _image_standardize(self.image2, means, s)
                 self.assertAllEqual(actual.eval(), e)
+
+
+class GaussianKernelTests(tf.test.TestCase):
+
+    def testGaussianKernelWikiExample(self):
+        """ Compare with Values from
+            https://en.wikipedia.org/wiki/Gaussian_blur
+        """
+        sigma = 0.84089642
+        expected = [
+            [0.00000067, 0.00002292, 0.00019117, 0.00038771, 0.00019117, 0.00002292, 0.00000067],
+            [0.00002292, 0.00078633, 0.00655965, 0.01330373, 0.00655965, 0.00078633, 0.00002292],
+            [0.00019117, 0.00655965, 0.05472157, 0.11098164, 0.05472157, 0.00655965, 0.00019117],
+            [0.00038771, 0.01330373, 0.11098164, 0.22508352, 0.11098164, 0.01330373, 0.00038771],
+            [0.00019117, 0.00655965, 0.05472157, 0.11098164, 0.05472157, 0.00655965, 0.00019117],
+            [0.00002292, 0.00078633, 0.00655965, 0.01330373, 0.00655965, 0.00078633, 0.00002292],
+            [0.00000067, 0.00002292, 0.00019117, 0.00038771, 0.00019117, 0.00002292, 0.00000067]
+            ]
+
+        kernel = gaussian_kernel_2D(sigma)
+        expected = tf.constant(expected, tf.float32)
+        ratio = tf.div(kernel, expected)
+
+        with self.test_session():
+            self.assertAllInRange(ratio.eval(), 0.99, 1.01)
 
 
 if __name__ == '__main__':

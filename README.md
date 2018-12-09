@@ -227,8 +227,7 @@ ctc.train \
 -n_cpus 4 \
 -n_gpus 1 \
 -buffer_size 512 \
--max_epochs 70 \
--color_augmentation full_randomized
+-max_epochs 70
 ```
 
 Use the following command for more help about all the options:
