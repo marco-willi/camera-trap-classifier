@@ -45,7 +45,6 @@ ctc.create_dataset_inventory --help
 ctc.create_dataset --help
 ctc.train --help
 ctc.predict --help
-ctc.export --help
 ```
 
 
@@ -281,9 +280,7 @@ cd camera_trap_classifier
 
 There are some manual tests in 'test/manual_tests' for different components that can be run interactively.
 
-## Exporting a Model
-
-Experimental - Needs update.
+## Exporting a Model (NEEDS UPDATE - DOES NOT WORK CORRECTLY)
 
 To export a model for later deployment we can use the following code:
 
@@ -295,7 +292,7 @@ ctc.export -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 -estimator_save_dir /my_experiment/my_estimators/
 ```
 
-## Deploying a Model
+## Deploying a Model (NEEDS UPDATE - DOES NOT WORK CORRECTLY)
 
 Experimental - Needs update.
 
