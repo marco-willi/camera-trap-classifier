@@ -4,7 +4,7 @@ setup(
     name='camera_trap_classifier',
     url='https://github.com/marco-willi/camera-trap-classifier',
     author='Marco Willi',
-    version='2.0.1',
+    version='2.1.0',
     packages=find_packages(),
     package_data={'': ['*.yaml']},
     include_package_data=True,
