@@ -110,15 +110,11 @@ Alternatively, cloud providers often provide pre-configured servers with all ins
 
 The following steps are required to train a model:
 
-1. Organizing image and label data according to different options (see below).
-2. Create a dataset inventory which is a file that contains all links and labels of images
-3. Create training/test/validation data from a dataset inventory. All images are saved into large 'tfrecord' files.
+1. Organizing image and label data according to different options.
+2. Create a dataset inventory that contains all links and labels of the images.
+3. Create training/test/validation data from a dataset inventory.
 4. Train a model.
 5. Apply a model on new data.
-
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/general_workflow.png"/>
-
-*Overview of the process*
 
 
 ### 1) Data Preparation
