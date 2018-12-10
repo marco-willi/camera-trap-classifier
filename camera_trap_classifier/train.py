@@ -177,6 +177,11 @@ def main():
               are slightly distorted with this option since they are \
               converted to squares.")
     parser.add_argument(
+        "-randomly_flip_horizontally", action='store_true', default=None,
+        help="Wheter to randomly flip the image during model training. \
+              This almost always makes sense unless the training labels \
+              are not invariant to flipping.")
+    parser.add_argument(
         "-crop_factor", type=float, default=None,
         metavar="[0-0.5]",
         help="Wheter to randomly crop the image within \
@@ -240,7 +245,8 @@ def main():
 
     # overwrite parameters if specified by user
     to_overwrite = ['color_augmentation', 'ignore_aspect_ratio',
-                    'crop_factor', 'zoom_factor', 'rotate_by_angle']
+                    'crop_factor', 'zoom_factor', 'rotate_by_angle',
+                    'randomly_flip_horizontally']
     for overwrite in to_overwrite:
         if args[overwrite] is not None:
             image_processing[overwrite] = args[overwrite]

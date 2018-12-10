@@ -49,3 +49,4 @@ image_processing:
   zoom_factor: 0.1
   rotate_by_angle: 5
   color_augmentation: full_randomized
+  randomly_flip_horizontally: True

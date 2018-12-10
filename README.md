@@ -234,6 +234,27 @@ Use the following command for more help about all the options:
 ctc.train --help
 ```
 
+#### Data Augmentation
+
+To avoid overfitting, images are randomly transformed in various ways during model training. The following options are available (defaults):
+-color_augmentation (full_randomized)
+-crop_factor (0.1)
+-zoom_factor (0.1)
+-rotate_by_angle (5)
+-randomly_flip_horizontally (True)
+-ignore_aspect_ratio (True)
+
+See ctc.train --help for more details.
+
+The default values produce following examples:
+
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_train_default.png"/>
+
+*This figure shows examples of randomly gerenated images using default data augmentation parameters*
+
+Important to note is that heavy data augmentation is quite expensive. Training a small model on 2 GPUs with a batch size of 256 required roughly 20 CPUs to keep the GPUs busy. This is less of a problem for larger models since the GPUs will be the
+bottleneck. Check CPU usage with the 'top' command. We also recommend the nvidia tool 'nvidia-smi -l 1' to check the GPU usage during model training (it should be near 100% all the time). If performance is a problem, set rotate_by_angle to 0, followed by zooming.
+
 ### 5) Model Use
 
 Finally, we can apply our model on new data. In the following code snippet the program looks for all images

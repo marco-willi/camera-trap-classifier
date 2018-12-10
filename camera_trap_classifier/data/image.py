@@ -218,7 +218,8 @@ def preprocess_for_train(image,
                          ignore_aspect_ratio,
                          zoom_factor,
                          crop_factor,
-                         rotate_by_angle):
+                         rotate_by_angle,
+                         randomly_flip_horizontally):
     """Preprocesses the given image for training.
     Note that the actual resizing scale is sampled from
     [`resize_size_min`, `resize_size_max`].
@@ -297,7 +298,8 @@ def preprocess_for_train(image,
     image = tf.cast(image, tf.float32)
 
     # randomly flip image
-    image = tf.image.random_flip_left_right(image)
+    if randomly_flip_horizontally:
+        image = tf.image.random_flip_left_right(image)
 
     # Convert image to range 0 and 1
     image = tf.divide(image, tf.cast(255.0, tf.float32))
@@ -376,6 +378,7 @@ def preprocess_image(image, output_height, output_width,
                      image_stdevs=[1, 1, 1],
                      color_augmentation=None,
                      ignore_aspect_ratio=False,
+                     randomly_flip_horizontally=True,
                      **kwargs):
     """Preprocesses the given image.
     Args:
@@ -398,7 +401,8 @@ def preprocess_image(image, output_height, output_width,
                                     ignore_aspect_ratio=ignore_aspect_ratio,
                                     zoom_factor=zoom_factor,
                                     crop_factor=crop_factor,
-                                    rotate_by_angle=rotate_by_angle)
+                                    rotate_by_angle=rotate_by_angle,
+                                    randomly_flip_horizontally=randomly_flip_horizontally)
     else:
         return preprocess_for_eval(image=image,
                                    output_height=output_height,
