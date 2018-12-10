@@ -25,7 +25,7 @@ To use this code following pre-requisites must be met:
 
 ## Installation
 
-The code and the models are based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
+The code has been implemented in Python (https://www.python.org) based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
 
 ### Installation from GitHub
 
