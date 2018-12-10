@@ -14,7 +14,7 @@ python create_dataset.py -inventory ./test_big/cat_dog_dir_test.json \
 import argparse
 import logging
 
-from camera_trap_classifier.config.config_logging import setup_logging
+from camera_trap_classifier.config.logging import setup_logging
 from camera_trap_classifier.data.inventory import DatasetInventoryMaster
 from camera_trap_classifier.data.writer import DatasetWriter
 from camera_trap_classifier.data.tfr_encoder_decoder import (

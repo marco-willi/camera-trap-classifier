@@ -14,7 +14,7 @@ python create_dataset_inventory.py dir -path /my_images/ \
 import os
 import argparse
 
-from camera_trap_classifier.config.config_logging import setup_logging
+from camera_trap_classifier.config.logging import setup_logging
 from camera_trap_classifier.data.inventory import DatasetInventoryMaster
 
 

@@ -76,7 +76,8 @@ mkdir ~/code
 cd ~/code
 git clone https://github.com/marco-willi/camera-trap-classifier.git
 cd camera-trap-classifier
-sudo docker build . -f Dockerfile.gpu -t camera_trap_classifier
+
+sudo docker build . -f Dockerfile.gpu -t camera-trap-classifier:latest-gpu
 ```
 
 ## Start Container
@@ -86,8 +87,8 @@ Now we run the container and map /my_data/ from the host computer to /data/ insi
 ```
 # run docker image
 # maps /my_data/ on host to /data/ in container
-sudo docker run --rm --name ctc --runtime=nvidia -v /my_data/:/data/ -itd camera_trap_classifier
-# sudo docker run --rm --name ctc --runtime=nvidia -v /home/ubuntu/data/:/data/ -itd camera_trap_classifier
+sudo docker run --rm --name ctc --runtime=nvidia -v /my_data/:/data/ -itd camera-trap-classifier:latest-gpu
+# sudo docker run --rm --name ctc --runtime=nvidia -v /home/ubuntu/data/:/data/ -itd camera-trap-classifier:latest-gpu
 ```
 
 ## Run Scripts
@@ -151,7 +152,7 @@ sudo docker exec ctc ctc.export -model /data/save1/best_model.hdf5 \
 
 ```
 # start container and map directories
-sudo docker run --rm --name ctc --runtime=nvidia -v /home/ubuntu/data/:/data/ -itd camera_trap_classifier
+sudo docker run --rm --name ctc --runtime=nvidia -v /home/ubuntu/data/:/data/ -itd camera-trap-classifier:latest-gpu
 
 # get sample data from (https://www.microsoft.com/en-ca/download/details.aspx?id=54765)
 cd ~/data/

@@ -69,14 +69,15 @@ pip install git+git://github.com/marco-willi/camera-trap-classifier.git
 
 The software can also be installed using Docker (https://docs.docker.com/get-started/). There are two versions, a CPU and a GPU Tensorflow installation.
 
-To build the (CPU) container:
+To build the (GPU or CPU) container:
 ```
-docker build . -f Dockerfile.cpu -t camera_trap_classifier
+docker build . -f Dockerfile.gpu -t camera-trap-classifier:latest-gpu
+docker build . -f Dockerfile.cpu -t camera-trap-classifier:latest-cpu
 ```
 
 To start the container:
 ```
-docker run --name ctc -v /my_data/:/data/ -itd camera_trap_classifier
+docker run --name ctc -v /my_data/:/data/ -itd camera-trap-classifier:latest-gpu
 ```
 
 To run commands inside the container:

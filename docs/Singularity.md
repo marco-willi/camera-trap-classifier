@@ -5,24 +5,22 @@ For security reasons some environments do not allow the use of Docker containers
 For more information: https://singularity.lbl.gov
 
 ```
-# pull the tensorflow gpu image
-singularity pull docker://tensorflow/tensorflow:1.12.0-gpu-py3
+# pull the docker image from Dockerhub (note: no guarantee this is up-to-date)
+singularity pull docker://will5448/camera-trap-classifier:latest-gpu
 
-# since we are pulling the tensorflow image the camera trap classifier code is
-# not included, we can download it outside the container
-CODE=${HOME}/code
-mkdir -p $CODE
-cd $CODE
-git clone https://github.com/marco-willi/camera-trap-classifier.git
+# run a program
+# map important paths with -B option
+singularity exec --nv -B /data/my_files/:/data/my_files/ ./camera-trap-classifier-latest-gpu.simg echo "TEST"
 
-# Start the container with the shell and map directories
-# we assume that $HOME in the container is mapped to $HOME outside
-singularity shell --nv -B /data/my_files/:/data/my_files/ ./tensorflow-1.12.0-gpu-py3.simg
+# Alternatively switch into the singularit container and run commands there
+singularity run ./camera-trap-classifier-latest-gpu.simg
+```
 
-# install missing packages
-CODE=${HOME}/code
-cd $CODE
-pip install --user -e camera-trap-classifier
+
+```
+# Example Usage
+
+cd $HOME
 
 # Prepare paths
 SAVE_ROOT_PATH=$HOME
@@ -35,31 +33,20 @@ LABEL_MAPPINGS=/data/tfr_files/label_mapping.json
 mkdir -p $RUN_OUTPUT
 mkdir -p $MODEL_SAVE
 
-
-# we can the run code with this (example for training a model)
-cd ${CODE}/camera-trap-classifier
-
-python -m camera_trap_classifier.train \
--train_tfr_path $TFR_FILES \
--val_tfr_path $TFR_FILES \
--test_tfr_path $TFR_FILES \
--class_mapping_json  $LABEL_MAPPINGS \
--run_outputs_dir $RUN_OUTPUT \
--model_save_dir $MODEL_SAVE \
--model ResNet18 \
--labels species count standing resting moving eating interacting babies \
--labels_loss_weights 1 0.2 0.2 0.2 0.2 0.2 0.2 0.2  \
--batch_size 256 \
--n_cpus 18 \
--n_gpus 2 \
--buffer_size 512 \
--max_epochs 70 \
--color_augmentation full_randomized \
--ignore_aspect_ratio
-```
-
-Other Commands:
-```
-# List running singularity containers
-singularity instance.list
+singularity exec --nv -B /data/my_files/:/data/my_files/ ./camera-trap-classifier-latest-gpu.simg \
+  ctc.train \
+  -train_tfr_path $TFR_FILES \
+  -val_tfr_path $TFR_FILES \
+  -test_tfr_path $TFR_FILES \
+  -class_mapping_json  $LABEL_MAPPINGS \
+  -run_outputs_dir $RUN_OUTPUT \
+  -model_save_dir $MODEL_SAVE \
+  -model ResNet18 \
+  -labels species count standing resting moving eating interacting babies \
+  -labels_loss_weights 1 0.2 0.2 0.2 0.2 0.2 0.2 0.2  \
+  -batch_size 256 \
+  -n_cpus 18 \
+  -n_gpus 2 \
+  -buffer_size 512 \
+  -max_epochs 70
 ```

@@ -6,7 +6,9 @@ import logging.config
 import yaml
 
 
-_DEFAULT_CFG_ = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'logging.yaml')
+_DEFAULT_CFG_ = os.path.join(os.path.abspath(
+    os.path.dirname(__file__)), 'logging.yaml')
+
 
 def logmaker(logname='run.log', path='./', mode='a', encoding=None):
     """ Set Default Path for File Loggers """
@@ -14,7 +16,7 @@ def logmaker(logname='run.log', path='./', mode='a', encoding=None):
     return logging.FileHandler(log_path, mode, encoding)
 
 
-def setup_logging(default_path=_DEFAULT_CFG_ ,
+def setup_logging(default_path=_DEFAULT_CFG_,
                   log_output_path='./',
                   default_level=logging.DEBUG,
                   env_key='LOG_CFG'):

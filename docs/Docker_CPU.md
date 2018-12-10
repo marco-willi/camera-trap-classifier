@@ -49,7 +49,7 @@ mkdir ~/code
 cd ~/code
 git clone https://github.com/marco-willi/camera-trap-classifier.git
 cd camera-trap-classifier
-sudo docker build . -f Dockerfile.cpu -t camera_trap_classifier
+sudo docker build . -f Dockerfile.cpu -t camera-trap-classifier:latest-cpu
 ```
 
 ## Start Container
@@ -59,7 +59,7 @@ Now we run the container and map /my_data/ from the host computer to /data/ insi
 ```
 # run docker image
 # maps /my_data/ on host to /data/ in container
-sudo docker run --name ctc -v /my_data/:/data/ -itd camera_trap_classifier
+sudo docker run --name ctc -v /my_data/:/data/ -itd camera-trap-classifier:latest-cpu
 ```
 
 ## Run Scripts
