@@ -45,7 +45,6 @@ ctc.create_dataset_inventory --help
 ctc.create_dataset --help
 ctc.train --help
 ctc.predict --help
-ctc.export --help
 ```
 
 
@@ -200,7 +199,7 @@ The following code snippet shows how that works:
 ```
 ctc.create_dataset -inventory /my_data/dataset_inventory.json \
 -output_dir /my_data/tfr_files/ \
--image_save_side_max 200 \
+-image_save_side_smallest 200 \
 -split_percent 0.9 0.05 0.05 \
 -overwrite
 ```
@@ -227,14 +226,15 @@ ctc.train \
 -n_cpus 4 \
 -n_gpus 1 \
 -buffer_size 512 \
--max_epochs 70 \
--color_augmentation full_randomized
+-max_epochs 70
 ```
 
 Use the following command for more help about all the options:
 ```
 ctc.train --help
 ```
+
+See section 'Data Augmentation' for more details.
 
 ### 5) Model Use
 
@@ -248,6 +248,48 @@ ctc.predict -image_dir /my_images/new_images/ \
   -class_mapping_json /my_model/save1/label_mappings.json \
   -pre_processing_json /my_model/save1/image_processing.json
 ```
+
+### Data Augmentation
+
+To avoid overfitting, images are randomly transformed in various ways during model training. The following options are available (defaults):
+
+```
+-color_augmentation (full_randomized)
+-crop_factor (0.1)
+-zoom_factor (0.1)
+-rotate_by_angle (5)
+-randomly_flip_horizontally (True)
+-ignore_aspect_ratio (True)
+```
+See ctc.train --help for more details.
+
+The default values produce following examples:
+
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_train_default.png"/>
+
+*This figure shows examples of randomly gerenated images using default data augmentation parameters*
+
+Important to note is that heavy data augmentation is quite expensive. Training a small model on 2 GPUs with a batch size of 256 required roughly 20 CPUs to keep the GPUs busy. This is less of a problem for larger models since the GPUs will be the
+bottleneck. Check CPU usage with the 'top' command. We also recommend the nvidia tool 'nvidia-smi -l 1' to check the GPU usage during model training (it should be near 100% all the time). If performance is a problem, set rotate_by_angle to 0, followed by zooming.
+
+### Experimental Feature - Grayscale-Stacking and Blurring
+
+To make better use of motion information contained in capture events with multiple images there is an option to stack up to three images into a single RGB image. The option can be activated during model training using:
+
+```
+-image_choice_for_sets grayscale_blurring
+```
+
+This will apply the following transformations to each image during model training:
+1. Convert each image of a capture event (set of image) to grayscale
+2. Blurr each image with a Gaussian filter
+3. Stack all images of the set in temporal order to an RGB image (e.g. first image goes into the 'red' channel). If there are fewer than 3 images in some sets, the last image is repeated.
+
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_grayscale_blurring.png"/>
+
+*This figure shows examples of grayscale blurring on sets with 1 or 3 images*
+
+NOTE: This option is not (yet) available when using a trained model. To apply a model trained with grayscale_blurring on new images they would have to be transformed and stacked beforehand. However, to test this approach and to get evaluation results just train a model.
 
 
 ## Testing the Code
@@ -282,9 +324,7 @@ cd camera_trap_classifier
 
 There are some manual tests in 'test/manual_tests' for different components that can be run interactively.
 
-## Exporting a Model
-
-Experimental - Needs update.
+## Exporting a Model (NEEDS UPDATE - DOES NOT WORK CORRECTLY)
 
 To export a model for later deployment we can use the following code:
 
@@ -296,7 +336,7 @@ ctc.export -model /my_experiment/model_save_dir/prediction_model.hdf5 \
 -estimator_save_dir /my_experiment/my_estimators/
 ```
 
-## Deploying a Model
+## Deploying a Model (NEEDS UPDATE - DOES NOT WORK CORRECTLY)
 
 Experimental - Needs update.
 
@@ -313,9 +353,8 @@ This code is based on work conducted in the following study:
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 
 Please cite as:
-```
-Willi M, Pitman RT, Cardoso AW, et al. Identifying animal species in camera trap images using deep learning and citizen science. Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099
-```
+
+*Willi M, Pitman RT, Cardoso AW, et al. Identifying animal species in camera trap images using deep learning and citizen science. Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099*
 
 The camera-trap images (330x330 pixels only) used in the study can be downloaded here:
 https://doi.org/10.13020/D6T11K

@@ -22,7 +22,6 @@ python train.py \
 -buffer_size 512 \
 -max_epochs 10 \
 -starting_epoch 0 \
--color_augmentation full_randomized \
 -optimizer sgd
 """
 import argparse
@@ -160,7 +159,8 @@ def main():
              the most recent model in that directory is loaded')
     # Image Processing
     parser.add_argument(
-        "-color_augmentation", type=str, default="full_randomized",
+        "-color_augmentation", type=str, default=None,
+        choices=[None, 'little', 'full_fast', 'full_randomized'],
         required=False,
         help="Which (random) color augmentation to perform during model\
               training - choose one of:\
@@ -170,12 +170,47 @@ def main():
               pipeline is slow. Generally full_randomized is recommended \
               and is usually more than fast enough.")
     parser.add_argument(
-        "-ignore_aspect_ratio", default=False, action='store_true',
+        "-ignore_aspect_ratio", action='store_true', default=None,
         help="Wheter to ignore the aspect ratio of the images during model \
               training. This can improve the total area of the image the \
               model sees during training and prediction. However, the images \
               are slightly distorted with this option since they are \
               converted to squares.")
+    parser.add_argument(
+        "-randomly_flip_horizontally", action='store_true', default=None,
+        help="Wheter to randomly flip the image during model training. \
+              This almost always makes sense unless the training labels \
+              are not invariant to flipping.")
+    parser.add_argument(
+        "-crop_factor", type=float, default=None,
+        metavar="[0-0.5]",
+        help="Wheter to randomly crop the image within \
+             image-size * [1-crop_factor, 1] during model training. \
+             This extracts a random portion of the image. \
+             Values between 0 and 0.5 are allowed.")
+    parser.add_argument(
+        "-zoom_factor", type=float, default=None,
+        metavar="[0-0.5]",
+        help="Wheter to randomly zoom the image by: \
+             image-size * [1 -zoom_factor, 1+zoom_factor] during model \
+             training. Values between 0 and 0.5 are allowed.")
+    parser.add_argument(
+        "-rotate_by_angle", type=int, default=None,
+        choices=range(0, 181),
+        metavar="[0-180]",
+        help="Wheter to randomly rotate the image during model training in \
+              range [0 - rotate_by_angle, 0 + rotate_by_angle] \
+             training. Values between 0 and 180 degrees are allowed.")
+    parser.add_argument(
+        "-image_choice_for_sets", type=str, default='random',
+        choices=['random', 'grayscale_blurring'],
+        help="How to choose an image for records with multiple images. \
+              Default is 'random' which randomly chooses an image \
+              during model training. 'grayscale_blurring' converts multiple \
+              images into a single RGB image by blurring and converting \
+              individual images to grayscale. Note that grayscale_blurring is \
+              an experimental feature and is not yet supported when using \
+              the predictor on new images. ")
 
     # Parse command line arguments
     args = vars(parser.parse_args())
@@ -197,17 +232,30 @@ def main():
     ###########################################
 
     # Load model config
-    models_cfg_path = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), 'config', 'models.yaml')
+    cfg_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), 'config', 'config.yaml')
 
-    model_cfg = ConfigLoader(models_cfg_path)
+    config = ConfigLoader(cfg_path)
 
-    assert args['model'] in model_cfg.cfg['models'], \
+    assert args['model'] in config.cfg['models'], \
         "model %s not found in config/models.yaml" % args['model']
 
-    image_processing = \
-        model_cfg.cfg['models'][args['model']]['image_processing']
-    image_processing['ignore_aspect_ratio'] = args['ignore_aspect_ratio']
+    # get default image_processing from config.yaml
+    image_processing = config.cfg['image_processing']
+
+    # overwrite parameters if specified by user
+    to_overwrite = ['color_augmentation', 'ignore_aspect_ratio',
+                    'crop_factor', 'zoom_factor', 'rotate_by_angle',
+                    'randomly_flip_horizontally']
+    for overwrite in to_overwrite:
+        if args[overwrite] is not None:
+            image_processing[overwrite] = args[overwrite]
+
+    # load model specific image processing parameters
+    image_processing_model = \
+        config.cfg['models'][args['model']]['image_processing']
+
+    image_processing = {**image_processing, **image_processing_model}
 
     input_shape = (image_processing['output_height'],
                    image_processing['output_width'], 3)
@@ -349,22 +397,6 @@ def main():
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
 
-    if TEST_SET:
-        def input_feeder_test():
-            return data_reader.get_iterator(
-                        tfr_files=tfr_test,
-                        batch_size=args['batch_size'],
-                        is_train=False,
-                        n_repeats=1,
-                        output_labels=output_labels,
-                        image_pre_processing_fun=preprocess_image,
-                        image_pre_processing_args={
-                            **image_processing,
-                            'is_training': False},
-                        buffer_size=args['buffer_size'],
-                        num_parallel_calls=args['n_cpus'],
-                        drop_batch_remainder=False)
-
     # Export Image Processing Settings
     export_dict_to_json({**image_processing,
                          'is_training': False},
@@ -490,6 +522,26 @@ def main():
 
     if TEST_SET:
         logger.info("Starting to predict on test data")
+
+        tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
+        logger.info("Create Dataset Reader")
+        data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
+
+        def input_feeder_test():
+            return data_reader.get_iterator(
+                        tfr_files=tfr_test,
+                        batch_size=args['batch_size'],
+                        is_train=False,
+                        n_repeats=1,
+                        output_labels=output_labels,
+                        image_pre_processing_fun=preprocess_image,
+                        image_pre_processing_args={
+                            **image_processing,
+                            'is_training': False},
+                        buffer_size=args['buffer_size'],
+                        num_parallel_calls=args['n_cpus'],
+                        drop_batch_remainder=False)
+
         pred = Predictor(
                 model_path=best_model_save_path,
                 class_mapping_json=args['class_mapping_json'],

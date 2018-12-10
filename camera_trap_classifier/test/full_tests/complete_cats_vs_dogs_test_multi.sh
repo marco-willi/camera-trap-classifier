@@ -1,6 +1,5 @@
 # Test Multi-Image Captures
 # ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
-image_root_path=D:\\Studium_GD\\Zooniverse\\Data\\transfer_learning_project\\images\\4715\\all
 export_root_path=./test_big/cats_vs_dogs_multi/
 image_root_path=./test/test_images/
 tfr_files_path=${export_root_path}tfr_files/
@@ -25,7 +24,7 @@ python create_dataset_inventory.py csv -path ./test/test_files/cats_vs_dogs_mult
 # Create TFRecord Files
 python create_dataset.py -inventory ${export_root_path}inventory.json \
 -output_dir ${tfr_files_path} \
--image_save_side_max 200 \
+-image_save_side_smallest 200 \
 -split_percent 0.7 0.15 0.15 \
 -overwrite
 

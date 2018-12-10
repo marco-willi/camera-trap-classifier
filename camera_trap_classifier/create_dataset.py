@@ -6,7 +6,7 @@ Exmple Usage:
 --------------
 python create_dataset.py -inventory ./test_big/cat_dog_dir_test.json \
 -output_dir ./test_big/cats_vs_dogs/tfr_files/ \
--image_save_side_max 200 \
+-image_save_side_smallest 200 \
 -split_percent 0.7 0.15 0.15 \
 -overwrite
 
@@ -17,8 +17,10 @@ import logging
 from camera_trap_classifier.config.config_logging import setup_logging
 from camera_trap_classifier.data.inventory import DatasetInventoryMaster
 from camera_trap_classifier.data.writer import DatasetWriter
-from camera_trap_classifier.data.tfr_encoder_decoder import DefaultTFRecordEncoderDecoder
-from camera_trap_classifier.data.image import read_resize_convert_to_jpeg
+from camera_trap_classifier.data.tfr_encoder_decoder import (
+    DefaultTFRecordEncoderDecoder)
+from camera_trap_classifier.data.image import (
+    read_image_from_disk_resize_and_convert_to_jpeg)
 
 # Configure Logging
 setup_logging()
@@ -83,13 +85,21 @@ def main():
                         help='Root path of all images - will be appended to\
                               the image paths stored in the dataset inventory',
                         required=False)
-    parser.add_argument("-image_save_side_max", type=int,
+    parser.add_argument("-image_save_side_smallest", type=int,
                         default=500,
                         required=False,
                         help="aspect preserving resizeing of images such that\
-                              the larger side of each image has that\
+                              the smaller side of each image has that\
                               many pixels, typically at least 330\
                               (depending on the model architecture)")
+    parser.add_argument("-image_save_quality", type=int,
+                        default=90,
+                        choices=range(0, 101),
+                        metavar="[0-100]",
+                        required=False,
+                        help="The image quality of the images saved to\
+                              TFRecord files. Recommended is 75-90 for good\
+                              quality-size trade-off.")
     parser.add_argument("-overwrite", default=False,
                         action='store_true', required=False,
                         help="whether to overwrite existing tfr files")
@@ -217,15 +227,17 @@ def main():
     for split_name, split_data in splitted.items():
         counter += 1
         logger.info("Starting to process %s (%s / %s)" %
-                     (split_name, counter, n_splits))
+                    (split_name, counter, n_splits))
         split_data.export_to_tfrecord(
             tfr_writer,
             args['output_dir'],
             file_prefix=split_name,
             image_root_path=args['image_root_path'],
-            image_pre_processing_fun=read_resize_convert_to_jpeg,
-            image_pre_processing_args={"max_side":
-                                       args['image_save_side_max']},
+            image_pre_processing_fun=read_image_from_disk_resize_and_convert_to_jpeg,
+            image_pre_processing_args={"smallest_side":
+                                       args['image_save_side_smallest'],
+                                       "image_save_quality":
+                                       args['image_save_quality']},
             random_shuffle_before_save=True,
             overwrite_existing_files=args['overwrite'],
             max_records_per_file=args['max_records_per_file'],

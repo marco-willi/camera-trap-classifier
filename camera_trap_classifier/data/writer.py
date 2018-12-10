@@ -8,9 +8,12 @@ from multiprocessing import Process, Manager
 
 import tensorflow as tf
 
-from camera_trap_classifier.data.image import read_convert_to_jpeg
+from camera_trap_classifier.data.image import (
+    read_image_from_disk_and_convert_to_jpeg)
 from camera_trap_classifier.data.utils import (
     slice_generator, estimate_remaining_time)
+
+tf.enable_eager_execution()
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +122,18 @@ class DatasetWriter(object):
             if serialized_record is not None:
                 outlist.append(serialized_record)
 
+    def _read_image_from_disk(self, image_path_full):
+        """ Read Image from Disk """
+        if self.image_pre_processing_fun is not None:
+            self.image_pre_processing_args['path_to_image'] = \
+                image_path_full
+            image_raw = self.image_pre_processing_fun(
+                 **self.image_pre_processing_args)
+        else:
+            image_raw = \
+                read_image_from_disk_and_convert_to_jpeg(image_path_full)
+        return image_raw
+
     def _serialize_record(self, record_data):
         """ Serialize a single record """
         # Process all images in a record
@@ -131,14 +146,7 @@ class DatasetWriter(object):
             else:
                 image_path_full = image_path
             try:
-                if self.image_pre_processing_fun is not None:
-                    self.image_pre_processing_args['image'] = \
-                        image_path_full
-                    image_raw = self.image_pre_processing_fun(
-                         **self.image_pre_processing_args)
-                else:
-                    image_raw = read_convert_to_jpeg(image_path_full)
-
+                image_raw = self._read_image_from_disk(image_path_full)
             except Exception as e:
                 logger.debug("Failed to read image: %s , error %s" %
                              (image_path_full, str(e)))

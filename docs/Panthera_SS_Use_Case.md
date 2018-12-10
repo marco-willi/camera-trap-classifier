@@ -112,7 +112,7 @@ The following command prepares data containing only species images. Set the numb
 ```
 python create_dataset.py -inventory /host/data_hdd/tfr_data/inventories/dataset_inventory_southern_africa.json \
 -output_dir /host/data_hdd/tfr_data/species/southern_africa/ \
--image_save_side_max 500 \
+-image_save_side_smallest 500 \
 -split_by_meta split_name \
 -remove_label_name empty empty \
 -remove_label_value empty vehicle \
@@ -127,7 +127,7 @@ The following command prepares data for the empty model.
 ```
 python create_dataset.py -inventory /host/data_hdd/tfr_data/inventories/dataset_inventory_southern_africa.json \
 -output_dir /host/data_hdd/tfr_data/empty_or_not/southern_africa/ \
--image_save_side_max 500 \
+-image_save_side_smallest 500 \
 -split_by_meta split_name \
 -balanced_sampling_min \
 -balanced_sampling_label empty \

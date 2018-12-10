@@ -1,5 +1,5 @@
 ###########################################
-# AVAILABLE MODELS ########################
+# MODELS ########################
 ###########################################
 
 models:
@@ -9,48 +9,44 @@ models:
       # image output size of pre-processing (input to training)
       output_height: 224
       output_width: 224
-      # resizing options for data augmentation
-      resize_side_min: 224
-      resize_side_max: 246
   ResNet34:
     image_processing:
       output_height: 224
       output_width: 224
-      resize_side_min: 224
-      resize_side_max: 246
   ResNet50:
     image_processing:
       output_height: 224
       output_width: 224
-      resize_side_min: 224
-      resize_side_max: 246
   ResNet101:
     image_processing:
       output_height: 224
       output_width: 224
-      resize_side_min: 224
-      resize_side_max: 246
   ResNet152:
     image_processing:
       output_height: 224
       output_width: 224
-      resize_side_min: 224
-      resize_side_max: 246
   InceptionResNetV2:
     image_processing:
       output_height: 299
       output_width: 299
-      resize_side_min: 299
-      resize_side_max: 329
   Xception:
     image_processing:
       output_height: 299
       output_width: 299
-      resize_side_min: 299
-      resize_side_max: 329
   small_cnn:
     image_processing:
       output_height: 50
       output_width: 50
-      resize_side_min: 50
-      resize_side_max: 55
+
+
+###########################################
+# Data Augmentation - Default Parameters
+###########################################
+
+image_processing:
+  ignore_aspect_ratio: True
+  crop_factor: 0.1
+  zoom_factor: 0.1
+  rotate_by_angle: 5
+  color_augmentation: full_randomized
+  randomly_flip_horizontally: True

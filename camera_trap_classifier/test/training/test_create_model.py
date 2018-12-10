@@ -9,7 +9,7 @@ class CreateModelTests(tf.test.TestCase):
     """ Test Create Model """
 
     def setUp(self):
-        self.model_cfg = ConfigLoader('./config/models.yaml')
+        self.model_cfg = ConfigLoader('./config/config.yaml')
         self.models = list(self.model_cfg.cfg['models'].keys())
         self.labels = ['label/species', 'label/counts']
         self.labels_clean = ['label/%s' % l for l in self.labels]
