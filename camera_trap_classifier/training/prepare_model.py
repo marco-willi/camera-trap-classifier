@@ -18,11 +18,12 @@ from camera_trap_classifier.training.utils import (
     build_masked_loss, accuracy, top_k_accuracy)
 
 
-def load_model_from_disk(path_to_model_on_disk):
+def load_model_from_disk(path_to_model_on_disk, compile=True):
     """ Load weights from disk and add to model """
     logging.info("Loading model from: %s" % path_to_model_on_disk)
     loaded_model = load_model(
         path_to_model_on_disk,
+        compile=compile,
         custom_objects={
             'accuracy': accuracy,
             'top_k_accuracy': top_k_accuracy,

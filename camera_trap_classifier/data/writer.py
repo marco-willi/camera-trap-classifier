@@ -52,7 +52,7 @@ class DatasetWriter(object):
         self.processes_images_in_parallel_n_processes = \
             processes_images_in_parallel_n_processes
 
-        logger.info("Starting to Encode Dict")
+        logger.info("Starting to Encode Data to TFRecords")
 
         if not isinstance(tfrecord_dict, dict):
             logger.error("tfrecord_dict must be a dictionary")
