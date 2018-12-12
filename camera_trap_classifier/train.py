@@ -129,6 +129,7 @@ def main():
         help="The initial learning rate.")
     parser.add_argument(
         "-optimizer", type=str, default="sgd",
+        choices=['sgd', 'rmsprop'],
         required=False,
         help="Which optimizer to use in training the model (sgd or rmsprop)")
     parser.add_argument(
@@ -146,9 +147,10 @@ def main():
         help="Option to specify that transfer learning should be used.")
     parser.add_argument(
         "-transfer_learning_type", default='last_layer', required=False,
-        help="Option to specify that transfer learning should be used, by\
-              allowing to adapt only the last layer ('last_layer') \
-              or all layers ('all_layers') - default is 'last_layer'")
+        choices=['last_layer', 'all_layers'],
+        help="Option to specify which transfer-learning stype hould be used: \
+              'last_layer': allowing to adapt only the last layer,  \
+              'all_layers': adapt all layers - default is 'last_layer'")
     parser.add_argument(
         "-continue_training", default=False,
         action='store_true', required=False,
