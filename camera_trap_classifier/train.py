@@ -46,7 +46,7 @@ from camera_trap_classifier.data.reader import DatasetReader
 from camera_trap_classifier.data.image import preprocess_image
 from camera_trap_classifier.data.utils import (
     calc_n_batches_per_epoch, export_dict_to_json, read_json,
-    n_records_in_tfr_parallel, find_files_with_ending,
+    n_records_in_tfr_dataset, find_files_with_ending,
     get_most_recent_file_from_files, find_tfr_files_pattern_subdir)
 
 
@@ -129,8 +129,17 @@ def main():
         help="The initial learning rate.")
     parser.add_argument(
         "-optimizer", type=str, default="sgd",
+        choices=['sgd', 'rmsprop'],
         required=False,
         help="Which optimizer to use in training the model (sgd or rmsprop)")
+    parser.add_argument(
+        "-early_stopping_patience", type=int, default=3,
+        help="Number of epochs after which to stop training if no improvement \
+              on validation set was observed (total loss).")
+    parser.add_argument(
+        "-reduce_lr_on_plateau_patience", type=int, default=2,
+        help="Number of epochs after which to reduce learning rate if no \
+              improvement on validation set was observed (total loss).")
     # Transfer-Learning and Model Loading
     parser.add_argument(
         "-transfer_learning", default=False,
@@ -138,9 +147,10 @@ def main():
         help="Option to specify that transfer learning should be used.")
     parser.add_argument(
         "-transfer_learning_type", default='last_layer', required=False,
-        help="Option to specify that transfer learning should be used, by\
-              allowing to adapt only the last layer ('last_layer') \
-              or all layers ('all_layers') - default is 'last_layer'")
+        choices=['last_layer', 'all_layers'],
+        help="Option to specify which transfer-learning stype hould be used: \
+              'last_layer': allowing to adapt only the last layer,  \
+              'all_layers': adapt all layers - default is 'last_layer'")
     parser.add_argument(
         "-continue_training", default=False,
         action='store_true', required=False,
@@ -223,9 +233,9 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    print("Using arguments:")
+    logger.info("Using arguments:")
     for k, v in args.items():
-        print("Arg: %s: %s" % (k, v))
+        logger.info("Arg: %s: %s" % (k, v))
 
     ###########################################
     # Process Input ###########
@@ -323,26 +333,23 @@ def main():
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
     logger.info("Get Dataset Reader for calculating datset stats")
-    n_records_train = n_records_in_tfr_parallel(tfr_train, args['n_cpus'])
+    n_records_train = n_records_in_tfr_dataset(tfr_train, args['n_cpus'])
     dataset = data_reader.get_iterator(
             tfr_files=tfr_train,
             batch_size=min([4096, n_records_train]),
             is_train=True,
             n_repeats=1,
             output_labels=output_labels,
-            label_to_numeric_mapping=class_mapping,
             image_pre_processing_fun=preprocess_image,
             image_pre_processing_args={**image_processing,
                                        'is_training': False},
             buffer_size=args['buffer_size'],
             num_parallel_calls=args['n_cpus'])
-    iterator = dataset.make_initializable_iterator()
+    iterator = dataset.make_one_shot_iterator()
     batch_data = iterator.get_next()
 
     logger.info("Calculating image means and stdevs")
     with tf.Session() as sess:
-        tf.tables_initializer().run()
-        sess.run(iterator.initializer)
         features, labels = sess.run(batch_data)
 
     # calculate and save image means and stdvs of each color channel
@@ -377,8 +384,7 @@ def main():
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
-                        'is_training': True,
-                        'color_augmentation': args['color_augmentation']},
+                        'is_training': True},
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
 
@@ -407,9 +413,16 @@ def main():
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
         n_records_train, args['batch_size'])
 
-    n_records_val = n_records_in_tfr_parallel(tfr_val, args['n_cpus'])
+    n_records_val = n_records_in_tfr_dataset(tfr_val, args['n_cpus'])
     n_batches_per_epoch_val = calc_n_batches_per_epoch(
         n_records_val, args['batch_size'])
+
+    logger.info("Found %s records in the training set" % n_records_train)
+    logger.debug("Using %s batches/epoch for the training set" %
+                 n_batches_per_epoch_train)
+    logger.info("Found %s records in the validation set" % n_records_val)
+    logger.debug("Using %s batches/epoch for the validation set" %
+                 n_batches_per_epoch_val)
 
     ###########################################
     # CREATE MODEL ###########
@@ -447,13 +460,13 @@ def main():
     # stop model training if validation loss does not improve
     early_stopping = EarlyStopping(
         monitor='val_loss',
-        min_delta=0, patience=3, verbose=0, mode='auto')
+        min_delta=0, patience=args['early_stopping_patience'], verbose=0, mode='auto')
 
     # reduce learning rate if model progress plateaus
     reduce_lr_on_plateau = ReduceLROnPlateau(
         monitor='val_loss',
         factor=0.1,
-        patience=2,
+        patience=args['reduce_lr_on_plateau_patience'],
         verbose=0,
         mode='auto',
         min_delta=0.0001, cooldown=1, min_lr=1e-5)

@@ -22,7 +22,7 @@ class DatasetReader(object):
         assert type(output_labels) is list, "label_list must be of " + \
             " type list is of type %s" % type(output_labels)
 
-        logger.info("Creating dataset TFR iterator")
+        logger.debug("Creating tf.Dataset")
 
         # Create Hash Map to map str labels to numerics if specified
         class_to_index_mappings = self._create_lookup_table(
@@ -108,13 +108,13 @@ class DatasetReader(object):
                 label_mapping = label_to_numeric_mapping[label]
                 if not self._is_correct_mapping(label_mapping):
                     err_msg = "Label mapping %s is invalid" % label_mapping
-                    logging.error(err_msg)
+                    logger.error(err_msg)
                     raise ValueError(err_msg)
                 lookup_tab = self._create_hash_table_from_dict(
                     label_mapping,
                     name='%s/label_lookup' % label)
-                logging.debug("Mapping labels for %s are %s" %
-                              (label, label_mapping))
+                logger.debug("Mapping labels for %s are %s" %
+                             (label, label_mapping))
                 class_to_index_mappings['label/%s' % label] = lookup_tab
             return class_to_index_mappings
         else:

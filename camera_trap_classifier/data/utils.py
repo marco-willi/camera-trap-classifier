@@ -309,6 +309,42 @@ def n_records_in_tfr(tfr_path):
     return total
 
 
+def n_records_in_tfr_dataset(tfr_path, n_processes=4):
+    """ Read the number of records in all tfr files using the Dataset API
+        Input:
+            list of tfr paths
+        Output:
+            int with number of records over all files
+    """
+    if not isinstance(tfr_path, list):
+        tfr_path = [tfr_path]
+
+    # Use max one process per file
+    n_tfr_files = len(tfr_path)
+    num_parallel_reads = min(n_processes, n_tfr_files)
+
+    # Define a Dataset and only keep the Counter
+    dataset = tf.data.TFRecordDataset(tfr_path,
+                                      num_parallel_reads=num_parallel_reads)
+    dataset = dataset.apply(tf.data.experimental.enumerate_dataset(start=0))
+    dataset = dataset.apply(
+                tf.data.experimental.map_and_batch(
+                        lambda x, y: x,
+                        batch_size=1024))
+    dataset = dataset.repeat(1)
+    iterator = dataset.make_one_shot_iterator()
+    batch = iterator.get_next()
+
+    # Loop once over the whole dataset
+    with tf.Session() as sess:
+        while True:
+            try:
+                counter = sess.run(batch)
+            except tf.errors.OutOfRangeError:
+                break
+    return counter[-1]
+
+
 def n_records_in_tfr_parallel(tfr_path, n_processes=4):
     """ Read the number of records in all tfr files in parallel """
     if not isinstance(tfr_path, list):
