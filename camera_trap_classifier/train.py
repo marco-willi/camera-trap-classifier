@@ -460,7 +460,8 @@ def main():
     # stop model training if validation loss does not improve
     early_stopping = EarlyStopping(
         monitor='val_loss',
-        min_delta=0, patience=args['early_stopping_patience'], verbose=0, mode='auto')
+        min_delta=0,
+        patience=args['early_stopping_patience'], verbose=0, mode='auto')
 
     # reduce learning rate if model progress plateaus
     reduce_lr_on_plateau = ReduceLROnPlateau(
