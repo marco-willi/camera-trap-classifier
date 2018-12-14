@@ -1,10 +1,8 @@
 """ Main File for Training a Model
 
-Allows for detailed configurations.
-
 Example Usage:
 ---------------
-python train.py \
+ctc.train \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
 -train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
@@ -316,9 +314,9 @@ def main():
     # CALC IMAGE STATS ###########
     ###########################################
 
-    tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
+    logger.info("Start Calculating Image Stats")
 
-    logger.info("Create Dataset Reader")
+    tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
     data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
@@ -357,6 +355,12 @@ def main():
     logger.info("Image Means: %s" % image_means)
     logger.info("Image Stdevs: %s" % image_stdevs)
 
+    # Export Image Processing Settings
+    export_dict_to_json({**image_processing,
+                         'is_training': False},
+                        os.path.join(args['run_outputs_dir'],
+                                     'image_processing.json'))
+
     ###########################################
     # PREPARE DATA READER ###########
     ###########################################
@@ -392,12 +396,6 @@ def main():
                         'is_training': False},
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
-
-    # Export Image Processing Settings
-    export_dict_to_json({**image_processing,
-                         'is_training': False},
-                        os.path.join(args['run_outputs_dir'],
-                                     'image_processing.json'))
 
     logger.info("Calculating batches per epoch")
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
@@ -441,11 +439,11 @@ def main():
                      (i, layer.name, layer.input_shape,
                       layer.output_shape))
 
-    logger.info("Preparing Callbacks and Monitors")
-
     ###########################################
     # MONITORS / HOOKS ###########
     ###########################################
+
+    logger.info("Preparing Callbacks and Monitors")
 
     # stop model training if validation loss does not improve
     early_stopping = EarlyStopping(
@@ -513,6 +511,8 @@ def main():
     # SAVE BEST MODEL ###########
     ###########################################
 
+    logger.info("Saving Best Model")
+
     copy_models_and_config_files(
             model_source=args['run_outputs_dir'] + 'model_best.hdf5',
             model_target=best_model_save_path,
@@ -526,14 +526,14 @@ def main():
 
     if len(args['test_tfr_path']) > 0:
 
+        logger.info("Starting to predict on test data")
+
         tfr_test = find_tfr_files_pattern_subdir(
             args['test_tfr_path'],
             args['test_tfr_pattern'])
 
         pred_output_json = os.path.join(args['run_outputs_dir'],
                                         'test_preds.json')
-
-        logger.info("Starting to predict on test data")
 
         tf.keras.backend.clear_session()
 
