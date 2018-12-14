@@ -16,7 +16,7 @@ This repository contains code and documentation to train and apply a convolution
 ## Features
 1. Step-by-step instructions on how to train powerful models in the cloud ([AWS example](docs/Docker_GPU.md))
 2. Modelling of capture events with multiple images (store, process, and predict together)
-3. Multi-output modelling: model species, behaviors, and any other label at the same time (including tolerance of missing labels).
+3. Multi-output modelling: model species, behaviors, and any other label at the same time.
 4. A large variety of options: models, data augmentation, installation, data-prep, transfer-learning, and more.
 5. Tested approach: This code is currently in use and is being developed further.
 
@@ -260,7 +260,7 @@ id,image1,image2,image3
 2,/unknown2_a.jpeg,/unknown2_b.jpeg,/unknown2_c.jpeg
 ```
 
-With the following command the images of a capture event are each passed through the model and at the end aggregated on capture_id (csv_id_col) level using the aggregation_mode. In this case the predictions of all classes over all images of
+With the following command the images of a capture event are each passed through the model and at the end aggregated on id (csv_id_col) level using the specified aggregation mode. In this case the predictions of all classes over all images of
 a capture event are averaged. The top-prediction is then determined on that aggregated metric.
 
 ```
@@ -277,12 +277,13 @@ ctc.predict \
 ```
 
 The predictions may look like that then:
+```
 "id","label","prediction_top","confidence_top","predictions_all"
 "1","species","cat","0.5350","{'cat': '0.5350', 'dog': '0.4650'}"
 "1","standing","1","0.5399","{'0': '0.4601', '1': '0.5399'}"
 "2","species","cat","0.5160","{'cat': '0.5160', 'dog': '0.4840'}"
 "2","standing","1","0.5064","{'0': '0.4936', '1': '0.5064'}"
-
+```
 
 Note: The json export (export_file_type json) contains also the unaggregated predictions of each image.
 
