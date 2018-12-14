@@ -321,7 +321,6 @@ class Predictor(object):
         # collect all labels
         inventory_predictions = dict()
 
-        #with tf.keras.backend.get_session() as sess:
         while True:
             try:
                 features, labels = self.session.run(batch_data)
@@ -418,16 +417,13 @@ class Predictor(object):
         with open(file_path, open_mode) as outfile:
             for _id, values in predictions.items():
 
-                # convert values to strings
+                # convert values to strings for compatibility with json
                 for label_name, preds in values['aggregated_pred'].items():
                     for label in preds.keys():
                         preds[label] = format(preds[label], '.4f')
 
-                for label_name, preds in values['predictions_top'].items():
-                    values['predictions_top'][label_name] = preds
-
-                for label_name, preds in values['confidences_top'].items():
-                    values['confidences_top'][label_name] = format(preds, '.4f')
+                for label_name, conf in values['confidences_top'].items():
+                    values['confidences_top'][label_name] = format(conf, '.4f')
 
                 for image in values['images']:
                     for label_name, preds in image['predictions'].items():

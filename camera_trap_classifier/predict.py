@@ -1,26 +1,10 @@
 #! /usr/bin/env python
 """ Classify images using a trained model
 
-    Arguments:
-    -image_dir: path to root of image directory, can contain subdirectories
-        with images, the program will search for all images and predict them
-
-    - results_file: path to the file to store the predictions in
-
-    -model_path: path to the model to use (hdf5 file)
-
-    -class_mapping_json: path to 'label_mappings.json'
-
-    -pre_processing_json: path to the image_processing.json
-
-    -export_file_type (optional, default csv): csv or json
-
-    -batch_size (optional, default 128): the number of images once at a time
-        to predict before writing results to disk
-
     Usage example:
 
-    python3 predict.py -image_dir /user/images/ \
+    ctc.predict \
+    -image_dir /user/images/ \
     -results_file /user/predictions/output.csv \
     -export_file_type csv \
     -model_path /user/models/my_super_model.hdf5 \
@@ -40,14 +24,14 @@ def main():
         "-csv_path", type=str, required=False, default=None,
         help="path to a csv containing capture events and links to images. \
             Must contain a column with a unique id and one or multiple\
-            columns with links to images for that unique id.")
+            columns with links to images.")
     parser.add_argument(
         "-csv_images_root_path", type=str, required=False, default="",
-        help="Optional root path appended to each image for images in \
+        help="Optional root path appended to each image for the images in \
               'csv_path'")
     parser.add_argument(
         "-csv_id_col", type=str, required=False, default="",
-        help="Column name of the id column in the csv")
+        help="Column name of the id column in the csv. A unique identifier.")
     parser.add_argument(
         "-csv_images_cols", nargs='+', type=str, default=[""],
         help="Column name of the columns with the image paths, specify like \
@@ -56,7 +40,7 @@ def main():
         "-image_dir", type=str, required=False, default=None,
         help='path to root of image directory, can contain subdirectories \
               with images, the program will search for all images and \
-              predict them')
+              classify them.')
     parser.add_argument(
         "-results_file", type=str, required=True,
         help='path to the file to which to store the predictions')

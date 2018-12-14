@@ -241,7 +241,7 @@ def main():
     # Process Input ###########
     ###########################################
 
-    # Load model config
+    # Load config file
     cfg_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 'config', 'config.yaml')
 
@@ -250,7 +250,7 @@ def main():
     assert args['model'] in config.cfg['models'], \
         "model %s not found in config/models.yaml" % args['model']
 
-    # get default image_processing from config.yaml
+    # get default image_processing options from config
     image_processing = config.cfg['image_processing']
 
     # overwrite parameters if specified by user
@@ -295,16 +295,6 @@ def main():
     tfr_val = find_tfr_files_pattern_subdir(
         args['val_tfr_path'],
         args['val_tfr_pattern'])
-
-    if len(args['test_tfr_path']) > 0:
-        TEST_SET = True
-        tfr_test = find_tfr_files_pattern_subdir(
-            args['test_tfr_path'],
-            args['test_tfr_pattern'])
-        pred_output_json = os.path.join(args['run_outputs_dir'],
-                                        'test_preds.json')
-    else:
-        TEST_SET = False
 
     # Create best model output name
     best_model_save_path = os.path.join(args['model_save_dir'],
@@ -534,7 +524,15 @@ def main():
     # PREDICT AND EXPORT TEST DATA ###########
     ###########################################
 
-    if TEST_SET:
+    if len(args['test_tfr_path']) > 0:
+
+        tfr_test = find_tfr_files_pattern_subdir(
+            args['test_tfr_path'],
+            args['test_tfr_pattern'])
+
+        pred_output_json = os.path.join(args['run_outputs_dir'],
+                                        'test_preds.json')
+
         logger.info("Starting to predict on test data")
 
         tf.keras.backend.clear_session()
