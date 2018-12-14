@@ -5,8 +5,6 @@
 
 This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
 
-## Example Camera Trap Images and Model Predictions
-
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions.png"/>
 
 *This figure shows examples of correctly classified camera trap images.*
@@ -14,6 +12,13 @@ This repository contains code and documentation to train and apply a convolution
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions_wrong.png"/>
 
 *This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
+
+## Features
+1. Step-by-step instructions on how to train powerful models in the cloud ([AWS example](docs/Docker_GPU.md))
+2. Modelling of capture events with multiple images (store, process, and predict together)
+3. Multi-output modelling: model species, behaviors, and any other label at the same time (including tolerance of missing labels).
+4. A large variety of options: models, data augmentation, installation, data-prep, transfer-learning, and more.
+5. Tested approach: This code is currently in use and is being developed further.
 
 ## Pre-Requisites
 
@@ -91,6 +96,7 @@ docker exec ctc ctc.train --predict
 We have run our models on AWS EC2 instances using Docker. A detailed example on how to install Docker and run scripts can be found here:
 
 [Install and use CPU Docker](docs/Docker_CPU.md)
+
 [Install and use GPU Docker](docs/Docker_GPU.md)
 
 
@@ -246,6 +252,40 @@ ctc.predict -image_dir /my_images/new_images/ \
   -pre_processing_json /my_model/save1/image_processing.json
 ```
 
+We can also use a csv for our predictions to process and aggregate multiple images for a capture event. For example, consider the following csv:
+
+```
+id,image1,image2,image3
+1,/unknown1_a.jpeg,/unknown1_b.jpeg,/unknown1_c.jpeg
+2,/unknown2_a.jpeg,/unknown2_b.jpeg,/unknown2_c.jpeg
+```
+
+With the following command the images of a capture event are each passed through the model and at the end aggregated on capture_id (csv_id_col) level using the aggregation_mode. In this case the predictions of all classes over all images of
+a capture event are averaged. The top-prediction is then determined on that aggregated metric.
+
+```
+ctc.predict \
+  -csv_path /my_images/new_images/inventory.csv \
+  -csv_id_col id \
+  -csv_images_cols image1 image2 image3 \
+  -export_file_type csv \
+  -results_file /my_preds/preds.csv \
+  -model_path /my_model/save1/best_model.hdf5 \
+  -class_mapping_json /my_model/save1/label_mappings.json \
+  -pre_processing_json /my_model/save1/image_processing.json \
+  -aggregation_mode mean
+```
+
+The predictions may look like that then:
+"id","label","prediction_top","confidence_top","predictions_all"
+"1","species","cat","0.5350","{'cat': '0.5350', 'dog': '0.4650'}"
+"1","standing","1","0.5399","{'0': '0.4601', '1': '0.5399'}"
+"2","species","cat","0.5160","{'cat': '0.5160', 'dog': '0.4840'}"
+"2","standing","1","0.5064","{'0': '0.4936', '1': '0.5064'}"
+
+
+Note: The json export (export_file_type json) contains also the unaggregated predictions of each image.
+
 ### Data Augmentation
 
 To avoid overfitting, images are randomly transformed in various ways during model training. The following options are available (defaults):
@@ -296,7 +336,10 @@ Following commands should run without error and test a part of the code:
 ```
 cd camera_trap_classifier
 python -m unittest discover test/data
+python -m unittest discover test/predicting
+# the next one runs long
 python -m unittest discover test/training
+
 ```
 
 The following script tests all components of the code end-to-end using images from a directory:

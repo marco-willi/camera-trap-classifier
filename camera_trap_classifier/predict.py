@@ -63,6 +63,7 @@ def main():
     parser.add_argument(
         "-export_file_type", type=str, default="csv",
         required=False,
+        choices=['csv', 'json'],
         help='export file type - csv or json')
     parser.add_argument(
         "-model_path", type=str, required=True,
@@ -107,7 +108,7 @@ def main():
             batch_size=args['batch_size'])
     else:
         pred.predict_from_csv(
-            path_to_csv=args['image_dir'],
+            path_to_csv=args['csv_path'],
             image_root_path=args['csv_images_root_path'],
             capture_id_col=args['csv_id_col'],
             image_path_col_list=args['csv_images_cols'],

@@ -537,6 +537,8 @@ def main():
     if TEST_SET:
         logger.info("Starting to predict on test data")
 
+        tf.keras.backend.clear_session()
+
         tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
         logger.info("Create Dataset Reader")
         data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
@@ -560,8 +562,7 @@ def main():
                 model_path=best_model_save_path,
                 class_mapping_json=args['class_mapping_json'],
                 pre_processing_json=args['run_outputs_dir'] +
-                'image_processing.json',
-                batch_size=args['batch_size'])
+                'image_processing.json')
 
         pred.predict_from_dataset(
             dataset=input_feeder_test(),

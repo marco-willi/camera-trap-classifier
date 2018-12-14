@@ -2,6 +2,7 @@
 # ./test/full_tests/complete_cats_vs_dogs_test_multi.sh
 export_root_path=./test_big/cats_vs_dogs_multi/
 image_root_path=./test/test_images/
+test_files=./test/test_files/
 tfr_files_path=${export_root_path}tfr_files/
 run_outputs_path=${export_root_path}run_outputs/
 model_save_dir=${export_root_path}model_save_dir/
@@ -44,7 +45,7 @@ python train.py \
 -labels_loss_weights 1 0.2 0.5 \
 -batch_size 12 \
 -n_cpus 2 \
--n_gpus 1 \
+-n_gpus 0 \
 -buffer_size 1 \
 -max_epochs 70 \
 -starting_epoch 0
@@ -64,7 +65,7 @@ python train.py \
 -labels species standing \
 -batch_size 12 \
 -n_cpus 2 \
--n_gpus 1 \
+-n_gpus 0 \
 -buffer_size 1 \
 -max_epochs 70 \
 -starting_epoch 0 \
@@ -78,3 +79,38 @@ python predict.py \
 -model_path ${model_save_dir}best_model.hdf5 \
 -class_mapping_json ${model_save_dir}label_mappings.json \
 -pre_processing_json ${model_save_dir}image_processing.json
+
+
+# Create Predictions from CSV
+python predict.py \
+-csv_path ${test_files}cats_vs_dogs_multi_image.csv \
+-csv_id_col id \
+-csv_images_cols image1 image2 image3 \
+-results_file ${model_save_dir}preds_multi_mean.csv \
+-model_path ${model_save_dir}best_model.hdf5 \
+-class_mapping_json ${model_save_dir}label_mappings.json \
+-pre_processing_json ${model_save_dir}image_processing.json \
+-aggregation_mode mean
+
+
+python predict.py \
+-csv_path ${test_files}cats_vs_dogs_multi_image.csv \
+-csv_id_col id \
+-csv_images_cols image1 image2 image3 \
+-results_file ${model_save_dir}preds_multi_max.csv \
+-model_path ${model_save_dir}best_model.hdf5 \
+-class_mapping_json ${model_save_dir}label_mappings.json \
+-pre_processing_json ${model_save_dir}image_processing.json \
+-aggregation_mode max
+
+
+python predict.py \
+-csv_path ${test_files}cats_vs_dogs_multi_image.csv \
+-csv_id_col id \
+-csv_images_cols image1 image2 image3 \
+-export_file_type json \
+-results_file ${model_save_dir}preds_multi_max.json \
+-model_path ${model_save_dir}best_model.hdf5 \
+-class_mapping_json ${model_save_dir}label_mappings.json \
+-pre_processing_json ${model_save_dir}image_processing.json \
+-aggregation_mode max

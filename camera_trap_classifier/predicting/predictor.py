@@ -7,13 +7,12 @@ import traceback
 
 import tensorflow as tf
 
+from camera_trap_classifier.predicting.processor import ProcessPredictions
 from camera_trap_classifier.training.prepare_model import load_model_from_disk
 from camera_trap_classifier.data.image import preprocess_image
 from camera_trap_classifier.data.utils import (
     print_progress, list_pictures,
     slice_generator, calc_n_batches_per_epoch)
-
-tf.enable_eager_execution()
 
 
 class Predictor(object):
@@ -38,6 +37,7 @@ class Predictor(object):
         self.aggregation_mode = aggregation_mode
         self.class_mapping = None
         self.pre_processing = None
+        self.session = tf.keras.backend.get_session()
 
         # check file existence
         path_names = ['model_path', 'class_mapping_json',
@@ -70,12 +70,10 @@ class Predictor(object):
 
         self.model = load_model_from_disk(self.model_path, compile=False)
 
-        # Analyze model output
-        self.outputs = self.modelmodel.output_names
-        self.output_to_pretty = \
-            {x: x.split('label/')[-1] for x in self.outputs}
-        self.id_to_class_mapping_clean = {'label/' + k: v for k, v in
-                                          self.id_to_class_mapping.items()}
+        # Create a class to process predictions
+        self.processor = ProcessPredictions(
+                            model_outputs=self.model.output_names,
+                            id_to_class_mapping=self.id_to_class_mapping)
 
     def predict_from_dataset(self, dataset, export_type, output_file):
         """  Predict from Dataset
@@ -84,7 +82,8 @@ class Predictor(object):
         - export_type: csv or json
         - output_file: path to write export file to
         """
-        self._predict_dataset(dataset, output_file, export_type)
+        with self.session:
+            self._predict_dataset(dataset, output_file, export_type)
 
     def predict_from_image_dir(self, image_dir, export_type, output_file,
                                batch_size=128):
@@ -95,10 +94,11 @@ class Predictor(object):
         - output_file: path to write export file to
         - batch_size: numer of images to process at the same time
         """
-        image_paths = self._from_image_dir(self, image_dir)
+        image_paths = self._from_image_dir(image_dir)
         inventory = self._create_inventory_from_paths(image_paths)
-        self._predict_inventory(inventory, output_file,
-                                batch_size, export_type)
+        with self.session:
+            self._predict_inventory(inventory, output_file,
+                                    batch_size, export_type)
 
     def predict_from_csv(self, path_to_csv, image_root_path, capture_id_col,
                          image_path_col_list, export_type, output_file,
@@ -114,12 +114,11 @@ class Predictor(object):
         - output_file: path to write export file to
         - batch_size: numer of images to process at the same time
         """
-        inventory = self._from_csv(
-            self, path_to_csv, image_root_path,
-            capture_id_col, image_path_col_list)
-
-        self._predict_inventory(inventory, output_file,
-                                batch_size, export_type)
+        inventory = self._from_csv(path_to_csv, image_root_path,
+                                   capture_id_col, image_path_col_list)
+        with self.session:
+            self._predict_inventory(inventory, output_file,
+                                    batch_size, export_type)
 
     def _log_cfg(self, cfg):
         """ Print configuration file """
@@ -147,8 +146,7 @@ class Predictor(object):
         image_paths = [os.path.normpath(x) for x in image_paths]
         for i, path in enumerate(image_paths):
             inventory[str(i)] = {
-                'images': [{'path': path}],
-                'meta_data': None}
+                'images': [{'path': path}]}
 
         return inventory
 
@@ -169,7 +167,7 @@ class Predictor(object):
         assert os.path.exists(path_to_csv), \
             "Path: %s does not exist" % path_to_csv
 
-        cols_in_csv = set(image_path_col_list).anion(capture_id_col)
+        cols_in_csv = set(image_path_col_list).union([capture_id_col])
 
         inventory = OrderedDict()
 
@@ -186,7 +184,7 @@ class Predictor(object):
             meta_cols = [x for x in header if x not in cols_in_csv]
 
             # map columns to position
-            col_mapper = {x: header.index(x) for x in cols_in_csv}
+            col_mapper = {x: header.index(x) for x in header}
             for i, row in enumerate(csv_reader):
                 # extract fields from csv
                 attrs = {attr: row[ind] for attr, ind in col_mapper.items()}
@@ -203,8 +201,9 @@ class Predictor(object):
                 # insert inventory record
                 inventory[capture_id] = {
                     'images': [{'path': img, 'predictions': {}}
-                               for img in images],
-                    'meta_data': meta_data}
+                               for img in images]}
+                if len(meta_data) > 0:
+                    inventory[capture_id]['meta_data'] = meta_data
             return inventory
 
     def _create_dataset_from_inventory(self, inventory, batch_size=128):
@@ -267,21 +266,26 @@ class Predictor(object):
         slices = slice_generator(n_records, n_inventories)
         n_processed = 0
 
+        # iterate over the dataset
         for i_start, i_end in slices:
             sub_inventory = {k: inventory[k] for k in _ids[i_start:i_end]}
 
             # create a dataset for the current sub-inventory
             dataset = self._create_dataset_from_inventory(
                 sub_inventory, batch_size)
-
-            # iterate over the dataset
             sub_preds = self._iterate_inventory_dataset(dataset, sub_inventory)
             n_preds = len(sub_preds.keys())
 
             # export preds
             if export_type == 'csv':
                 if i_start == 0:
-                    self._create_csv_file_with_header(output_file)
+                    meta_data = set()
+                    for k, v in sub_preds.items():
+                        if 'meta_data' in v:
+                            meta_data = meta_data.union(v['meta_data'].keys())
+                    self._create_csv_file_with_header(
+                        output_file,
+                        meta_headers=list(meta_data))
                 self._append_predictions_to_csv(sub_preds, output_file)
             elif export_type == 'json':
                 if i_start == 0:
@@ -302,21 +306,25 @@ class Predictor(object):
             else:
                 print("Processed %s images" % n_processed)
 
+        print("\nProcessed %s records" % n_processed)
+
         if export_type == 'json':
             self._finish_json_file(output_file)
 
-    def _iterate_inventory_dataset(self, dataset, inventory=None):
+    def _iterate_inventory_dataset(self, dataset, inventory=None, sess=None):
         """ Iterate through dataset and feed to model """
 
         # Create Dataset Iterator
         iterator = dataset.make_one_shot_iterator()
+        batch_data = iterator.get_next()
 
         # collect all labels
         inventory_predictions = dict()
 
+        #with tf.keras.backend.get_session() as sess:
         while True:
             try:
-                features, labels = iterator.get_next()
+                features, labels = self.session.run(batch_data)
             except tf.errors.OutOfRangeError:
                 print("")
                 print("Finished Predicting")
@@ -327,29 +335,32 @@ class Predictor(object):
 
             # Calculate Predictions
             batch_preds = self.model.predict_on_batch(features['images'])
+
+            # check preds format
+            if not isinstance(batch_preds, list):
+                batch_preds = [batch_preds]
+
             n_preds = int(batch_preds[0].shape[0])
 
             # iterate over all preds
             for pred_id in range(0, n_preds):
                 # extract data of current id
-                _id = labels['id'][pred_id].numpy().decode("utf-8")
+                _id = labels['id'][pred_id].decode("utf-8")
                 _id_preds = [x[pred_id] for x in batch_preds]
                 _id_labels = {k: v[pred_id] for k, v in labels.items()}
 
                 # extract and map predictions
-                _id_preds_extracted = self._map_and_extract_model_prediction(
-                     _id_preds, _id_labels, self.outputs,
-                     self.output_to_pretty, self.id_to_class_mapping_clean)
+                _id_preds_extracted = \
+                    self.processor.map_and_extract_model_prediction(_id_preds)
 
                 # try to get ground truth if available
-                _id_ground_truth = self._map_and_extract_ground_truth(
-                     _id_labels, self.outputs,
-                     self.output_to_pretty, self.id_to_class_mapping_clean)
+                _id_ground_truth = \
+                    self.processor.map_and_extract_ground_truth(_id_labels)
 
-                # assign the current prediction to the correct image
-                path = labels['image_path'][pred_id].numpy().decode("utf-8")
-
+                # assign a prediction to a specific image
                 if inventory is not None:
+                    # assign the current prediction to the correct image
+                    path = labels['image_path'][pred_id].decode("utf-8")
 
                     img_id = [i for i, x in enumerate(inventory[_id]['images'])
                               if x['path'] == path]
@@ -357,12 +368,15 @@ class Predictor(object):
                     img_dict['predictions'] = _id_preds_extracted
 
                     # add the predictions to the batch dictionary
-                    _id = labels['id'][pred_id].numpy().decode("utf-8")
+                    _id = labels['id'][pred_id].decode("utf-8")
                     inventory_predictions[_id] = inventory[_id]
                 else:
                     # add the predictions to the batch dictionary
                     inventory_predictions[_id] = {
-                        'predictions': _id_preds_extracted}
+                        'images': [
+                            {'path': 'from_iterator',
+                             'predictions': _id_preds_extracted
+                             }]}
 
                 # add ground truth
                 if _id_ground_truth is not None:
@@ -371,201 +385,12 @@ class Predictor(object):
 
         # Process and aggregate predictions
         inventory_predictions = \
-            self._process_predictions(inventory_predictions)
+            self.processor.process_predictions(
+                inventory_predictions, aggregation_mode=self.aggregation_mode)
 
         return inventory_predictions
 
-    def _map_and_extract_model_prediction(self, preds):
-        """ Process a single prediction
-        Output:
-            {
-                'label1': {
-                    'predictions_all: {'class1': 0.5, 'class2': 0.5},
-                    'prediction_top': 'class1',
-                    'confidence_top': 0.5},
-                'label2':
-                    'predictions_all: {'classA': 0.3, 'classB': 0.7},
-                    'prediction_top': 'classB',
-                    'confidence_top': 0.7},
-            }
-        """
-        result = dict()
-
-        # Loop over all labels (self.outputs)
-        for i, output in enumerate(self.outputs):
-
-            all_numeric_outputs = \
-                list(self.id_to_class_mapping_clean[output].keys())
-            all_numeric_outputs.sort()
-
-            # extract predictions for each label of the current output
-            preds_for_output = preds[i]
-
-            all_class_preds = [preds_for_output[x].numpy() for x in
-                               all_numeric_outputs]
-
-            all_class_preds_mapped = {
-                    self.id_to_class_mapping_clean[output][i]: pred for i, pred
-                    in enumerate(all_class_preds)
-                    }
-
-            result[self.output_to_pretty[output]] = all_class_preds_mapped
-
-        return result
-
-    def _map_and_extract_ground_truth(self, labels):
-        """ Process a single prediction
-        Output:
-            {
-                'label1': {
-                    'predictions_all: {'class1': 0.5, 'class2': 0.5},
-                    'prediction_top': 'class1',
-                    'confidence_top': 0.5},
-                'label2':
-                    'predictions_all: {'classA': 0.3, 'classB': 0.7},
-                    'prediction_top': 'classB',
-                    'confidence_top': 0.7},
-            }
-        """
-        result = dict()
-
-        # Loop over all labels (self.outputs)
-        for i, output in enumerate(self.outputs):
-
-            truth = self._try_extracting_ground_truth(labels, output)
-
-            if truth is not None:
-                result[self.output_to_pretty[output]] = truth
-
-        if len(result.keys()) == 0:
-            return None
-        return result
-
-    def _try_extracting_ground_truth(self, labels, output):
-        """ Try to find and extract ground truth """
-        # try to find the output in the features
-        try:
-            truth_for_output = labels[output]
-            try:
-                truth_numeric = int(truth_for_output)
-                truth_mapped = \
-                    self.id_to_class_mapping_clean[output][truth_numeric]
-            except:
-                truth_mapped = truth_for_output.decode('utf-8')
-        except:
-            return None
-        return truth_mapped
-
-    def _process_predictions(self, predictions):
-        """ Process a batch of predictions
-        Input: {'images': [
-                {'path': 'img1.jpg',
-                 'predictions': {
-                     'species': {'cat': '0.1', 'dog': '0.9'},
-                     'standing': {'0': '0.5', '1': '0.5'}
-                     },
-                 {'path': 'img2.jpg',
-                 'predictions': {
-                     'species': {'cat': '0.3', 'dog': '0.7'},
-                     'standing': {'0': '0.1', '1': '0.9'}
-                     }
-                 ],
-            'meta_data': None}
-        Output: (additional dict entry)
-            ...
-            aggregated_pred': {'species': {'cat': 0.4643, 'dog': 0.5357},
-                    'standing': {'0': 0.5076, '1': 0.4924}}
-            'predictions_top': {'species': ('dog', 0.5357),
-                                'standing': ('0', 0.5076)}
-            ...
-        """
-        for _id, data in predictions.items():
-            preds_list = [x['predictions'] for x in data['images']]
-            # collect all predictions
-            collected = self._collect_predictions(preds_list)
-            # consolidate predictions
-            consolidated = self._consolidate_predictions(collected)
-            # aggregate predictions
-            aggregated = self._aggregate_predictions(
-                consolidated,
-                self.aggregation_mode)
-            # get top predictions
-            top_preds = self._get_top_predictions(aggregated)
-
-            # add info
-            data['aggregated_pred'] = aggregated
-            data['predictions_top'] = top_preds
-
-        return predictions
-
-    def _collect_predictions(self, extracted_predictions):
-        """ Collect all predictions
-        Input:
-            [{{'species': {'cat': '0.1', 'dog': '0.9'},
-               'standing': {'0': '0.5', '1': '0.5'}},
-            {'species': {'cat': '0.3', 'dog': '0.7'},
-             'standing': {'0': '0.1', '1': '0.9'}}]
-        Output:
-            ['species': {'cat': ['0.1', '0.3'], 'dog': ['0.9', '0.7' ]},
-            ....]
-        """
-        for i, image_pred in enumerate(extracted_predictions):
-            all_label_names = image_pred.keys()
-            if i == 0:
-                preds_per_label = {x: list() for x in all_label_names}
-            for label in all_label_names:
-                preds_of_image_and_label = image_pred[label]
-                preds_per_label[label].append(preds_of_image_and_label)
-        return preds_per_label
-
-    def _consolidate_predictions(self, collected_preds):
-        """ Consolidate Predictions """
-
-        label_names = collected_preds.keys()
-        consolidated = {k: {} for k in label_names}
-        for label_name in label_names:
-            label_pred_list = collected_preds[label_name]
-            for label_pred in label_pred_list:
-                for label, pred in label_pred.items():
-                    if label not in consolidated[label_name]:
-                        consolidated[label_name][label] = list()
-                    consolidated[label_name][label].append(pred)
-        return consolidated
-
-    def _aggregate_predictions(self, consolidated_predictions, mode='mean'):
-        """ Aggregate Predictions of Multiple Images / ID
-
-        """
-        agg_label = dict()
-        for label_name, labels in consolidated_predictions.items():
-            agg_label[label_name] = dict()
-            for label, preds_list in labels.items():
-                if mode == 'mean':
-                    agg = sum([float(x) for x in preds_list]) / len(preds_list)
-                elif mode == 'max':
-                    agg = max([float(x) for x in preds_list])
-                elif mode == 'min':
-                    agg = min([float(x) for x in preds_list])
-                else:
-                    raise NotImplementedError(
-                        "Aggregation mode %s not implemented" % mode)
-                agg_label[label_name][label] = agg
-        return agg_label
-
-    def _get_top_predictions(self, aggregated_predictions):
-        """ Get top prediction for each label """
-        top_preds = dict()
-        for label_name, label_vals in aggregated_predictions.items():
-
-            ordered_classes = sorted(label_vals,
-                                     key=label_vals.get,
-                                     reverse=True)
-            top_label = ordered_classes[0]
-            top_value = label_vals[top_label]
-            top_preds[label_name] = (top_label, top_value)
-        return top_preds
-
-    def _create_csv_file_with_header(self, file_path):
+    def _create_csv_file_with_header(self, file_path, meta_headers=[]):
             """ Creates a csv file with a header row """
             print("Creating file: %s" % file_path)
 
@@ -576,7 +401,9 @@ class Predictor(object):
                 header_row = ['id', 'label',
                               'prediction_top',
                               'confidence_top', 'predictions_all']
+                header_row += meta_headers
                 csvwriter.writerow(header_row)
+                self.csv_header = header_row
 
     def _append_predictions_to_json(self, file_path, predictions,
                                     append=False):
@@ -597,8 +424,10 @@ class Predictor(object):
                         preds[label] = format(preds[label], '.4f')
 
                 for label_name, preds in values['predictions_top'].items():
-                    values['predictions_top'][label_name] = \
-                        (preds[0], format(preds[1], '.4f'))
+                    values['predictions_top'][label_name] = preds
+
+                for label_name, preds in values['confidences_top'].items():
+                    values['confidences_top'][label_name] = format(preds, '.4f')
 
                 for image in values['images']:
                     for label_name, preds in image['predictions'].items():
@@ -630,10 +459,27 @@ class Predictor(object):
                 for label_type, preds in values['aggregated_pred'].items():
 
                     preds_r = {k: format(v, '.4f') for k, v in preds.items()}
-                    top_pred = values['predictions_top'][label_type][0]
+                    top_pred = values['predictions_top'][label_type]
                     top_conf = \
-                        format(values['predictions_top'][label_type][1], '.4f')
+                        format(values['confidences_top'][label_type], '.4f')
 
-                    row_to_write = [_id, label_type, top_pred,
-                                    top_conf, preds_r]
+                    data = {
+                     'id': _id, 'label': label_type,
+                     'prediction_top': top_pred,
+                     'confidence_top': top_conf,
+                     'predictions_all': preds_r}
+
+                    # find and extract meta-data
+                    if 'meta_data' in values:
+                        for meta_col, meta_val in values['meta_data'].items():
+                            data[meta_col] = meta_val
+
+                    row_to_write = list()
+                    for header in self.csv_header:
+                        try:
+                            data_element = data[header]
+                        except:
+                            data_element = ''
+                        row_to_write.append(data_element)
+
                     csvwriter.writerow(row_to_write)
