@@ -30,7 +30,7 @@ To use this code following pre-requisites must be met:
 
 ## Installation
 
-The code has been implemented in Python (https://www.python.org) based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
+The code has been implemented in Python (https://www.python.org) and is based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
 
 ### Installation from GitHub
 
@@ -310,12 +310,12 @@ The default values produce following examples:
 Important to note is that heavy data augmentation is quite expensive. Training a small model on 2 GPUs with a batch size of 256 required roughly 20 CPUs to keep the GPUs busy. This is less of a problem for larger models since the GPUs will be the
 bottleneck. Check CPU usage with the 'top' command. We also recommend the nvidia tool 'nvidia-smi -l 1' to check the GPU usage during model training (it should be near 100% all the time). If performance is a problem, set rotate_by_angle to 0, followed by zooming.
 
-### Experimental Feature - Grayscale-Stacking and Blurring
+### Experimental Feature - Grayscale Stacking
 
-To make better use of motion information contained in capture events with multiple images there is an option to stack up to three images into a single RGB image. The option can be activated during model training using:
+To make better use of motion information contained in capture events with multiple images there is an option to stack up to three images into a single RGB image. The option can be activated using:
 
 ```
--image_choice_for_sets grayscale_blurring
+-image_choice_for_sets grayscale_stacking
 ```
 
 This will apply the following transformations to each image during model training:
@@ -323,11 +323,11 @@ This will apply the following transformations to each image during model trainin
 2. Blurr each image with a Gaussian filter
 3. Stack all images of the set in temporal order to an RGB image (e.g. first image goes into the 'red' channel). If there are fewer than 3 images in some sets, the last image is repeated.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_grayscale_blurring.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_grayscale_stacking.png"/>
 
 *This figure shows examples of grayscale blurring on sets with 1 or 3 images*
 
-NOTE: This option is not (yet) available when using a trained model. To apply a model trained with grayscale_blurring on new images they would have to be transformed and stacked beforehand. However, to test this approach and to get evaluation results just train a model.
+This feature is experimental in the sense that it has not yet been throughly tested. We think that this option may benefit models which have to identify the presence of animals -- especially if there are small animals that are difficult to see without the motion information.
 
 
 ## Testing the Code

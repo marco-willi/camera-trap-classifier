@@ -50,3 +50,4 @@ image_processing:
   rotate_by_angle: 5
   color_augmentation: full_randomized
   randomly_flip_horizontally: True
+  image_choice_for_sets: random
