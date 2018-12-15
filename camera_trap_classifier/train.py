@@ -210,13 +210,13 @@ def main():
               range [0 - rotate_by_angle, 0 + rotate_by_angle] \
              training. Values between 0 and 180 degrees are allowed.")
     parser.add_argument(
-        "-image_choice_for_sets", type=str, default='random',
-        choices=['random', 'grayscale_blurring'],
+        "-image_choice_for_sets", type=str, default=None,
+        choices=['random', 'grayscale_stacking'],
         help="How to choose an image for records with multiple images. \
               Default is 'random' which randomly chooses an image \
-              during model training. 'grayscale_blurring' converts multiple \
+              during model training. 'grayscale_stacking' converts multiple \
               images into a single RGB image by blurring and converting \
-              individual images to grayscale. Note that grayscale_blurring is \
+              individual images to grayscale. Note that grayscale_stacking is \
               an experimental feature and is not yet supported when using \
               the predictor on new images. ")
 
@@ -254,7 +254,7 @@ def main():
     # overwrite parameters if specified by user
     to_overwrite = ['color_augmentation', 'ignore_aspect_ratio',
                     'crop_factor', 'zoom_factor', 'rotate_by_angle',
-                    'randomly_flip_horizontally']
+                    'randomly_flip_horizontally', 'image_choice_for_sets']
     for overwrite in to_overwrite:
         if args[overwrite] is not None:
             image_processing[overwrite] = args[overwrite]
@@ -264,6 +264,13 @@ def main():
         config.cfg['models'][args['model']]['image_processing']
 
     image_processing = {**image_processing, **image_processing_model}
+
+    # disable color_augmentation for grayscale_stacking
+    if image_processing['image_choice_for_sets'] == 'grayscale_stacking':
+        if image_processing['color_augmentation'] is not None:
+            image_processing['color_augmentation'] = None
+            logging.info("Disabling color_augmentation because of \
+                incompatibility with grayscale_stacking")
 
     input_shape = (image_processing['output_height'],
                    image_processing['output_width'], 3)

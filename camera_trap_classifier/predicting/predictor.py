@@ -9,7 +9,8 @@ import tensorflow as tf
 
 from camera_trap_classifier.predicting.processor import ProcessPredictions
 from camera_trap_classifier.training.prepare_model import load_model_from_disk
-from camera_trap_classifier.data.image import preprocess_image
+from camera_trap_classifier.data.image import (
+    preprocess_image, decode_image_bytes_1D)
 from camera_trap_classifier.data.utils import (
     print_progress, list_pictures,
     slice_generator, calc_n_batches_per_epoch)
@@ -213,9 +214,17 @@ class Predictor(object):
         ids = list()
         paths = list()
         for _id, data in inventory.items():
-            for image in data['images']:
+            # add each image to a separate iteration if image choice for sets
+            # is random, to ensure all images are processed
+            if self.pre_processing['image_choice_for_sets'] == 'random':
+                for image in data['images']:
+                    ids.append(_id)
+                    paths.append([image['path']])
+            # Otherwise treat images of a capture event as one unit and
+            # process together
+            else:
                 ids.append(_id)
-                paths.append(image['path'])
+                paths.append([x['path'] for x in data['images']])
 
         # Feed ids and image paths to Dataset
         dataset = tf.data.Dataset.from_tensor_slices((ids, paths))
@@ -227,13 +236,19 @@ class Predictor(object):
         dataset = dataset.repeat(1)
         return dataset
 
-    def _get_and_transform_image(self, _id, image_path, pre_proc_args):
-        """ Process a single image """
-        image_raw = tf.read_file(image_path)
-        image_decoded = tf.image.decode_image(image_raw, channels=3)
+    def _get_and_transform_image(self, _id, image_paths, pre_proc_args):
+        """ Process a list of 1-N images """
+        images_raw = tf.map_fn(
+                        lambda x: tf.read_file(x),
+                        image_paths, dtype=tf.string)
+        # decode images
+        image_decoded = decode_image_bytes_1D(images_raw, **pre_proc_args)
+
+        # pre-process image
         image_processed = preprocess_image(image_decoded, **pre_proc_args)
+
         return {'images': image_processed}, \
-               {'id': _id, 'image_path': image_path}
+               {'id': _id, 'image_path': image_paths}
 
     def _predict_dataset(self, dataset, output_file, export_type):
         """ Predict a datset """
@@ -359,7 +374,7 @@ class Predictor(object):
                 # assign a prediction to a specific image
                 if inventory is not None:
                     # assign the current prediction to the correct image
-                    path = labels['image_path'][pred_id].decode("utf-8")
+                    path = labels['image_path'][pred_id][0].decode("utf-8")
 
                     img_id = [i for i, x in enumerate(inventory[_id]['images'])
                               if x['path'] == path]
