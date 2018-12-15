@@ -202,12 +202,17 @@ The following code snippet shows how that works:
 ```
 ctc.create_dataset -inventory /my_data/dataset_inventory.json \
 -output_dir /my_data/tfr_files/ \
--image_save_side_smallest 200 \
+-image_save_side_smallest 400 \
 -split_percent 0.9 0.05 0.05 \
--overwrite
+-overwrite \
+-process_images_in_parallel \
+-process_images_in_parallel_size 320 \
+-processes_images_in_parallel_n_processes 4 \
+-image_save_quality 75 \
+-max_records_per_file 5000
 ```
 
-See the function documentations for options regarding how to parallelize / speed up
+See the function documentations for options regarding details on how to parallelize / speed up
 the processing for large datasets.
 
 ### 4) Model Training
@@ -325,9 +330,9 @@ This will apply the following transformations to each image during model trainin
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_grayscale_stacking.png"/>
 
-*This figure shows examples of grayscale blurring on sets with 1 or 3 images*
+*This figure shows examples of grayscale stacking on sets with 1 or 3 images*
 
-This feature is experimental in the sense that it has not yet been throughly tested. We think that this option may benefit models which have to identify the presence of animals -- especially if there are small animals that are difficult to see without the motion information.
+This feature is experimental in the sense that it has not yet been thoroughly tested. We think that this option may benefit models which have to identify the presence of animals -- especially if there are small animals that are difficult to see without the motion information.
 
 
 ## Testing the Code
@@ -394,8 +399,11 @@ This code is based on work conducted in the following study:
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 
 Please cite as:
-
-*Willi M, Pitman RT, Cardoso AW, et al. Identifying animal species in camera trap images using deep learning and citizen science. Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099*
+```
+Willi M, Pitman RT, Cardoso AW, et al.
+Identifying animal species in camera trap images using deep learning and citizen science.
+Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099
+```
 
 The camera-trap images (330x330 pixels only) used in the study can be downloaded here:
 https://doi.org/10.13020/D6T11K
