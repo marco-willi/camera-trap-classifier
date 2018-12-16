@@ -161,8 +161,7 @@ python3 train.py \
 -n_gpus 4 \
 -buffer_size 32768 \
 -max_epochs 50 \
--color_augmentation full_randomized \
--ignore_aspect_ratio > out.log &
+-color_augmentation full_randomized > out.log &
 ```
 
 Use the following command to monitor the training progress:
@@ -190,8 +189,7 @@ python3 train.py \
 -n_gpus 1 \
 -buffer_size 32768 \
 -max_epochs 30 \
--color_augmentation full_randomized \
--ignore_aspect_ratio > out.log &
+-color_augmentation full_randomized > out.log &
 ```
 
 
@@ -224,8 +222,7 @@ python3 train.py \
 -max_epochs 50 \
 -color_augmentation full_randomized \
 -transfer_learning \
--model_to_load /host/data_hdd/runs/species/sa_and_ss/saves_all_labels/best_model.hdf5 \
--ignore_aspect_ratio > out.log &
+-model_to_load /host/data_hdd/runs/species/sa_and_ss/saves_all_labels/best_model.hdf5 > out.log &
 ```
 
 
@@ -258,8 +255,7 @@ python3 train.py \
 -max_epochs 50 \
 -color_augmentation full_randomized \
 -continue_training \
--model_to_load /host/data_hdd/runs/species/sa_and_ss/saves_all_labels/best_model.hdf5 \
--ignore_aspect_ratio > out.log &
+-model_to_load /host/data_hdd/runs/species/sa_and_ss/saves_all_labels/best_model.hdf5 > out.log &
 ```
 
 Use the following additional option if the model crashes (this can happen if different settings are chosen).
@@ -305,8 +301,7 @@ python3 train.py \
 -color_augmentation full_randomized \
 -continue_training \
 -rebuild_model \
--model_to_load /host/data_hdd/runs/species/sa_and_ss/outputs_all_labels/ \
--ignore_aspect_ratio
+-model_to_load /host/data_hdd/runs/species/sa_and_ss/outputs_all_labels/
 ```
 
 
@@ -337,7 +332,6 @@ python3 train.py \
 -buffer_size 32768 \
 -max_epochs 50 \
 -color_augmentation full_randomized \
--ignore_aspect_ratio \
 -continue_training \
 -model_to_load /host/data_hdd/runs/empty_or_not/sa_and_ss/outputs/ > out_empty_continue.log &
 ```

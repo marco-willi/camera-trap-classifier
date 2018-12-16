@@ -25,12 +25,12 @@ This repository contains code and documentation to train and apply a convolution
 To use this code following pre-requisites must be met:
 
 1. Camera trap images (jpeg / jpg / png /bmp) with labels
-2. Server with graphics processing units (GPUs) for model training (e.g. AWS account, supercomputing institute)
+2. Computer with GPUs for model training (e.g. AWS account, supercomputing institute)
 3. Some Unix knowledge
 
 ## Installation
 
-The code has been implemented in Python (https://www.python.org) and is based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
+The code has been implemented in Python (https://www.python.org) and is based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider ([AWS example](docs/Docker_GPU.md)).
 
 ### Installation from GitHub
 
@@ -302,7 +302,7 @@ To avoid overfitting, images are randomly transformed in various ways during mod
 -zoom_factor (0.1)
 -rotate_by_angle (5)
 -randomly_flip_horizontally (True)
--ignore_aspect_ratio (True)
+-preserve_aspect_ratio (False)
 ```
 See ctc.train --help for more details.
 

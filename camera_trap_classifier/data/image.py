@@ -215,7 +215,7 @@ def preprocess_for_train(image,
                          image_means,
                          image_stdevs,
                          color_augmentation,
-                         ignore_aspect_ratio,
+                         preserve_aspect_ratio,
                          zoom_factor,
                          crop_factor,
                          rotate_by_angle,
@@ -282,7 +282,7 @@ def preprocess_for_train(image,
         image = tf.squeeze(image, 0)
 
     # Resize image to target width
-    if ignore_aspect_ratio:
+    if not preserve_aspect_ratio:
         image = tf.expand_dims(image, 0)
         image = tf.image.resize_bilinear(
                     image,
@@ -337,7 +337,7 @@ def preprocess_for_train(image,
 
 def preprocess_for_eval(image, output_height,
                         output_width, image_means, image_stdevs,
-                        ignore_aspect_ratio):
+                        preserve_aspect_ratio):
     """Preprocesses the given image for evaluation.
     Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -349,7 +349,7 @@ def preprocess_for_eval(image, output_height,
     """
     # Directly resize the image to the target size if we ignore the
     # aspect ratio of the input image
-    if ignore_aspect_ratio:
+    if not preserve_aspect_ratio:
         image = tf.expand_dims(image, 0)
         image = tf.image.resize_bilinear(
                     image,
@@ -403,7 +403,7 @@ def preprocess_image(image, output_height, output_width,
                      image_means=[0, 0, 0],
                      image_stdevs=[1, 1, 1],
                      color_augmentation=None,
-                     ignore_aspect_ratio=False,
+                     preserve_aspect_ratio=False,
                      randomly_flip_horizontally=True,
                      **kwargs):
     """Preprocesses the given image.
@@ -424,7 +424,7 @@ def preprocess_image(image, output_height, output_width,
                                     image_means=image_means,
                                     image_stdevs=image_stdevs,
                                     color_augmentation=color_augmentation,
-                                    ignore_aspect_ratio=ignore_aspect_ratio,
+                                    preserve_aspect_ratio=preserve_aspect_ratio,
                                     zoom_factor=zoom_factor,
                                     crop_factor=crop_factor,
                                     rotate_by_angle=rotate_by_angle,
@@ -435,7 +435,7 @@ def preprocess_image(image, output_height, output_width,
                                    output_width=output_width,
                                    image_means=image_means,
                                    image_stdevs=image_stdevs,
-                                   ignore_aspect_ratio=ignore_aspect_ratio)
+                                   preserve_aspect_ratio=preserve_aspect_ratio)
 
 
 # https://github.com/tensorflow/tpu/blob/master/models/experimental/inception/

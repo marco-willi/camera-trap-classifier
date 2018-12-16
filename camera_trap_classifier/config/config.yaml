@@ -44,7 +44,7 @@ models:
 ###########################################
 
 image_processing:
-  ignore_aspect_ratio: True
+  preserve_aspect_ratio: False
   crop_factor: 0.1
   zoom_factor: 0.1
   rotate_by_angle: 5

@@ -178,12 +178,13 @@ def main():
               pipeline is slow. Generally full_randomized is recommended \
               and is usually more than fast enough.")
     parser.add_argument(
-        "-ignore_aspect_ratio", action='store_true', default=None,
-        help="Wheter to ignore the aspect ratio of the images during model \
-              training. This can improve the total area of the image the \
-              model sees during training and prediction. However, the images \
-              are slightly distorted with this option since they are \
-              converted to squares.")
+        "-preserve_aspect_ratio", action='store_true', default=None,
+        help="Wheter to preserve the aspect ratio of the images during model \
+              training. This keeps the aspect ratio intact which may improve \
+              model performance, however, may lead to cut-off areas at the \
+              border of an image during training and prediction. If objects \
+              of interest may occur at the edges we don't recommend to \
+              specify this.")
     parser.add_argument(
         "-randomly_flip_horizontally", action='store_true', default=None,
         help="Wheter to randomly flip the image during model training. \
@@ -252,7 +253,7 @@ def main():
     image_processing = config.cfg['image_processing']
 
     # overwrite parameters if specified by user
-    to_overwrite = ['color_augmentation', 'ignore_aspect_ratio',
+    to_overwrite = ['color_augmentation', 'preserve_aspect_ratio',
                     'crop_factor', 'zoom_factor', 'rotate_by_angle',
                     'randomly_flip_horizontally', 'image_choice_for_sets']
     for overwrite in to_overwrite:

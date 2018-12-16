@@ -99,7 +99,7 @@ python train.py \
 -starting_epoch 0 \
 -transfer_learning \
 -model_to_load ${run_outputs_path} \
--ignore_aspect_ratio
+-preserve_aspect_ratio
 
 
 # Pseudo Fine Tuning
