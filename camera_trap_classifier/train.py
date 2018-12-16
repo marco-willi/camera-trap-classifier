@@ -1,10 +1,8 @@
 """ Main File for Training a Model
 
-Allows for detailed configurations.
-
 Example Usage:
 ---------------
-python train.py \
+ctc.train \
 -train_tfr_path ./test_big/cats_vs_dogs/tfr_files \
 -train_tfr_pattern train \
 -val_tfr_path ./test_big/cats_vs_dogs/tfr_files \
@@ -180,12 +178,13 @@ def main():
               pipeline is slow. Generally full_randomized is recommended \
               and is usually more than fast enough.")
     parser.add_argument(
-        "-ignore_aspect_ratio", action='store_true', default=None,
-        help="Wheter to ignore the aspect ratio of the images during model \
-              training. This can improve the total area of the image the \
-              model sees during training and prediction. However, the images \
-              are slightly distorted with this option since they are \
-              converted to squares.")
+        "-preserve_aspect_ratio", action='store_true', default=None,
+        help="Wheter to preserve the aspect ratio of the images during model \
+              training. This keeps the aspect ratio intact which may improve \
+              model performance, however, may lead to cut-off areas at the \
+              border of an image during training and prediction. If objects \
+              of interest may occur at the edges we don't recommend to \
+              specify this.")
     parser.add_argument(
         "-randomly_flip_horizontally", action='store_true', default=None,
         help="Wheter to randomly flip the image during model training. \
@@ -212,13 +211,13 @@ def main():
               range [0 - rotate_by_angle, 0 + rotate_by_angle] \
              training. Values between 0 and 180 degrees are allowed.")
     parser.add_argument(
-        "-image_choice_for_sets", type=str, default='random',
-        choices=['random', 'grayscale_blurring'],
+        "-image_choice_for_sets", type=str, default=None,
+        choices=['random', 'grayscale_stacking'],
         help="How to choose an image for records with multiple images. \
               Default is 'random' which randomly chooses an image \
-              during model training. 'grayscale_blurring' converts multiple \
+              during model training. 'grayscale_stacking' converts multiple \
               images into a single RGB image by blurring and converting \
-              individual images to grayscale. Note that grayscale_blurring is \
+              individual images to grayscale. Note that grayscale_stacking is \
               an experimental feature and is not yet supported when using \
               the predictor on new images. ")
 
@@ -241,7 +240,7 @@ def main():
     # Process Input ###########
     ###########################################
 
-    # Load model config
+    # Load config file
     cfg_path = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 'config', 'config.yaml')
 
@@ -250,13 +249,13 @@ def main():
     assert args['model'] in config.cfg['models'], \
         "model %s not found in config/models.yaml" % args['model']
 
-    # get default image_processing from config.yaml
+    # get default image_processing options from config
     image_processing = config.cfg['image_processing']
 
     # overwrite parameters if specified by user
-    to_overwrite = ['color_augmentation', 'ignore_aspect_ratio',
+    to_overwrite = ['color_augmentation', 'preserve_aspect_ratio',
                     'crop_factor', 'zoom_factor', 'rotate_by_angle',
-                    'randomly_flip_horizontally']
+                    'randomly_flip_horizontally', 'image_choice_for_sets']
     for overwrite in to_overwrite:
         if args[overwrite] is not None:
             image_processing[overwrite] = args[overwrite]
@@ -266,6 +265,13 @@ def main():
         config.cfg['models'][args['model']]['image_processing']
 
     image_processing = {**image_processing, **image_processing_model}
+
+    # disable color_augmentation for grayscale_stacking
+    if image_processing['image_choice_for_sets'] == 'grayscale_stacking':
+        if image_processing['color_augmentation'] is not None:
+            image_processing['color_augmentation'] = None
+            logging.info("Disabling color_augmentation because of \
+                incompatibility with grayscale_stacking")
 
     input_shape = (image_processing['output_height'],
                    image_processing['output_width'], 3)
@@ -296,16 +302,6 @@ def main():
         args['val_tfr_path'],
         args['val_tfr_pattern'])
 
-    if len(args['test_tfr_path']) > 0:
-        TEST_SET = True
-        tfr_test = find_tfr_files_pattern_subdir(
-            args['test_tfr_path'],
-            args['test_tfr_pattern'])
-        pred_output_json = os.path.join(args['run_outputs_dir'],
-                                        'test_preds.json')
-    else:
-        TEST_SET = False
-
     # Create best model output name
     best_model_save_path = os.path.join(args['model_save_dir'],
                                         'best_model.hdf5')
@@ -326,9 +322,9 @@ def main():
     # CALC IMAGE STATS ###########
     ###########################################
 
-    tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
+    logger.info("Start Calculating Image Stats")
 
-    logger.info("Create Dataset Reader")
+    tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
     data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
@@ -367,6 +363,12 @@ def main():
     logger.info("Image Means: %s" % image_means)
     logger.info("Image Stdevs: %s" % image_stdevs)
 
+    # Export Image Processing Settings
+    export_dict_to_json({**image_processing,
+                         'is_training': False},
+                        os.path.join(args['run_outputs_dir'],
+                                     'image_processing.json'))
+
     ###########################################
     # PREPARE DATA READER ###########
     ###########################################
@@ -402,12 +404,6 @@ def main():
                         'is_training': False},
                     buffer_size=args['buffer_size'],
                     num_parallel_calls=args['n_cpus'])
-
-    # Export Image Processing Settings
-    export_dict_to_json({**image_processing,
-                         'is_training': False},
-                        os.path.join(args['run_outputs_dir'],
-                                     'image_processing.json'))
 
     logger.info("Calculating batches per epoch")
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
@@ -451,16 +447,17 @@ def main():
                      (i, layer.name, layer.input_shape,
                       layer.output_shape))
 
-    logger.info("Preparing Callbacks and Monitors")
-
     ###########################################
     # MONITORS / HOOKS ###########
     ###########################################
 
+    logger.info("Preparing Callbacks and Monitors")
+
     # stop model training if validation loss does not improve
     early_stopping = EarlyStopping(
         monitor='val_loss',
-        min_delta=0, patience=args['early_stopping_patience'], verbose=0, mode='auto')
+        min_delta=0,
+        patience=args['early_stopping_patience'], verbose=0, mode='auto')
 
     # reduce learning rate if model progress plateaus
     reduce_lr_on_plateau = ReduceLROnPlateau(
@@ -522,6 +519,8 @@ def main():
     # SAVE BEST MODEL ###########
     ###########################################
 
+    logger.info("Saving Best Model")
+
     copy_models_and_config_files(
             model_source=args['run_outputs_dir'] + 'model_best.hdf5',
             model_target=best_model_save_path,
@@ -533,8 +532,18 @@ def main():
     # PREDICT AND EXPORT TEST DATA ###########
     ###########################################
 
-    if TEST_SET:
+    if len(args['test_tfr_path']) > 0:
+
         logger.info("Starting to predict on test data")
+
+        tfr_test = find_tfr_files_pattern_subdir(
+            args['test_tfr_path'],
+            args['test_tfr_pattern'])
+
+        pred_output_json = os.path.join(args['run_outputs_dir'],
+                                        'test_preds.json')
+
+        tf.keras.backend.clear_session()
 
         tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
         logger.info("Create Dataset Reader")
@@ -559,8 +568,7 @@ def main():
                 model_path=best_model_save_path,
                 class_mapping_json=args['class_mapping_json'],
                 pre_processing_json=args['run_outputs_dir'] +
-                'image_processing.json',
-                batch_size=args['batch_size'])
+                'image_processing.json')
 
         pred.predict_from_dataset(
             dataset=input_feeder_test(),

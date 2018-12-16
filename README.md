@@ -5,8 +5,6 @@
 
 This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
 
-## Example Camera Trap Images and Model Predictions
-
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions.png"/>
 
 *This figure shows examples of correctly classified camera trap images.*
@@ -15,17 +13,24 @@ This repository contains code and documentation to train and apply a convolution
 
 *This figure shows examples of wrongly classified camera trap images (note the lower confidence values).*
 
+## Features
+1. Step-by-step instructions on how to train powerful models in the cloud ([AWS example](docs/Docker_GPU.md))
+2. Modelling of capture events with multiple images (store, process, and predict together)
+3. Multi-output modelling: model species, behaviors, and any other label at the same time.
+4. A large variety of options: models, data augmentation, installation, data-prep, transfer-learning, and more.
+5. Tested approach: This code is currently in use and is being developed further.
+
 ## Pre-Requisites
 
 To use this code following pre-requisites must be met:
 
 1. Camera trap images (jpeg / jpg / png /bmp) with labels
-2. Server with graphics processing units (GPUs) for model training (e.g. AWS account, supercomputing institute)
+2. Computer with GPUs for model training (e.g. AWS account, supercomputing institute)
 3. Some Unix knowledge
 
 ## Installation
 
-The code has been implemented in Python (https://www.python.org) based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider (see below).
+The code has been implemented in Python (https://www.python.org) and is based on TensorFlow (https://www.tensorflow.org), a graph-computing software commonly used to implement machine learning models. The installation is relatively easy but can be tricky if an installation with GPU support on a server is required. We recommend using Docker on a GPU instance of a cloud provider ([AWS example](docs/Docker_GPU.md)).
 
 ### Installation from GitHub
 
@@ -91,6 +96,7 @@ docker exec ctc ctc.train --predict
 We have run our models on AWS EC2 instances using Docker. A detailed example on how to install Docker and run scripts can be found here:
 
 [Install and use CPU Docker](docs/Docker_CPU.md)
+
 [Install and use GPU Docker](docs/Docker_GPU.md)
 
 
@@ -196,12 +202,17 @@ The following code snippet shows how that works:
 ```
 ctc.create_dataset -inventory /my_data/dataset_inventory.json \
 -output_dir /my_data/tfr_files/ \
--image_save_side_smallest 200 \
+-image_save_side_smallest 400 \
 -split_percent 0.9 0.05 0.05 \
--overwrite
+-overwrite \
+-process_images_in_parallel \
+-process_images_in_parallel_size 320 \
+-processes_images_in_parallel_n_processes 4 \
+-image_save_quality 75 \
+-max_records_per_file 5000
 ```
 
-See the function documentations for options regarding how to parallelize / speed up
+See the function documentations for options regarding details on how to parallelize / speed up
 the processing for large datasets.
 
 ### 4) Model Training
@@ -246,6 +257,41 @@ ctc.predict -image_dir /my_images/new_images/ \
   -pre_processing_json /my_model/save1/image_processing.json
 ```
 
+We can also use a csv for our predictions to process and aggregate multiple images for a capture event. For example, consider the following csv:
+
+```
+id,image1,image2,image3
+1,/unknown1_a.jpeg,/unknown1_b.jpeg,/unknown1_c.jpeg
+2,/unknown2_a.jpeg,/unknown2_b.jpeg,/unknown2_c.jpeg
+```
+
+With the following command the images of a capture event are each passed through the model and at the end aggregated on id (csv_id_col) level using the specified aggregation mode. In this case the predictions of all classes over all images of
+a capture event are averaged. The top-prediction is then determined on that aggregated metric.
+
+```
+ctc.predict \
+  -csv_path /my_images/new_images/inventory.csv \
+  -csv_id_col id \
+  -csv_images_cols image1 image2 image3 \
+  -export_file_type csv \
+  -results_file /my_preds/preds.csv \
+  -model_path /my_model/save1/best_model.hdf5 \
+  -class_mapping_json /my_model/save1/label_mappings.json \
+  -pre_processing_json /my_model/save1/image_processing.json \
+  -aggregation_mode mean
+```
+
+The predictions may look like that then:
+```
+"id","label","prediction_top","confidence_top","predictions_all"
+"1","species","cat","0.5350","{'cat': '0.5350', 'dog': '0.4650'}"
+"1","standing","1","0.5399","{'0': '0.4601', '1': '0.5399'}"
+"2","species","cat","0.5160","{'cat': '0.5160', 'dog': '0.4840'}"
+"2","standing","1","0.5064","{'0': '0.4936', '1': '0.5064'}"
+```
+
+Note: The json export (export_file_type json) contains also the unaggregated predictions of each image.
+
 ### Data Augmentation
 
 To avoid overfitting, images are randomly transformed in various ways during model training. The following options are available (defaults):
@@ -256,7 +302,7 @@ To avoid overfitting, images are randomly transformed in various ways during mod
 -zoom_factor (0.1)
 -rotate_by_angle (5)
 -randomly_flip_horizontally (True)
--ignore_aspect_ratio (True)
+-preserve_aspect_ratio (False)
 ```
 See ctc.train --help for more details.
 
@@ -269,12 +315,12 @@ The default values produce following examples:
 Important to note is that heavy data augmentation is quite expensive. Training a small model on 2 GPUs with a batch size of 256 required roughly 20 CPUs to keep the GPUs busy. This is less of a problem for larger models since the GPUs will be the
 bottleneck. Check CPU usage with the 'top' command. We also recommend the nvidia tool 'nvidia-smi -l 1' to check the GPU usage during model training (it should be near 100% all the time). If performance is a problem, set rotate_by_angle to 0, followed by zooming.
 
-### Experimental Feature - Grayscale-Stacking and Blurring
+### Experimental Feature - Grayscale Stacking
 
-To make better use of motion information contained in capture events with multiple images there is an option to stack up to three images into a single RGB image. The option can be activated during model training using:
+To make better use of motion information contained in capture events with multiple images there is an option to stack up to three images into a single RGB image. The option can be activated using:
 
 ```
--image_choice_for_sets grayscale_blurring
+-image_choice_for_sets grayscale_stacking
 ```
 
 This will apply the following transformations to each image during model training:
@@ -282,11 +328,11 @@ This will apply the following transformations to each image during model trainin
 2. Blurr each image with a Gaussian filter
 3. Stack all images of the set in temporal order to an RGB image (e.g. first image goes into the 'red' channel). If there are fewer than 3 images in some sets, the last image is repeated.
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_grayscale_blurring.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_grayscale_stacking.png"/>
 
-*This figure shows examples of grayscale blurring on sets with 1 or 3 images*
+*This figure shows examples of grayscale stacking on sets with 1 or 3 images*
 
-NOTE: This option is not (yet) available when using a trained model. To apply a model trained with grayscale_blurring on new images they would have to be transformed and stacked beforehand. However, to test this approach and to get evaluation results just train a model.
+This feature is experimental in the sense that it has not yet been thoroughly tested. We think that this option may benefit models which have to identify the presence of animals -- especially if there are small animals that are difficult to see without the motion information.
 
 
 ## Testing the Code
@@ -296,7 +342,10 @@ Following commands should run without error and test a part of the code:
 ```
 cd camera_trap_classifier
 python -m unittest discover test/data
+python -m unittest discover test/predicting
+# the next one runs long
 python -m unittest discover test/training
+
 ```
 
 The following script tests all components of the code end-to-end using images from a directory:
@@ -350,8 +399,11 @@ This code is based on work conducted in the following study:
 Authors: Marco Willi, Ross Tyzack Pitman, Anabelle W. Cardoso, Christina Locke, Alexandra Swanson, Amy Boyer, Marten Veldthuis, Lucy Fortson
 
 Please cite as:
-
-*Willi M, Pitman RT, Cardoso AW, et al. Identifying animal species in camera trap images using deep learning and citizen science. Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099*
+```
+Willi M, Pitman RT, Cardoso AW, et al.
+Identifying animal species in camera trap images using deep learning and citizen science.
+Methods Ecol Evol. 2018;00:1–12. https://doi.org/10.1111/2041-210X.13099
+```
 
 The camera-trap images (330x330 pixels only) used in the study can be downloaded here:
 https://doi.org/10.13020/D6T11K

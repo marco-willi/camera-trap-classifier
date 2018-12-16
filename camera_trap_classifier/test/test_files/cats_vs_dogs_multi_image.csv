@@ -1,0 +1,5 @@
+id,image1,image2,image3,species,standing,count
+cat0.jpg,./test/test_images/Cats/cat0.jpg,./test/test_images/Cats/cat2.jpg,./test/test_images/Cats/cat3.jpg,cat,1,14
+cat10.jpg,./test/test_images/Cats/cat10.jpg,./test/test_images/Cats/cat13.jpg,./test/test_images/Cats/cat15.jpg,cat,0,3
+dog1,./test/test_images/Dogs/dog3160.jpg,./test/test_images/Dogs/dog3160.jpg,./test/test_images/Dogs/dog3160.jpg,dog,1,1
+dog2,./test/test_images/Dogs/dog3161.jpg,./test/test_images/Dogs/dog3162.jpg,./test/test_images/Dogs/dog3164.jpg,dog,1,3

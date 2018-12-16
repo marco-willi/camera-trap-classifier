@@ -215,7 +215,7 @@ def preprocess_for_train(image,
                          image_means,
                          image_stdevs,
                          color_augmentation,
-                         ignore_aspect_ratio,
+                         preserve_aspect_ratio,
                          zoom_factor,
                          crop_factor,
                          rotate_by_angle,
@@ -282,7 +282,7 @@ def preprocess_for_train(image,
         image = tf.squeeze(image, 0)
 
     # Resize image to target width
-    if ignore_aspect_ratio:
+    if not preserve_aspect_ratio:
         image = tf.expand_dims(image, 0)
         image = tf.image.resize_bilinear(
                     image,
@@ -309,7 +309,7 @@ def preprocess_for_train(image,
         image = _image_standardize(image, image_means, image_stdevs)
         return image
 
-    elif color_augmentation == 'little':
+    if color_augmentation == 'little':
         fast_mode = True
         use_fast_color_distort = False
 
@@ -337,7 +337,7 @@ def preprocess_for_train(image,
 
 def preprocess_for_eval(image, output_height,
                         output_width, image_means, image_stdevs,
-                        ignore_aspect_ratio):
+                        preserve_aspect_ratio):
     """Preprocesses the given image for evaluation.
     Args:
     image: A `Tensor` representing an image of arbitrary size.
@@ -349,7 +349,7 @@ def preprocess_for_eval(image, output_height,
     """
     # Directly resize the image to the target size if we ignore the
     # aspect ratio of the input image
-    if ignore_aspect_ratio:
+    if not preserve_aspect_ratio:
         image = tf.expand_dims(image, 0)
         image = tf.image.resize_bilinear(
                     image,
@@ -369,6 +369,32 @@ def preprocess_for_eval(image, output_height,
     return image
 
 
+def decode_image_bytes_1D(image_bytes_list,
+                          output_height=None,
+                          output_width=None,
+                          image_choice_for_sets='random',
+                          **kwargs):
+    """ Decode a 1D Tensor of 1-N raw image bytes
+    Args:
+    image_bytes_list: a 1-D tensor with raw bytes
+    output_height: height in pixels of decoded images
+        (only used if image_choice_for_sets is not random)
+    output_width: height in pixels of decoded images
+        (only used if image_choice_for_sets is not random)
+    """
+
+    if image_choice_for_sets == 'random':
+        image = choose_random_image(image_bytes_list)
+    elif image_choice_for_sets == 'grayscale_stacking':
+        image = grayscale_stacking_and_blurring(
+                    image_bytes_list,
+                    output_height, output_width)
+    else:
+        raise NotImplemented("Image choice for set: %s not implemented" %
+                             image_choice_for_sets)
+    return image
+
+
 def preprocess_image(image, output_height, output_width,
                      is_training,
                      zoom_factor=0,
@@ -377,7 +403,7 @@ def preprocess_image(image, output_height, output_width,
                      image_means=[0, 0, 0],
                      image_stdevs=[1, 1, 1],
                      color_augmentation=None,
-                     ignore_aspect_ratio=False,
+                     preserve_aspect_ratio=False,
                      randomly_flip_horizontally=True,
                      **kwargs):
     """Preprocesses the given image.
@@ -398,7 +424,7 @@ def preprocess_image(image, output_height, output_width,
                                     image_means=image_means,
                                     image_stdevs=image_stdevs,
                                     color_augmentation=color_augmentation,
-                                    ignore_aspect_ratio=ignore_aspect_ratio,
+                                    preserve_aspect_ratio=preserve_aspect_ratio,
                                     zoom_factor=zoom_factor,
                                     crop_factor=crop_factor,
                                     rotate_by_angle=rotate_by_angle,
@@ -409,7 +435,7 @@ def preprocess_image(image, output_height, output_width,
                                    output_width=output_width,
                                    image_means=image_means,
                                    image_stdevs=image_stdevs,
-                                   ignore_aspect_ratio=ignore_aspect_ratio)
+                                   preserve_aspect_ratio=preserve_aspect_ratio)
 
 
 # https://github.com/tensorflow/tpu/blob/master/models/experimental/inception/
@@ -594,3 +620,96 @@ def _random_crop(image_list, crop_height, crop_width):
             crop_height,
             crop_width
             ) for image in image_list]
+
+
+def choose_random_image(image_bytes_list):
+    """ Choose a random image """
+    n_images = tf.shape(image_bytes_list)
+
+    # select a random image of the record
+    rand = tf.random_uniform([], minval=0, maxval=n_images[0],
+                             dtype=tf.int32)
+
+    # decode image to tensor
+    image = tf.image.decode_jpeg(image_bytes_list[rand])
+
+    return image
+
+
+def _decode_image_bytes_example(
+        image_bytes,
+        output_height=None, output_width=None, n_colors=3):
+    """ Input is one TFRecord Exaample
+        Example with three images:
+            TensorShape([Dimension(1), Dimension(3)])
+        Example Output:
+            TensorShape([Dimension(3), Dimension(375),
+                         Dimension(500), Dimension(3)])
+    """
+    if (output_width is None) or (output_height is None):
+        images = tf.map_fn(
+                    lambda x: tf.image.decode_jpeg(x, channels=n_colors),
+                    image_bytes, dtype=tf.uint8)
+        images = tf.cast(images, tf.float32)
+    else:
+        images = tf.map_fn(
+                     lambda x: tf.image.resize_images(
+                                 tf.image.decode_jpeg(x, channels=n_colors),
+                                 [output_height, output_width]),
+                     image_bytes, dtype=tf.float32)
+    return images
+
+
+def _stack_images_to_3D(image_tensor):
+    """ Stack images """
+    input_shape = image_tensor.get_shape().as_list()
+    if input_shape[-1] == 1:
+        target_shape = image_tensor.get_shape().as_list()
+        target_shape[-1] = 3
+        image_tensor = tf.broadcast_to(image_tensor, target_shape)
+    elif input_shape[-1] == 2:
+        image_tensor = tf.stack([
+            image_tensor[:, :, 0],
+            image_tensor[:, :, 1],
+            image_tensor[:, :, 1]], 2)
+    image_tensor.set_shape([input_shape[0], input_shape[1], 3])
+    return image_tensor
+
+
+def _blurr_imgs(img_batch):
+    """ Blurr image batch with Gaussian Filter """
+    with tf.variable_scope("gauss_kernel"):
+        gauss_kernel = gaussian_kernel_2D(sigma=2)
+        gauss_kernel = tf.expand_dims(tf.expand_dims(gauss_kernel, -1), -1)
+
+    img_batch_blurred = tf.nn.conv2d(
+        img_batch,
+        filter=gauss_kernel,
+        strides=[1, 1, 1, 1],
+        padding="SAME",
+        use_cudnn_on_gpu=True,
+        data_format='NHWC'
+    )
+
+    return img_batch_blurred
+
+
+def grayscale_stacking_and_blurring(
+        image_bytes, output_height=None, output_width=None):
+    """ Get and convert all images to grayscale """
+
+    # Grayscale image batch tensor (4-D, NHWC)
+    imgs = _decode_image_bytes_example(
+        image_bytes, output_height, output_width, n_colors=1)
+
+    # Apply Gaussian Blurring
+    # Batch of 1-N blurred images
+    imgs_blurred = _blurr_imgs(imgs)
+
+    # Stack into RGB image, handle cases when there is only 1 or 2 images
+    image = tf.transpose(tf.squeeze(imgs_blurred, -1), perm=[1, 2, 0])
+    image = _stack_images_to_3D(image)
+
+    image = tf.cast(image, tf.uint8)
+
+    return image

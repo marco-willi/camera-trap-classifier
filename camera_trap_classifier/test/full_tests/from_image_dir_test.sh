@@ -99,7 +99,7 @@ python train.py \
 -starting_epoch 0 \
 -transfer_learning \
 -model_to_load ${run_outputs_path} \
--ignore_aspect_ratio
+-preserve_aspect_ratio
 
 
 # Pseudo Fine Tuning
@@ -127,11 +127,11 @@ python train.py \
 
 
 # Deploy model
-python export.py -model ${model_save_dir}best_model.hdf5 \
--class_mapping_json ${model_save_dir}label_mappings.json \
--pre_processing_json ${model_save_dir}image_processing.json \
--output_dir ${estimator_deploy_save_dir} \
--estimator_save_dir ${estimator_save_dir}
+# python export.py -model ${model_save_dir}best_model.hdf5 \
+# -class_mapping_json ${model_save_dir}label_mappings.json \
+# -pre_processing_json ${model_save_dir}image_processing.json \
+# -output_dir ${estimator_deploy_save_dir} \
+# -estimator_save_dir ${estimator_save_dir}
 
 
 # Create Predictions

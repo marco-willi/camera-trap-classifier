@@ -7,9 +7,7 @@ from camera_trap_classifier.data.utils import (
         wrap_int64, wrap_bytes, wrap_dict_bytes_list, wrap_dict_int64_list,
         _bytes_feature_list,
         _bytes_feature_list_str)
-from camera_trap_classifier.data.image import (
-    gaussian_kernel_2D
-)
+from camera_trap_classifier.data.image import decode_image_bytes_1D
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +91,7 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                       label_lookup_dict=None,
                       image_pre_processing_fun=None,
                       image_pre_processing_args=None,
-                      image_choice_if_multiple='random',
+                      image_choice_for_sets='random',
                       decode_images=True,
                       numeric_labels=False,
                       return_only_ml_data=True,
@@ -180,14 +178,11 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                     **{k: v for k, v in sequence.items()
                        if label_prefix not in k},
                     **parsed_labels}
-            #return sequence['images']
 
-        if image_choice_if_multiple == 'random':
-            image = self._choose_random_image(sequence['images'])
-        elif image_choice_if_multiple == 'grayscale_blurring':
-            image = self._grayscale_blurring(sequence['images'])
-        else:
-            raise NotImplemented("Non-Random Image-Choice not implemented")
+        # decode 1-D tensor of raw images
+        image = decode_image_bytes_1D(
+                    sequence['images'],
+                    **image_pre_processing_args)
 
         # Pre-Process image
         if image_pre_processing_fun is not None:
@@ -199,79 +194,3 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                  **{k: v for k, v in sequence.items()
                  if label_prefix not in k and 'images' not in k},
                 **parsed_labels})
-
-    def _choose_random_image(self, image_bytes):
-        """ Choose a random image """
-        n_images = tf.shape(image_bytes)
-
-        # select a random image of the record
-        rand = tf.random_uniform([], minval=0, maxval=n_images[0],
-                                 dtype=tf.int32)
-
-        # decode image to tensor
-        image = tf.image.decode_jpeg(image_bytes[rand])
-
-        return image
-
-    def _decode_image_bytes_example(self, image_bytes, n_colors=3):
-        """ Input is one TFRecord Exaample
-            Example with three images:
-                TensorShape([Dimension(1), Dimension(3)])
-            Example Output:
-                TensorShape([Dimension(3), Dimension(375),
-                             Dimension(500), Dimension(3)])
-        """
-        images = tf.map_fn(
-                    lambda x: tf.image.decode_jpeg(x, channels=n_colors),
-                    image_bytes, dtype=tf.uint8)
-        return images
-
-    def _stack_images_to_3D(self, image_tensor):
-        """ Stack images """
-        input_shape = tf.shape(image_tensor)
-        if input_shape[-1] == 1:
-            target_shape = image_tensor.get_shape().as_list()
-            target_shape[-1] = 3
-            image_tensor = tf.broadcast_to(image_tensor, target_shape)
-        elif input_shape[-1] == 2:
-            image_tensor = tf.stack([
-                image_tensor[:, :, 0],
-                image_tensor[:, :, 1],
-                image_tensor[:, :, 1]], 2)
-        return image_tensor
-
-    def _blurr_imgs(self, img_batch):
-        """ Blurr image batch with Gaussian Filter """
-        with tf.variable_scope("gauss_kernel"):
-            gauss_kernel = gaussian_kernel_2D(sigma=2)
-            gauss_kernel = tf.expand_dims(tf.expand_dims(gauss_kernel, -1), -1)
-
-        img_batch = tf.cast(img_batch, tf.float32)
-        img_batch_blurred = tf.nn.conv2d(
-            img_batch,
-            filter=gauss_kernel,
-            strides=[1, 1, 1, 1],
-            padding="SAME",
-            use_cudnn_on_gpu=True,
-            data_format='NHWC'
-        )
-
-        return img_batch_blurred
-
-    def _grayscale_blurring(self, image_bytes):
-        """ Get and convert all images to grayscale """
-
-        # Grayscale image batch tensor (4-D, NHWC)
-        imgs = self._decode_image_bytes_example(image_bytes, n_colors=1)
-
-        # Apply Gaussian Blurring
-        # Batch of 1-N blurred images
-        imgs_blurred = self._blurr_imgs(imgs)
-
-        # Stack into RGB image, handle cases when there is only 1 or 2 images
-        image = tf.transpose(tf.squeeze(imgs_blurred, -1), perm=[1, 2, 0])
-        image = self._stack_images_to_3D(image)
-
-        image = tf.cast(image, tf.uint8)
-
-        return image
