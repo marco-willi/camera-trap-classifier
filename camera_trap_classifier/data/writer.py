@@ -4,6 +4,7 @@ import os
 import math
 import time
 import logging
+import textwrap
 from multiprocessing import Process, Manager
 
 import tensorflow as tf
@@ -179,7 +180,11 @@ class DatasetWriter(object):
             random.seed(123)
             random.shuffle(record_ids)
 
-        with tf.python_io.TFRecordWriter(output_file) as writer:
+        # temporary filename for writing to avoid complications after
+        # a write is incomplete
+
+        output_temp = output_file + '_temp'
+        with tf.python_io.TFRecordWriter(output_temp) as writer:
 
             for i, record_id in enumerate(record_ids):
 
@@ -202,9 +207,12 @@ class DatasetWriter(object):
                 writer.write(serialized_record)
                 successfull_writes += 1
 
-            logger.info(
-                "Finished Writing Records to %s - Wrote %s/%s" %
-                (output_file, successfull_writes, n_records))
+        # Rename temporary file
+        os.replace(output_temp, output_file)
+
+        logger.info(
+            "Finished Writing Records to %s - Wrote %s/%s" %
+            (output_file, successfull_writes, n_records))
 
     def _write_to_file_parallel(self, output_file, record_ids):
         """ Write a TFR File with parallel image processing """
@@ -227,7 +235,11 @@ class DatasetWriter(object):
             + min(n_records % max_batch_size, 1)
         slices = slice_generator(n_records, n_batches)
 
-        with tf.python_io.TFRecordWriter(output_file) as writer:
+        # temporary filename for writing to avoid complications after
+        # a write is incomplete
+
+        output_temp = output_file + '_temp'
+        with tf.python_io.TFRecordWriter(output_temp) as writer:
 
             for batch_i, (start_i, end_i) in enumerate(slices):
 
@@ -262,9 +274,16 @@ class DatasetWriter(object):
                     successfull_writes += 1
                 est_t = estimate_remaining_time(start_time, n_records,
                                                 successfull_writes)
-                logger.debug("Wrote %s / %s records - estimated time remaining: %s - file: %s)" %
-                            (successfull_writes, n_records, est_t, output_file))
 
-            logger.info(
-                "Finished Writing Records to %s - Wrote %s/%s" %
-                (output_file, successfull_writes, n_records))
+                msg = "Wrote %s / %s records - \
+                       estimated time remaining: %s - file: %s)" % \
+                      (successfull_writes, n_records, est_t, output_file)
+
+                logger.debug(textwrap.shorten(msg, width=99))
+
+        # Rename temporary file
+        os.replace(output_temp, output_file)
+
+        logger.info(
+            "Finished Writing Records to %s - Wrote %s/%s" %
+            (output_file, successfull_writes, n_records))
