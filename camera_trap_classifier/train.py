@@ -25,6 +25,7 @@ ctc.train \
 import argparse
 import logging
 import os
+import textwrap
 
 import tensorflow as tf
 import numpy as np
@@ -41,7 +42,7 @@ from camera_trap_classifier.predicting.predictor import Predictor
 from camera_trap_classifier.data.tfr_encoder_decoder import (
     DefaultTFRecordEncoderDecoder)
 from camera_trap_classifier.data.reader import DatasetReader
-from camera_trap_classifier.data.image import preprocess_image
+from camera_trap_classifier.data.image import preprocess_image, ImageDecoder
 from camera_trap_classifier.data.utils import (
     calc_n_batches_per_epoch, export_dict_to_json, read_json,
     n_records_in_tfr_dataset, find_files_with_ending,
@@ -270,8 +271,9 @@ def main():
     if image_processing['image_choice_for_sets'] == 'grayscale_stacking':
         if image_processing['color_augmentation'] is not None:
             image_processing['color_augmentation'] = None
-            logging.info("Disabling color_augmentation because of \
-                incompatibility with grayscale_stacking")
+            msg = "Disabling color_augmentation because of \
+                incompatibility with grayscale_stacking"
+            logging.info(textwrap.shorten(msg, width=99))
 
     input_shape = (image_processing['output_height'],
                    image_processing['output_width'], 3)
@@ -326,6 +328,7 @@ def main():
 
     tfr_encoder_decoder = DefaultTFRecordEncoderDecoder()
     data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
+    image_decoder = ImageDecoder(image_processing['image_choice_for_sets'])
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
     logger.info("Get Dataset Reader for calculating datset stats")
@@ -335,6 +338,7 @@ def main():
             batch_size=min([4096, n_records_train]),
             is_train=True,
             n_repeats=1,
+            image_decoder=image_decoder,
             output_labels=output_labels,
             image_pre_processing_fun=preprocess_image,
             image_pre_processing_args={**image_processing,
@@ -383,6 +387,7 @@ def main():
                     n_repeats=None,
                     output_labels=output_labels,
                     label_to_numeric_mapping=class_mapping,
+                    image_decoder=image_decoder,
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
@@ -398,6 +403,7 @@ def main():
                     n_repeats=None,
                     output_labels=output_labels,
                     label_to_numeric_mapping=class_mapping,
+                    image_decoder=image_decoder,
                     image_pre_processing_fun=preprocess_image,
                     image_pre_processing_args={
                         **image_processing,
@@ -556,6 +562,7 @@ def main():
                         is_train=False,
                         n_repeats=1,
                         output_labels=output_labels,
+                        image_decoder=image_decoder,
                         image_pre_processing_fun=preprocess_image,
                         image_pre_processing_args={
                             **image_processing,

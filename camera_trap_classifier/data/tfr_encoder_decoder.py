@@ -7,7 +7,6 @@ from camera_trap_classifier.data.utils import (
         wrap_int64, wrap_bytes, wrap_dict_bytes_list, wrap_dict_int64_list,
         _bytes_feature_list,
         _bytes_feature_list_str)
-from camera_trap_classifier.data.image import decode_image_bytes_1D
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +90,7 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                       label_lookup_dict=None,
                       image_pre_processing_fun=None,
                       image_pre_processing_args=None,
-                      image_choice_for_sets='random',
+                      image_decoder=None,
                       decode_images=True,
                       numeric_labels=False,
                       return_only_ml_data=True,
@@ -180,9 +179,9 @@ class DefaultTFRecordEncoderDecoder(TFRecordEncoderDecoder):
                     **parsed_labels}
 
         # decode 1-D tensor of raw images
-        image = decode_image_bytes_1D(
-                    sequence['images'],
-                    **image_pre_processing_args)
+        image = image_decoder.get_image(
+            sequence['images'],
+            **image_pre_processing_args)
 
         # Pre-Process image
         if image_pre_processing_fun is not None:

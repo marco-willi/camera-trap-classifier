@@ -10,7 +10,7 @@ import tensorflow as tf
 from camera_trap_classifier.predicting.processor import ProcessPredictions
 from camera_trap_classifier.training.prepare_model import load_model_from_disk
 from camera_trap_classifier.data.image import (
-    preprocess_image, decode_image_bytes_1D)
+    preprocess_image, ImageDecoder)
 from camera_trap_classifier.data.utils import (
     print_progress, list_pictures,
     slice_generator, calc_n_batches_per_epoch)
@@ -68,6 +68,9 @@ class Predictor(object):
 
         print("Read following pre processing options:")
         self._log_cfg(self.pre_processing)
+
+        self.image_decoder = ImageDecoder(
+            self.pre_processing['image_choice_for_sets'])
 
         self.model = load_model_from_disk(self.model_path, compile=False)
 
@@ -242,7 +245,8 @@ class Predictor(object):
                         lambda x: tf.read_file(x),
                         image_paths, dtype=tf.string)
         # decode images
-        image_decoded = decode_image_bytes_1D(images_raw, **pre_proc_args)
+        image_decoded = self.image_decoder.get_image(
+            images_raw, **pre_proc_args)
 
         # pre-process image
         image_processed = preprocess_image(image_decoded, **pre_proc_args)

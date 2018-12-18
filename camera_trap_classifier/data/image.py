@@ -622,107 +622,123 @@ def _random_crop(image_list, crop_height, crop_width):
             ) for image in image_list]
 
 
-def choose_random_image(image_bytes_list):
-    """ Choose a random image """
-    n_images = tf.shape(image_bytes_list)
+class ImageDecoder(object):
+    """ Image Decoder """
 
-    # select a random image of the record
-    rand = tf.random_uniform([], minval=0, maxval=n_images[0],
-                             dtype=tf.int32)
+    def __init__(self, type="random"):
+        self.type = type
 
-    # decode image to tensor
-    image = tf.image.decode_jpeg(image_bytes_list[rand])
+        assert type in ('random', 'grayscale_stacking'), \
+            "type %s not supported" % type
 
-    return image
+        if type == 'grayscale_stacking':
+            self.gauss_kernel = \
+                tf.expand_dims(
+                    tf.expand_dims(gaussian_kernel_2D(sigma=2), -1), -1)
 
+    def get_image(self, image_bytes_list, **kwargs):
+        args = {**kwargs}
+        if self.type == 'random':
+            return self._choose_random_image(image_bytes_list)
+        else:
+            return self._grayscale_stacking_and_blurring(
+                image_bytes_list, output_width=args['output_width'],
+                output_height=args['output_height'])
 
-def _decode_image_bytes_example(
-        image_bytes,
-        output_height=None, output_width=None, n_colors=3):
-    """ Input is one TFRecord Exaample
-        Example with three images:
-            TensorShape([Dimension(1), Dimension(3)])
-        Example Output:
-            TensorShape([Dimension(3), Dimension(375),
-                         Dimension(500), Dimension(3)])
-    """
-    if (output_width is None) or (output_height is None):
-        images = tf.map_fn(
-                    lambda x: tf.image.decode_jpeg(x, channels=n_colors),
-                    image_bytes, dtype=tf.uint8)
-        images = tf.cast(images, tf.float32)
-    else:
-        images = tf.map_fn(
-                     lambda x: tf.image.resize_images(
-                                 tf.image.decode_jpeg(x, channels=n_colors),
-                                 [output_height, output_width]),
-                     image_bytes, dtype=tf.float32)
-    return images
+    def _choose_random_image(self, image_bytes_list):
+        """ Choose a random image """
+        n_images = tf.shape(image_bytes_list)
 
+        # select a random image of the record
+        rand = tf.random_uniform([], minval=0, maxval=n_images[0],
+                                 dtype=tf.int32)
 
-def _stacker(image):
-    """ Append / Repeat the last channel of a (H,W,C) Tensor to itself """
-    res = tf.cond(
-            tf.equal(tf.shape(image)[-1], 1),
-            lambda: tf.squeeze(
-                    tf.stack([image, image], axis=2), -1),
-            lambda: tf.concat([
-                        image,
-                        tf.expand_dims(image[:, :, -1], -1)
-                        ], axis=2))
-    return res
+        # decode image to tensor
+        image = tf.image.decode_jpeg(image_bytes_list[rand])
 
+        return image
 
-def _cond(image):
-    """ Return True if Tensor has less than 3 Channels (H,W,C) """
-    return tf.less(tf.shape(image)[-1], 3)
+    def _decode_image_bytes_example(
+            self,
+            image_bytes,
+            output_height=None, output_width=None, n_colors=3):
+        """ Input is one TFRecord Exaample
+            Example with three images:
+                TensorShape([Dimension(1), Dimension(3)])
+            Example Output:
+                TensorShape([Dimension(3), Dimension(375),
+                             Dimension(500), Dimension(3)])
+        """
+        if (output_width is None) or (output_height is None):
+            images = tf.map_fn(
+                        lambda x: tf.image.decode_jpeg(x, channels=n_colors),
+                        image_bytes, dtype=tf.uint8)
+            images = tf.cast(images, tf.float32)
+        else:
+            images = tf.map_fn(
+                         lambda x: tf.image.resize_images(
+                                     tf.image.decode_jpeg(x, channels=n_colors),
+                                     [output_height, output_width]),
+                         image_bytes, dtype=tf.float32)
+        return images
 
+    def _stacker(self, image):
+        """ Append / Repeat the last channel of a (H,W,C) Tensor to itself """
+        res = tf.cond(
+                tf.equal(tf.shape(image)[-1], 1),
+                lambda: tf.squeeze(
+                        tf.stack([image, image], axis=2), -1),
+                lambda: tf.concat([
+                            image,
+                            tf.expand_dims(image[:, :, -1], -1)
+                            ], axis=2))
+        return res
 
-def _stack_1D_or_2D_to_3D(image):
-    """ Stack a 1D/2D image tensor to a 3D tensor by appending the last
-       channel of the input image
-    """
-    image_stacked = tf.while_loop(
-        _cond, _stacker, [image],
-        shape_invariants=[tf.TensorShape([None, None, None])])
-    return image_stacked
+    def _cond(self, image):
+        """ Return True if Tensor has less than 3 Channels (H,W,C) """
+        return tf.less(tf.shape(image)[-1], 3)
 
+    def _stack_1D_or_2D_to_3D(self, image):
+        """ Stack a 1D/2D image tensor to a 3D tensor by appending the last
+           channel of the input image
+        """
+        image_stacked = tf.while_loop(
+            self._cond, self._stacker, [image],
+            shape_invariants=[tf.TensorShape([None, None, None])])
+        return image_stacked
 
-def _blurr_imgs(img_batch):
-    """ Blurr image batch with Gaussian Filter """
-    with tf.variable_scope("gauss_kernel"):
-        gauss_kernel = gaussian_kernel_2D(sigma=2)
-        gauss_kernel = tf.expand_dims(tf.expand_dims(gauss_kernel, -1), -1)
+    def _blurr_imgs(self, img_batch):
+        """ Blurr image batch with Gaussian Filter """
 
-    img_batch_blurred = tf.nn.conv2d(
-        img_batch,
-        filter=gauss_kernel,
-        strides=[1, 1, 1, 1],
-        padding="SAME",
-        use_cudnn_on_gpu=True,
-        data_format='NHWC'
-    )
+        img_batch_blurred = tf.nn.conv2d(
+            img_batch,
+            filter=self.gauss_kernel,
+            strides=[1, 1, 1, 1],
+            padding="SAME",
+            use_cudnn_on_gpu=True,
+            data_format='NHWC'
+        )
 
-    return img_batch_blurred
+        return img_batch_blurred
 
+    def _grayscale_stacking_and_blurring(
+            self,
+            image_bytes, output_height=None, output_width=None):
+        """ Get and convert all images to grayscale """
 
-def grayscale_stacking_and_blurring(
-        image_bytes, output_height=None, output_width=None):
-    """ Get and convert all images to grayscale """
+        # Grayscale image batch tensor (4-D, NHWC)
+        imgs = self._decode_image_bytes_example(
+            image_bytes, output_height, output_width, n_colors=1)
 
-    # Grayscale image batch tensor (4-D, NHWC)
-    imgs = _decode_image_bytes_example(
-        image_bytes, output_height, output_width, n_colors=1)
+        # Apply Gaussian Blurring
+        # Batch of 1-N blurred images
+        imgs_blurred = self._blurr_imgs(imgs)
 
-    # Apply Gaussian Blurring
-    # Batch of 1-N blurred images
-    imgs_blurred = _blurr_imgs(imgs)
+        # Stack into RGB image, handle cases when there is only 1 or 2 images
+        image = tf.transpose(tf.squeeze(imgs_blurred, -1), perm=[1, 2, 0])
 
-    # Stack into RGB image, handle cases when there is only 1 or 2 images
-    image = tf.transpose(tf.squeeze(imgs_blurred, -1), perm=[1, 2, 0])
+        image = self._stack_1D_or_2D_to_3D(image)
 
-    image = _stack_1D_or_2D_to_3D(image)
+        image = tf.cast(image, tf.uint8)
 
-    image = tf.cast(image, tf.uint8)
-
-    return image
+        return image
