@@ -22,10 +22,6 @@ from camera_trap_classifier.data.tfr_encoder_decoder import (
 from camera_trap_classifier.data.image import (
     read_image_from_disk_resize_and_convert_to_jpeg)
 
-# Configure Logging
-setup_logging()
-logger = logging.getLogger(__name__)
-
 
 def main():
     # Parse command line arguments
@@ -139,9 +135,9 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    print("Using arguments:")
+    logger.info("Using arguments:")
     for k, v in args.items():
-        print("Arg: %s: %s" % (k, v))
+        logger.info("Arg: %s: %s" % (k, v))
 
     # Create Dataset Inventory
     params = {'path': args['inventory']}

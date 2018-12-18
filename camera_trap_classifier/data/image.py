@@ -390,8 +390,8 @@ def decode_image_bytes_1D(image_bytes_list,
                     image_bytes_list,
                     output_height, output_width)
     else:
-        raise NotImplemented("Image choice for set: %s not implemented" %
-                             image_choice_for_sets)
+        raise NotImplementedError("Image choice for set: %s not implemented" %
+                                  image_choice_for_sets)
     return image
 
 
@@ -660,20 +660,32 @@ def _decode_image_bytes_example(
     return images
 
 
-def _stack_images_to_3D(image_tensor):
-    """ Stack images """
-    input_shape = image_tensor.get_shape().as_list()
-    if input_shape[-1] == 1:
-        target_shape = image_tensor.get_shape().as_list()
-        target_shape[-1] = 3
-        image_tensor = tf.broadcast_to(image_tensor, target_shape)
-    elif input_shape[-1] == 2:
-        image_tensor = tf.stack([
-            image_tensor[:, :, 0],
-            image_tensor[:, :, 1],
-            image_tensor[:, :, 1]], 2)
-    image_tensor.set_shape([input_shape[0], input_shape[1], 3])
-    return image_tensor
+def _stacker(image):
+    """ Append / Repeat the last channel of a (H,W,C) Tensor to itself """
+    res = tf.cond(
+            tf.equal(tf.shape(image)[-1], 1),
+            lambda: tf.squeeze(
+                    tf.stack([image, image], axis=2), -1),
+            lambda: tf.concat([
+                        image,
+                        tf.expand_dims(image[:, :, -1], -1)
+                        ], axis=2))
+    return res
+
+
+def _cond(image):
+    """ Return True if Tensor has less than 3 Channels (H,W,C) """
+    return tf.less(tf.shape(image)[-1], 3)
+
+
+def _stack_1D_or_2D_to_3D(image):
+    """ Stack a 1D/2D image tensor to a 3D tensor by appending the last
+       channel of the input image
+    """
+    image_stacked = tf.while_loop(
+        _cond, _stacker, [image],
+        shape_invariants=[tf.TensorShape([None, None, None])])
+    return image_stacked
 
 
 def _blurr_imgs(img_batch):
@@ -708,7 +720,8 @@ def grayscale_stacking_and_blurring(
 
     # Stack into RGB image, handle cases when there is only 1 or 2 images
     image = tf.transpose(tf.squeeze(imgs_blurred, -1), perm=[1, 2, 0])
-    image = _stack_images_to_3D(image)
+
+    image = _stack_1D_or_2D_to_3D(image)
 
     image = tf.cast(image, tf.uint8)
 

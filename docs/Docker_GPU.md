@@ -21,7 +21,7 @@ sudo apt-get install -y build-essential git python-pip libfreetype6-dev \
 ## Docker Installation
 
 ```
-sudo apt-get install \
+sudo apt-get install -y \
     apt-transport-https \
     ca-certificates \
     curl \
@@ -33,7 +33,7 @@ sudo add-apt-repository \
    $(lsb_release -cs) \
    stable"
 sudo apt-get update
-sudo apt-get install docker-ce
+sudo apt-get install -y docker-ce
 
 # test installation
 sudo docker run hello-world

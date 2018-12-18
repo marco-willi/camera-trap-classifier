@@ -3,7 +3,7 @@
 
 **Automatically identify animals in camera trap images by training and applying a deep neural network.**
 
-This repository contains code and documentation to train and apply a convolutional neural network (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and featuers.
+This repository contains code and documentation to train and apply convolutional neural networks (CNN) for identifying animal species in photographs from camera traps. Please note that this repository will be updated to include more documentation and features.
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/sample_predictions.png"/>
 
