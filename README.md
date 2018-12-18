@@ -325,7 +325,7 @@ To make better use of motion information contained in capture events with multip
 
 This will apply the following transformations to each image during model training:
 1. Convert each image of a capture event (set of image) to grayscale
-2. Blurr each image with a Gaussian filter
+2. (Blurr each image with a Gaussian filter - DEPRECATED due to poor performance on CPU)
 3. Stack all images of the set in temporal order to an RGB image (e.g. first image goes into the 'red' channel). If there are fewer than 3 images in some sets, the last image is repeated.
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/data_augmentation_grayscale_stacking.png"/>

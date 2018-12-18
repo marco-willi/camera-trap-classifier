@@ -716,7 +716,11 @@ def grayscale_stacking_and_blurring(
 
     # Apply Gaussian Blurring
     # Batch of 1-N blurred images
-    imgs_blurred = _blurr_imgs(imgs)
+    # don't apply due to poor performance on a typical CPU pipeline
+    if False:
+        imgs_blurred = _blurr_imgs(imgs)
+    else:
+        imgs_blurred = imgs
 
     # Stack into RGB image, handle cases when there is only 1 or 2 images
     image = tf.transpose(tf.squeeze(imgs_blurred, -1), perm=[1, 2, 0])
