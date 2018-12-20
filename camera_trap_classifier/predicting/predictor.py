@@ -5,7 +5,6 @@ import csv
 from collections import OrderedDict
 import traceback
 import time
-import datetime
 
 import tensorflow as tf
 
