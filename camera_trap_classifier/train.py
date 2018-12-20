@@ -130,7 +130,7 @@ def main():
         "-optimizer", type=str, default="sgd",
         choices=['sgd', 'rmsprop'],
         required=False,
-        help="Which optimizer to use in training the model (sgd or rmsprop)")
+        help="Which optimizer to use in training the model.")
     parser.add_argument(
         "-early_stopping_patience", type=int, default=3,
         help="Number of epochs after which to stop training if no improvement \
@@ -180,6 +180,7 @@ def main():
               and is usually more than fast enough.")
     parser.add_argument(
         "-preserve_aspect_ratio", action='store_true', default=None,
+        dest='preserve_aspect_ratio',
         help="Wheter to preserve the aspect ratio of the images during model \
               training. This keeps the aspect ratio intact which may improve \
               model performance, however, may lead to cut-off areas at the \
@@ -187,9 +188,21 @@ def main():
               of interest may occur at the edges we don't recommend to \
               specify this.")
     parser.add_argument(
-        "-randomly_flip_horizontally", action='store_true', default=None,
-        help="Wheter to randomly flip the image during model training. \
+        "-ignore_aspect_ratio", action='store_false', default=None,
+        dest='preserve_aspect_ratio',
+        help="Wheter to ignore the aspect ratio of the images during model \
+              training.")
+    parser.add_argument(
+        "-randomly_flip_horizontally", dest='randomly_flip_horizontally',
+        action='store_true', default=None,
+        help="Whether to randomly flip the image during model training. \
               This almost always makes sense unless the training labels \
+              are not invariant to flipping.")
+    parser.add_argument(
+        "-dont_randomly_flip_horizontally", dest='randomly_flip_horizontally',
+        action='store_false', default=None,
+        help="Whether to not randomly flip the image during model training. \
+              This only makes sense if the training labels \
               are not invariant to flipping.")
     parser.add_argument(
         "-crop_factor", type=float, default=None,
@@ -221,6 +234,18 @@ def main():
               individual images to grayscale. Note that grayscale_stacking is \
               an experimental feature and is not yet supported when using \
               the predictor on new images. ")
+    parser.add_argument(
+        "-output_width", type=int, default=None,
+        help="The output width in pixels of the image after pre-processing, \
+              thus the input width of the image into the model. \
+              Use this to override the default model-specific values as \
+              specified in the config.yaml")
+    parser.add_argument(
+        "-output_height", type=int, default=None,
+        help="The output height in pixels of the image after pre-processing, \
+              thus the input height of the image into the model. \
+              Use this to override the default model-specific values as \
+              specified in the config.yaml")
 
     # Parse command line arguments
     args = vars(parser.parse_args())
@@ -253,19 +278,20 @@ def main():
     # get default image_processing options from config
     image_processing = config.cfg['image_processing']
 
-    # overwrite parameters if specified by user
-    to_overwrite = ['color_augmentation', 'preserve_aspect_ratio',
-                    'crop_factor', 'zoom_factor', 'rotate_by_angle',
-                    'randomly_flip_horizontally', 'image_choice_for_sets']
-    for overwrite in to_overwrite:
-        if args[overwrite] is not None:
-            image_processing[overwrite] = args[overwrite]
-
     # load model specific image processing parameters
     image_processing_model = \
         config.cfg['models'][args['model']]['image_processing']
 
-    image_processing = {**image_processing, **image_processing_model}
+    # overwrite parameters if specified by user
+    to_overwrite = ['color_augmentation', 'preserve_aspect_ratio',
+                    'crop_factor', 'zoom_factor', 'rotate_by_angle',
+                    'randomly_flip_horizontally', 'image_choice_for_sets',
+                    'output_width', 'output_height']
+    for overwrite in to_overwrite:
+        if args[overwrite] is not None:
+            image_processing[overwrite] = args[overwrite]
+
+    image_processing = {**image_processing_model, **image_processing}
 
     # disable color_augmentation for grayscale_stacking
     if image_processing['image_choice_for_sets'] == 'grayscale_stacking':

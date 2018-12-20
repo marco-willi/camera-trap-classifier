@@ -140,7 +140,10 @@ python train.py \
 -buffer_size 1 \
 -max_epochs 2 \
 -starting_epoch 0 \
--image_choice_for_sets grayscale_stacking
+-image_choice_for_sets grayscale_stacking \
+-output_width 60 \
+-output_height 60 \
+-dont_randomly_flip_horizontally
 
 
 # Predict with grayscale_stacking
