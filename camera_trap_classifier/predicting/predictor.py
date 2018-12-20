@@ -4,6 +4,8 @@ import json
 import csv
 from collections import OrderedDict
 import traceback
+import time
+import datetime
 
 import tensorflow as tf
 
@@ -12,7 +14,7 @@ from camera_trap_classifier.training.prepare_model import load_model_from_disk
 from camera_trap_classifier.data.image import (
     preprocess_image, decode_image_bytes_1D)
 from camera_trap_classifier.data.utils import (
-    print_progress, list_pictures,
+    print_progress, list_pictures, estimate_remaining_time,
     slice_generator, calc_n_batches_per_epoch)
 
 
@@ -280,6 +282,7 @@ class Predictor(object):
             n_records, batch_size * 5, False)
         slices = slice_generator(n_records, n_inventories)
         n_processed = 0
+        start_time = time.time()
 
         # iterate over the dataset
         for i_start, i_end in slices:
@@ -318,6 +321,9 @@ class Predictor(object):
             n_processed += n_preds
             if n_records is not None:
                 print_progress(n_processed, n_records)
+                estt = estimate_remaining_time(
+                    start_time, n_records, n_processed)
+                print("\nEstimated time remaining: %s" % estt)
             else:
                 print("Processed %s images" % n_processed)
 
@@ -336,12 +342,16 @@ class Predictor(object):
         # collect all labels
         inventory_predictions = dict()
 
+        batch_counter = 0
+
         while True:
             try:
                 features, labels = self.session.run(batch_data)
+                batch_counter += 1
             except tf.errors.OutOfRangeError:
                 print("")
-                print("Finished Predicting")
+                print("finished current iterator, predicted %s batches" %
+                      batch_counter)
                 break
             except Exception:
                 traceback.print_exc()

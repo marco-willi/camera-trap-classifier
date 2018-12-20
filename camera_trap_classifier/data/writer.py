@@ -276,7 +276,7 @@ class DatasetWriter(object):
                                                 successfull_writes)
 
                 msg = "Wrote %s / %s records - \
-                       estimated time remaining: %s - file: %s)" % \
+                       estimated time remaining: %s - file: %s" % \
                       (successfull_writes, n_records, est_t, output_file)
 
                 logger.debug(textwrap.shorten(msg, width=99))

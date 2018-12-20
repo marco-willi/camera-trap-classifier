@@ -25,6 +25,7 @@ ctc.train \
 import argparse
 import logging
 import os
+import textwrap
 
 import tensorflow as tf
 import numpy as np
@@ -270,8 +271,9 @@ def main():
     if image_processing['image_choice_for_sets'] == 'grayscale_stacking':
         if image_processing['color_augmentation'] is not None:
             image_processing['color_augmentation'] = None
-            logging.info("Disabling color_augmentation because of \
-                incompatibility with grayscale_stacking")
+            msg = "Disabling color_augmentation because of \
+                   incompatibility with grayscale_stacking"
+            logger.info(textwrap.shorten(msg, width=99))
 
     input_shape = (image_processing['output_height'],
                    image_processing['output_width'], 3)
@@ -315,8 +317,8 @@ def main():
                 most_recent_model = \
                     get_most_recent_file_from_files(model_files)
                 args['model_to_load'] = most_recent_model
-                logging.debug("Loading most recent model file %s:"
-                              % most_recent_model)
+                logger.debug("Loading most recent model file %s:"
+                             % most_recent_model)
 
     ###########################################
     # CALC IMAGE STATS ###########
