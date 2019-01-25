@@ -97,12 +97,13 @@ class ProcessPredictions(object):
 
     def _collect_predictions(self, extracted_predictions):
         """ Collect all predictions  """
+        preds_per_label = dict()
         for i, image_pred in enumerate(extracted_predictions):
             all_label_names = image_pred.keys()
-            if i == 0:
-                preds_per_label = {x: list() for x in all_label_names}
             for label in all_label_names:
                 preds_of_image_and_label = image_pred[label]
+                if label not in preds_per_label:
+                    preds_per_label[label] = list()
                 preds_per_label[label].append(preds_of_image_and_label)
         return preds_per_label
 

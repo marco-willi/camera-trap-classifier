@@ -122,7 +122,9 @@ def main():
     parser.add_argument(
         "-starting_epoch", type=int, default=0,
         help="The starting epoch number (0-based index).")
+    ######################################################################
     # Model Training Parameters
+    ######################################################################
     parser.add_argument(
         "-initial_learning_rate", type=float, default=0.01,
         help="The initial learning rate.")
@@ -139,7 +141,9 @@ def main():
         "-reduce_lr_on_plateau_patience", type=int, default=2,
         help="Number of epochs after which to reduce learning rate if no \
               improvement on validation set was observed (total loss).")
+    ######################################################################
     # Transfer-Learning and Model Loading
+    ######################################################################
     parser.add_argument(
         "-transfer_learning", default=False,
         action='store_true', required=False,
@@ -166,7 +170,9 @@ def main():
              or transfer_learning are specified, \
              if a directory is specified, \
              the most recent model in that directory is loaded')
+    ######################################################################
     # Image Processing
+    ######################################################################
     parser.add_argument(
         "-color_augmentation", type=str, default=None,
         choices=[None, 'little', 'full_fast', 'full_randomized'],

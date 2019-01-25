@@ -17,7 +17,7 @@ class ProcessPredictionsTestsr(unittest.TestCase):
              'images': [{
                      'path': 'image1',
                      'predictions': {
-                        'species': {'cats': 0.8, 'dogs': 0.2},
+                        'species': {'cats': 0.8, 'dogs': 0.6},
                         'counts': {'1': 0.5, '2': 0.5}
                         }
                      },{
@@ -37,6 +37,24 @@ class ProcessPredictionsTestsr(unittest.TestCase):
                      'path': 'image1',
                      'predictions': {
                         'species': {'cats': 0.5, 'dogs': 0.5},
+                        'counts': {'1': 0.5, '2': 0.5}
+                        }
+                     },{
+                     'path': 'image2',
+                     'predictions':{
+                        'species': {'cats': 0.2, 'dogs': 0.8},
+                        'counts': {'1': 0.6, '2': 0.4}
+                        }
+                     }],
+             'meta_data': {'timestamp': 'lala'},
+             'ground_truth': {
+              'species': 'cats',
+              'counts': 'ClassB'
+              }},
+             '1236':{
+             'images': [{
+                     'path': 'image1',
+                     'predictions': {
                         'counts': {'1': 0.5, '2': 0.5}
                         }
                      },{
@@ -86,6 +104,24 @@ class ProcessPredictionsTestsr(unittest.TestCase):
         actual = self.processor._collect_predictions(input)
         self.assertEqual(expected, actual)
 
+    def testCollectPredictionsWithMissing(self):
+        input = [{'counts': {'1': 0.5, '2': 0.5}},
+                 {'species': {'cats': 0.2, 'dogs': 0.8},
+                  'counts': {'1': 0.6, '2': 0.4}}]
+        expected = {'species': [{'cats': 0.2, 'dogs': 0.8}],
+                    'counts': [{'1': 0.5, '2': 0.5}, {'1': 0.6, '2': 0.4}]}
+        actual = self.processor._collect_predictions(input)
+        self.assertEqual(expected, actual)
+
+    def testCollectPredictionsWithAllMissing(self):
+        input = [{},
+                 {'species': {'cats': 0.2, 'dogs': 0.8},
+                  'counts': {'1': 0.6, '2': 0.4}}]
+        expected = {'species': [{'cats': 0.2, 'dogs': 0.8}],
+                    'counts': [{'1': 0.6, '2': 0.4}]}
+        actual = self.processor._collect_predictions(input)
+        self.assertEqual(expected, actual)
+
     def testConsolidatePredictionsStandard(self):
         input = {'species': [{'cats': 0.5, 'dogs': 0.5}, {'cats': 0.2, 'dogs': 0.8}],
                     'counts': [{'1': 0.5, '2': 0.5}, {'1': 0.6, '2': 0.4}]}
@@ -125,7 +161,7 @@ class ProcessPredictionsTestsr(unittest.TestCase):
         {'1234': {
             'images': [
                 {'path': 'image1',
-                 'predictions': {'species': {'cats': 0.8, 'dogs': 0.2},
+                 'predictions': {'species': {'cats': 0.8, 'dogs': 0.6},
                                  'counts': {'1': 0.5, '2': 0.5}}},
                  {'path': 'image2',
                   'predictions': {'species': {'cats': 0.2, 'dogs': 0.8},
@@ -133,12 +169,12 @@ class ProcessPredictionsTestsr(unittest.TestCase):
           'meta_data': {'timestamp': 'lala'},
           'ground_truth': {'species': 'cats', 'counts': 'ClassB'},
           'aggregated_pred':
-              {'species': {'cats': 0.5, 'dogs': 0.5},
+              {'species': {'cats': 0.5, 'dogs': 0.7},
                'counts': {'1': 0.55, '2': 0.45}},
           'predictions_top':
-              {'species': 'cats',
+              {'species': 'dogs',
                'counts': '1'},
-        'confidences_top': {'species': 0.5, 'counts': 0.55}},
+        'confidences_top': {'species': 0.7, 'counts': 0.55}},
          '1235': {
             'images': [
                 {'path': 'image1',
@@ -155,10 +191,27 @@ class ProcessPredictionsTestsr(unittest.TestCase):
           'predictions_top': {
                   'species': 'dogs',
                   'counts': '1'},
-           'confidences_top': {'species': 0.65, 'counts': 0.55}}
+           'confidences_top': {'species': 0.65, 'counts': 0.55}},
+         '1236': {
+            'images': [
+                {'path': 'image1',
+                 'predictions': {
+                                 'counts': {'1': 0.5, '2': 0.5}}},
+                 {'path': 'image2',
+                  'predictions': {'species': {'cats': 0.2, 'dogs': 0.8},
+                                  'counts': {'1': 0.6, '2': 0.4}}}],
+            'meta_data': {'timestamp': 'lala'},
+            'ground_truth': {'species': 'cats', 'counts': 'ClassB'},
+            'aggregated_pred': {
+                    'species': {'cats': 0.2, 'dogs': 0.8},
+                    'counts': {'1': 0.55, '2': 0.45}},
+          'predictions_top': {
+                  'species': 'dogs',
+                  'counts': '1'},
+           'confidences_top': {'species': 0.8, 'counts': 0.55}}
            }
         actual = self.processor.process_predictions(self.example, aggregation_mode='mean')
-        self.assertEqual(expected, actual)
+        self.assertAlmostEqual(expected, actual, delta=0.0001)
 
 if __name__ == '__main__':
 
