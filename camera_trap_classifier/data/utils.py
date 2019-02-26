@@ -510,11 +510,15 @@ def get_file_name_from_path(file_path):
     return file_path.split(os.path.sep)[-1]
 
 
-def list_pictures(directory, ext='jpg|jpeg|bmp|png|ppm'):
-    """ List jpeg/jpg images  """
-    file_paths = [os.path.join(root, f)
-                  for root, _, files in os.walk(directory)
-                  for f in files
-                  if re.match(r'([\w-]+\.(?:' + ext + '))', f,
-                              re.IGNORECASE)]
-    return file_paths
+def list_pictures(directory, ext=('jpg', 'jpeg', 'bmp', 'png', 'ppm')):
+    """Lists all pictures in a directory, including all subdirectories.
+    # Arguments
+        directory: string, absolute path to the directory
+        ext: tuple of strings or single string, extensions of the pictures
+    # Returns
+        a list of paths
+    """
+    ext = tuple('.%s' % e for e in ((ext,) if isinstance(ext, str) else ext))
+    return [os.path.join(root, f)
+            for root, _, files in os.walk(directory) for f in files
+            if f.lower().endswith(ext)]

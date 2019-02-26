@@ -134,8 +134,9 @@ class Predictor(object):
 
     def _from_image_dir(self, path_to_image_dir):
         """ Find all images in a directory """
-        image_paths = list_pictures(path_to_image_dir,
-                                    ext='jpg|jpeg|bmp|png')
+        image_paths = list_pictures(
+            path_to_image_dir,
+            ext=('jpg', 'jpeg', 'bmp', 'png'))
         print("Found %s images in %s" %
               (len(image_paths), path_to_image_dir))
 
