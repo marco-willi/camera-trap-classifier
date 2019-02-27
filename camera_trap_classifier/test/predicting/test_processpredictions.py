@@ -4,7 +4,7 @@ import unittest
 from camera_trap_classifier.predicting.processor import ProcessPredictions
 
 
-class ProcessPredictionsTestsr(unittest.TestCase):
+class ProcessPredictionsTests(unittest.TestCase):
     """ Test Processing of PRedictions """
 
     def setUp(self):

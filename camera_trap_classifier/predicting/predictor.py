@@ -147,8 +147,8 @@ class Predictor(object):
         image_paths.sort()
         inventory = OrderedDict()
         image_paths = [os.path.normpath(x) for x in image_paths]
-        for i, path in enumerate(image_paths):
-            inventory[str(i)] = {
+        for path in image_paths:
+            inventory[path] = {
                 'images': [{'path': path}]}
 
         return inventory
