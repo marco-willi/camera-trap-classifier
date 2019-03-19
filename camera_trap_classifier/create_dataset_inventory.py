@@ -135,7 +135,6 @@ def main():
         args['log_outdir'] = os.path.split(args['export_path'])[0]
     setup_logging(log_output_path=args['log_outdir'])
 
-
     print("Using arguments:")
     for k, v in args.items():
         print("Arg: %s: %s" % (k, v))

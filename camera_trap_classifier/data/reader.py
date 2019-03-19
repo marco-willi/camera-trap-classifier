@@ -50,16 +50,19 @@ class DatasetReader(object):
                     buffer_size=buffer_size,
                     count=n_repeats))
 
-        dataset = dataset.apply(
-              tf.data.experimental.map_and_batch(
-                  lambda x: self.tfr_decoder(
-                          serialized_example=x,
-                          output_labels=output_labels,
-                          label_lookup_dict=class_to_index_mappings,
-                          **kwargs),
-                  batch_size=batch_size,
-                  num_parallel_calls=num_parallel_calls,
-                  drop_remainder=drop_batch_remainder))
+        dataset = dataset.map(
+            lambda x: self.tfr_decoder(
+                serialized_example=x,
+                output_labels=output_labels,
+                label_lookup_dict=class_to_index_mappings,
+                **kwargs), num_parallel_calls=num_parallel_calls)
+
+        # silently ignore errors -- this occured extremely rarely due to issues
+        # with color augmentation operations for some images
+        dataset = dataset.apply(tf.data.experimental.ignore_errors())
+
+        dataset = dataset.batch(batch_size=batch_size,
+                                drop_remainder=drop_batch_remainder)
 
         if not is_train:
             dataset = dataset.repeat(n_repeats)
