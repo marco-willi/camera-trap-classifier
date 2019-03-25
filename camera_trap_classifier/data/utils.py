@@ -361,9 +361,11 @@ def n_records_in_tfr_dataset(tfr_path,
                 break
             if (n_batches % 100) == 0:
                 t_now = time.time()
-                logger.debug("Counted {} records".format(counter[-1]))
-                logger.debug("Took {:2.2f} s/batch".format(
+                logger.debug("Counted {} records so far ...".format(
+                    counter[-1]))
+                logger.debug("Current speed: {:2.2f} s/batch".format(
                     t_now-t_start_batch))
+    logger.debug("Finished -- Counted {} records".format(counter[-1]))
     return counter[-1]
 
 
