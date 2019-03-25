@@ -3,6 +3,31 @@
 This document describes how to setup and use Docker. The following commands were executed on an Ubuntu 16.04 base installation on an EC2 instance on AWS.
 
 
+## Docker Installation
+
+```
+sudo apt-get update
+
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    software-properties-common
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+
+sudo apt-get update
+sudo apt-get install -y docker-ce
+
+# test installation
+sudo docker run hello-world
+```
+
 ## Install general programs
 
 ```
@@ -10,33 +35,7 @@ This document describes how to setup and use Docker. The following commands were
 sudo apt-get update
 
 # install some basics
-sudo apt-get install -y build-essential git python-pip libfreetype6-dev \
- libxft-dev libncurses-dev libopenblas-dev gfortran \
- libblas-dev liblapack-dev libatlas-base-dev \
- linux-headers-generic linux-image-extra-virtual unzip \
- swig unzip wget pkg-config zip g++ zlib1g-dev \
- screen
-```
-
-## Docker Installation
-
-```
-sudo apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-sudo apt-get update
-sudo apt-get install -y docker-ce
-
-# test installation
-sudo docker run hello-world
+sudo apt-get install -y git unzip wget zip screen vim
 ```
 
 ## Build Container

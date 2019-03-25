@@ -1,37 +1,26 @@
 # Docker Usage (GPU version)
 
-This document describes how to setup and use Docker. The following commands were executed on an Ubuntu 16.04 base installation on an EC2 instance on AWS. The GPU version requires the installation of Nvidia GPU drivers.
+This document describes how to setup and use Docker. The following commands were executed on an Ubuntu 16.04 base AMI on an EC2 instance on AWS (specifically, we used the following AMI: ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-20181114 (ami-0f9cf087c1f27d9b1)). The GPU version requires the installation of Nvidia GPU drivers. Alternatively, it is possible to select a pre-configured AMI, for example, "Deep Learning Base AMI (Amazon Linux) Version 15.0 - ami-082a51998a2828b4a". In that case one can skip the 'Docker Installation', the 'Nvidia Driver' installation, and jump directly to 'Build Container'.
 
-
-## Install general programs
-
-```
-# update
-sudo apt-get update
-
-# install some basics
-sudo apt-get install -y build-essential git python-pip libfreetype6-dev \
- libxft-dev libncurses-dev libopenblas-dev gfortran \
- libblas-dev liblapack-dev libatlas-base-dev \
- linux-headers-generic linux-image-extra-virtual unzip \
- swig unzip wget pkg-config zip g++ zlib1g-dev \
- screen
-```
 
 ## Docker Installation
 
 ```
+sudo apt-get update
+
 sudo apt-get install -y \
     apt-transport-https \
     ca-certificates \
     curl \
     software-properties-common
+
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
 sudo add-apt-repository \
    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
    $(lsb_release -cs) \
    stable"
+
 sudo apt-get update
 sudo apt-get install -y docker-ce
 
@@ -41,7 +30,7 @@ sudo docker run hello-world
 
 ## Nvidia Driver / Docker installation
 
-From (https://github.com/NVIDIA/nvidia-docker/wiki/Driver-containers-(EXPERIMENTAL))
+From (https://github.com/NVIDIA/nvidia-docker/wiki/Driver-containers-(Beta))
 
 ```
 curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
@@ -49,6 +38,8 @@ curl -s -L https://nvidia.github.io/nvidia-docker/ubuntu16.04/nvidia-docker.list
   | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
 
 sudo apt-get update && sudo apt-get install -y nvidia-docker2
+sudo pkill -SIGHUP dockerd
+
 sudo sed -i 's/^#root/root/' /etc/nvidia-container-runtime/config.toml
 
 sudo tee /etc/modules-load.d/ipmi.conf <<< "ipmi_msghandler"
@@ -56,13 +47,25 @@ sudo tee /etc/modprobe.d/blacklist-nouveau.conf <<< "blacklist nouveau"
 sudo tee -a /etc/modprobe.d/blacklist-nouveau.conf <<< "options nouveau modeset=0"
 sudo update-initramfs -u
 
+# Reboot
 sudo reboot
 
-sudo docker run -d --name nvidia-driver --privileged --pid=host -v /run/nvidia:/run/nvidia:shared \
-  nvidia/driver:396.37-ubuntu16.04 --accept-license
+# Download and run nvidia driver
+sudo docker run -d --name nvidia-driver --privileged --pid=host -v /run/nvidia:/run/nvidia:shared --restart=unless-stopped nvidia/driver:396.37-4.4.0-1072-aws-ubuntu16.04 --accept-license
 
-# Verify installation (wait ca. 30 seconds)
-sudo docker run --runtime=nvidia --rm nvidia/cuda:9.0-base nvidia-smi
+# Verify running of container (wait 30 seconds)
+sudo docker ps
+sudo docker run --rm --runtime=nvidia nvidia/cuda:9.0-base-ubuntu16.04 nvidia-smi
+```
+
+## Install general programs
+
+```
+# update
+sudo apt-get update
+
+# install some basics
+sudo apt-get install -y git unzip wget zip screen vim
 ```
 
 
@@ -82,7 +85,7 @@ sudo docker build . -f Dockerfile.gpu -t camera-trap-classifier:latest-gpu
 
 ## Start Container
 
-Now we run the container and map /my_data/ from the host computer to /data/ inside the container. It is important to adapt these paths to where the actual data is on the host.
+Now we run the container and map /my_data/ from the host computer to /data/ inside the container. It is important to adapt these paths to where the actual data is on the host. Note, that, depending on the AMI, your username may not be 'ubuntu' but 'ec2-user'.
 
 ```
 # run docker image

@@ -117,6 +117,10 @@ def main():
         help='The buffer size to use for shuffling training records. Use \
               smaller values if memory is limited.')
     parser.add_argument(
+        "-n_parallel_file_reads", type=int, default=50,
+        help='How many files to read in parallel when counting the number of \
+              records in tfr files.')
+    parser.add_argument(
         "-max_epochs", type=int, default=70,
         help="The max number of epochs to train the model")
     parser.add_argument(
@@ -362,8 +366,10 @@ def main():
     data_reader = DatasetReader(tfr_encoder_decoder.decode_record)
 
     # Calculate Dataset Image Means and Stdevs for a dummy batch
-    logger.info("Get Dataset Reader for calculating datset stats")
-    n_records_train = n_records_in_tfr_dataset(tfr_train, args['n_cpus'])
+    logger.info("Get Dataset Reader for calculating dataset stats")
+    n_records_train = n_records_in_tfr_dataset(
+                        tfr_train,
+                        n_parallel_file_reads=args['n_parallel_file_reads'])
     dataset = data_reader.get_iterator(
             tfr_files=tfr_train,
             batch_size=min([4096, n_records_train]),
@@ -443,7 +449,8 @@ def main():
     n_batches_per_epoch_train = calc_n_batches_per_epoch(
         n_records_train, args['batch_size'])
 
-    n_records_val = n_records_in_tfr_dataset(tfr_val, args['n_cpus'])
+    n_records_val = n_records_in_tfr_dataset(
+        tfr_val, n_parallel_file_reads=args['n_parallel_file_reads'])
     n_batches_per_epoch_val = calc_n_batches_per_epoch(
         n_records_val, args['batch_size'])
 

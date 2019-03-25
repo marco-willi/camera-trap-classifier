@@ -9,9 +9,13 @@ from hashlib import md5
 import random
 import time
 from multiprocessing import Pool
+import logging
 
 import tensorflow as tf
 import numpy as np
+
+
+logger = logging.getLogger(__name__)
 
 
 def generate_synthetic_data(**kwargs):
@@ -309,10 +313,14 @@ def n_records_in_tfr(tfr_path):
     return total
 
 
-def n_records_in_tfr_dataset(tfr_path, n_processes=4):
+def n_records_in_tfr_dataset(tfr_path,
+                             n_parallel_file_reads=50,
+                             batch_size=5000):
     """ Read the number of records in all tfr files using the Dataset API
         Input:
-            list of tfr paths
+            tfr_path: list of tfr paths
+            n_parallel_file_reads: int - number of files to read in parallel
+            batch_size: int - number of elements to read from each file
         Output:
             int with number of records over all files
     """
@@ -321,27 +329,41 @@ def n_records_in_tfr_dataset(tfr_path, n_processes=4):
 
     # Use max one process per file
     n_tfr_files = len(tfr_path)
-    num_parallel_reads = min(n_processes, n_tfr_files)
+    num_parallel_reads = min(n_parallel_file_reads, n_tfr_files)
 
-    # Define a Dataset and only keep the Counter
-    dataset = tf.data.TFRecordDataset(tfr_path,
-                                      num_parallel_reads=num_parallel_reads)
+    logger.debug("Reading total {} files in {} parallel threads".format(
+        n_tfr_files, num_parallel_reads))
+
+    # read files in parallel
+    dataset = tf.data.Dataset.from_tensor_slices(tfr_path)
+    dataset = dataset.apply(
+        tf.data.experimental.parallel_interleave(
+            lambda filename: tf.data.TFRecordDataset(filename),
+            cycle_length=num_parallel_reads))
     dataset = dataset.apply(tf.data.experimental.enumerate_dataset(start=0))
     dataset = dataset.apply(
                 tf.data.experimental.map_and_batch(
                         lambda x, y: x,
-                        batch_size=1024))
+                        batch_size=batch_size))
     dataset = dataset.repeat(1)
     iterator = dataset.make_one_shot_iterator()
     batch = iterator.get_next()
 
     # Loop once over the whole dataset
     with tf.Session() as sess:
+        n_batches = 0
         while True:
             try:
+                t_start_batch = time.time()
                 counter = sess.run(batch)
+                n_batches += 1
             except tf.errors.OutOfRangeError:
                 break
+            if (n_batches % 100) == 0:
+                t_now = time.time()
+                logger.debug("Counted {} records".format(counter[-1]))
+                logger.debug("Took {:2.2f} s/batch".format(
+                    t_now-t_start_batch))
     return counter[-1]
 
 

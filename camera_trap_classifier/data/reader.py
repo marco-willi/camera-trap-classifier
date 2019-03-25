@@ -39,7 +39,7 @@ class DatasetReader(object):
             tf.data.experimental.parallel_interleave(
                 lambda filename: tf.data.TFRecordDataset(filename),
                 sloppy=is_train,
-                cycle_length=12))
+                cycle_length=24))
 
         dataset = dataset.prefetch(buffer_size=batch_size)
 
