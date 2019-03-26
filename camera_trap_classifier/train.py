@@ -126,6 +126,10 @@ def main():
     parser.add_argument(
         "-starting_epoch", type=int, default=0,
         help="The starting epoch number (0-based index).")
+    parser.add_argument(
+        "-n_batches_per_epoch_train", type=int, default=None,
+        help="Override automatic calculation of how many batches make up \
+              an epoch.")
     ######################################################################
     # Model Training Parameters
     ######################################################################
@@ -446,8 +450,11 @@ def main():
                     num_parallel_calls=args['n_cpus'])
 
     logger.info("Calculating batches per epoch")
-    n_batches_per_epoch_train = calc_n_batches_per_epoch(
-        n_records_train, args['batch_size'])
+    if args['n_batches_per_epoch_train'] is None:
+        n_batches_per_epoch_train = calc_n_batches_per_epoch(
+            n_records_train, args['batch_size'])
+    else:
+        n_batches_per_epoch_train = args['n_batches_per_epoch_train']
 
     n_records_val = n_records_in_tfr_dataset(
         tfr_val, n_parallel_file_reads=args['n_parallel_file_reads'])
