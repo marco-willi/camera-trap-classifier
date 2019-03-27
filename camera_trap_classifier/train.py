@@ -376,7 +376,7 @@ def main():
                         n_parallel_file_reads=args['n_parallel_file_reads'])
     dataset = data_reader.get_iterator(
             tfr_files=tfr_train,
-            batch_size=min([32768, n_records_train]),
+            batch_size=min([4096, n_records_train]),
             is_train=True,
             n_repeats=1,
             output_labels=output_labels,
