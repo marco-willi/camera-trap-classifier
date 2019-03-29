@@ -18,3 +18,4 @@ __pycache__/*
 */setup/server_commands.sh
 */setup/*
 TODO.txt
+**/dev/**

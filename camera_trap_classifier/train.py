@@ -33,7 +33,7 @@ from tensorflow.python.keras.callbacks import (
     TensorBoard, EarlyStopping, CSVLogger, ReduceLROnPlateau)
 
 from camera_trap_classifier.training.hooks import (
-    TableInitializerCallback, ModelCheckpoint)
+    TableInitializerCallback, ModelCheckpoint, LoggingLogger)
 from camera_trap_classifier.config.config import ConfigLoader
 from camera_trap_classifier.config.logging import setup_logging
 from camera_trap_classifier.training.utils import copy_models_and_config_files
@@ -520,6 +520,9 @@ def main():
     csv_logger = CSVLogger(args['run_outputs_dir'] + 'training.log',
                            append=args['continue_training'])
 
+    # Log metrics after each epoch to logger
+    logging_logger = LoggingLogger(logger)
+
     # create model checkpoints after each epoch
     checkpointer = ModelCheckpoint(
         filepath=args['run_outputs_dir'] +
@@ -543,8 +546,9 @@ def main():
     # Initialize tables (lookup tables)
     table_init = TableInitializerCallback()
 
-    callbacks_list = [early_stopping, reduce_lr_on_plateau, csv_logger,
-                      checkpointer, checkpointer_best, table_init, tensorboard]
+    callbacks_list = [
+        early_stopping, reduce_lr_on_plateau, csv_logger, logging_logger,
+        checkpointer, checkpointer_best, table_init, tensorboard]
 
     ###########################################
     # MODEL TRAINING  ###########
