@@ -186,7 +186,7 @@ ctc.create_dataset_inventory csv -path /my_data/dataset_info.csv \
 -label_fields species count
 ```
 
-The following code snippet shows how to create a dataset inventory from class directories:
+The following code snippet shows how to create a dataset inventory from class directories (in that case the label will be refered to as 'class' -- see model training section):
 ```
 ctc.create_dataset_inventory dir -path /my_images/all_classes/ \
 -export_path /my_data/dataset_inventory.json
@@ -242,7 +242,13 @@ Use the following command for more help about all the options:
 ctc.train --help
 ```
 
-See section 'Data Augmentation' for more details.
+If the data inventory was created from class directories (Option 1) the default and only label will be 'class'. This means the model has to be trained with the following 'labels' parameter:
+```
+-labels class \
+```
+See also the example in: [AWS Example](docs/Docker_CPU.md)
+
+See section 'Data Augmentation' for more details about how to modify model training.
 
 ### 5) Model Use
 
