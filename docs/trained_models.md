@@ -82,7 +82,7 @@ sudo docker exec ctc ctc.train \
 
 ### Results on Test-Data (in sample data)
 
-The following report shows evaluation results on the test data: [Evaluation Results](docs/figures/Evaluation_SnapshotSafariModel.html).
+The following report shows evaluation results on the test data: [Evaluation Results](http://htmlpreview.github.io/?https://github.com/marco-willi/camera-trap-classifier/blob/add_models/docs/figures/All_SnapshotSafariModels.html).
 
 Shown are results separated by different locations / parks. The overwhelming majority of the images is from 'SER' the Serengeti national park.
 
@@ -93,8 +93,8 @@ The data is refered to as 'in sample data' because it is based on data from the 
 
 The following reports show model evaluations using independent test data:
 
-* Grumeti: [Evaluation Results Grumeti](docs/figures/GRU_S1_model_evaluation.html)
-* Enonkishu: [Evaluation Results Enonkishu](docs/figures/ENO_S1_model_evaluation.html)
-* Kruger: [Evaluation Results Kruger](docs/figures/KRU_S1_model_evaluation.html)
+* Grumeti: [Evaluation Results Grumeti](../docs/figures/GRU_S1_model_evaluation.html)
+* Enonkishu: [Evaluation Results Enonkishu](../docs/figures/ENO_S1_model_evaluation.html)
+* Kruger: [Evaluation Results Kruger](../docs/figures/KRU_S1_model_evaluation.html)
 
 The evaluation from these locations is based on a realistic scenario, on data collected from locations (Enonkishu and Kruger) the model has not seen or mostly not seen (Grumeti), as well as by applying a two-stage process: 1) identify images with species and 2) identify species on images considered as containing an animal.
