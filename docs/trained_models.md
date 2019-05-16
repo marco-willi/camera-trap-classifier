@@ -97,4 +97,4 @@ The following reports show model evaluations using independent test data:
 * Enonkishu: [Evaluation Results Enonkishu](../docs/figures/ENO_S1_model_evaluation.pdf)
 * Kruger: [Evaluation Results Kruger](../docs/figures/KRU_S1_model_evaluation.pdf)
 
-The evaluation from these locations is based on a realistic scenario, on data collected from locations (Enonkishu and Kruger) the model has not seen or mostly not seen (Grumeti), as well as by applying a two-stage process: 1) identify images with species and 2) identify species on images considered as containing an animal.
+The evaluation from these locations is based on a realistic scenario, on data collected from locations (Enonkishu and Kruger) the model has not seen or mostly not seen (Grumeti), as well as by applying a two-stage process: 1) identify images with species and 2) identify species on images considered as containing an animal. Furthermore, some (rare) species from Kruger / Enonkishu are completely unknown to the model and thus not predictable.
