@@ -1,6 +1,6 @@
 # Trained Models
 
-The following trained models are available for downloading. Both models were trained on AWS using a p3.xlarge instance and Docker as described here [AWS example](../docs/Docker_GPU.md). Apply the models as described here [Model Application](../README.md#5-model-use).
+The following trained models are available for downloading. The models were trained on AWS using a p3.2xlarge EC2  instance and Docker as described here [AWS example](../docs/Docker_GPU.md). The models can be apply as described here [Model Application](../README.md#5-model-use).
 
 ## Empty or Not Model
 
@@ -9,7 +9,7 @@ Download from: https://s3.msi.umn.edu/snapshotsafari/models/empty_or_not/ResNet1
 * Number of capture events in training set: 3.66 million
 * Architecture: ResNet18
 * Input Resolution: 448x448
-* Images: (mainly) from Tanzania (Serengeti National Park) and South Africa
+* Images: mainly from Tanzania (Serengeti National Park) and South Africa
 * Output: is_blank - binary label indicating whether the capture is empty ('blank'), i.e. no animal or human
 
 
@@ -48,9 +48,13 @@ Download from: https://s3.msi.umn.edu/snapshotsafari/models/species/Xception_v1.
 * Number of captures in training set: 1.84 million
 * Architecture: Xception
 * Input Resolution: 299x299
-* Images: (mainly) from Tanzania (Serengeti National Part) and South Africa
+* Images: mainly from Tanzania (Serengeti National Part) and South Africa
 * Output: species, counts, standing, resting, moving, eating, interacting, young_present
 * Number of species: 85
+
+Example Output: [Xception_v1 Output](../docs/example_pred_Xception_v1.json)
+
+
 
 
 ### Training Parameters
