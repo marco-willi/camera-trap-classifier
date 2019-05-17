@@ -1,6 +1,6 @@
 # Trained Models
 
-The following trained models are available for downloading. Both models were trained on AWS using a p3.xlarge instance and Docker as described here [AWS example](../docs/Docker_GPU.md). Apply the models as described here [Model Application](#5-model-use).
+The following trained models are available for downloading. Both models were trained on AWS using a p3.xlarge instance and Docker as described here [AWS example](../docs/Docker_GPU.md). Apply the models as described here [Model Application](../README.md#5-model-use).
 
 ## Empty or Not Model
 
