@@ -52,7 +52,7 @@ Download from: https://s3.msi.umn.edu/snapshotsafari/models/species/Xception_v1.
 * Output: species, counts, standing, resting, moving, eating, interacting, young_present
 * Number of species: 85
 
-<img src="https://github.com/marco-willi/camera-trap-classifier/blob/add_models/docs/figures/zebra_example.png"/>
+<img src="https://github.com/marco-willi/camera-trap-classifier/blob/master/docs/figures/zebra_example.png"/>
 
 *This figure shows a capture of a Zebra (see corresponding model output below).*
 
