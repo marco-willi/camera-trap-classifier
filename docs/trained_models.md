@@ -52,7 +52,7 @@ Download from: https://s3.msi.umn.edu/snapshotsafari/models/species/Xception_v1.
 * Output: species, counts, standing, resting, moving, eating, interacting, young_present
 * Number of species: 85
 
-Example Output: [Xception_v1 Output](../docs/example_pred_Xception_v1.json)
+Example Output: [Xception_v1 Output](../docs/figures/example_pred_Xception_v1.json)
 
 
 
