@@ -54,10 +54,9 @@ Download from: https://s3.msi.umn.edu/snapshotsafari/models/species/Xception_v1.
 
 <img src="https://github.com/marco-willi/camera-trap-classifier/blob/add_models/docs/figures/zebra_example.png"/>
 
-*This figure shows a capture of a Zebra.*
+*This figure shows a capture of a Zebra (see corresponding model output below).*
 
-Example Model Output for the image above: [Xception_v1 Output](../docs/figures/example_pred_Xception_v1.json)
-
+Example Model Output for the image above: [Xception_v1 Output](../docs/figures/example_pred_Xception_v1.json). This file also shows the complete list of species and all the other labels that the model was trained to classify.
 
 ### Training Parameters
 
@@ -105,4 +104,4 @@ The following reports show model evaluations using independent test data:
 * Enonkishu: [Evaluation Results Enonkishu](../docs/figures/ENO_S1_model_evaluation.pdf)
 * Kruger: [Evaluation Results Kruger](../docs/figures/KRU_S1_model_evaluation.pdf)
 
-The evaluation from these locations is based on a realistic scenario, on data collected from locations (Enonkishu and Kruger) the model has not seen or mostly not seen (Grumeti), as well as by applying a two-stage process: 1) identify images with species and 2) identify species on images considered as containing an animal. Furthermore, some (rare) species from Kruger / Enonkishu are completely unknown to the model and thus not predictable.
+The evaluation from these locations is based on a realistic scenario, on data collected from locations (Enonkishu and Kruger) the model has not seen or mostly not seen (Grumeti), as well as by applying a two-stage process: 1) identify images with animals and 2) identify species on images considered as containing an animal. Note that some (rare) species from Kruger / Enonkishu are completely unknown to the model and thus not predictable.
