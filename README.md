@@ -19,6 +19,7 @@ This repository contains code and documentation to train and apply convolutional
 3. Multi-output modelling: model species, behaviors, and any other label at the same time.
 4. A large variety of options: models, data augmentation, installation, data-prep, transfer-learning, and more.
 5. Tested approach: This code is currently in use and is being developed further.
+6. Trained models for download: [Trained Models](docs/trained_models.md)
 
 ## Pre-Requisites
 
@@ -339,6 +340,10 @@ This will apply the following transformations to each image during model trainin
 *This figure shows examples of grayscale stacking on sets with 1 or 3 images*
 
 This feature is experimental in the sense that it has not yet been thoroughly tested. We think that this option may benefit models which have to identify the presence of animals -- especially if there are small animals that are difficult to see without the motion information.
+
+## Downloading Trained Models
+
+See the following documentation about trained models available for download: [Trained Models](docs/trained_models.md)
 
 
 ## Testing the Code
